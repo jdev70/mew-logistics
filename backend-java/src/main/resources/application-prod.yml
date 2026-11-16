@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    jndi-name: ${MEW_DATASOURCE_JNDI:jdbc/MewLogisticsDS}
+  h2:
+    console:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.Oracle12cDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${MEW_JWT_ISSUER_URI}
+
+mew:
+  security:
+    mode: jwt

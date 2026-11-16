@@ -59,7 +59,9 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 java -jar target\mew-logistics-api.war --spring.profiles.active=local
 ```
 
-The `local` profile is development-only and creates a configured demo identity. The default mode is JWT authentication; configure `spring.security.oauth2.resourceserver.jwt.issuer-uri` (or `jwk-set-uri`) and provision each JWT `sub` as a unique `identity_subject` on an authorized personnel record before deploying.
+The `local` profile is development-only and is the only profile that enables H2, automatic schema updates, its web console, and the configured demo identity. The base profile has no development datastore configuration.
+
+For production, start with `--spring.profiles.active=prod`, set `MEW_JWT_ISSUER_URI` to the trusted identity-provider issuer, and optionally set `MEW_DATASOURCE_JNDI` (default: `jdbc/MewLogisticsDS`). The production profile disables H2 and uses `ddl-auto: validate`; apply [the authorization schema migration](docs/AUTHORIZATION_SCHEMA_MIGRATION.md) and provision each JWT `sub` as a unique `identity_subject` before deployment.
 
 ### H2 Database Console (Local Dev)
 While the backend is running, open **`http://localhost:8080/h2-console`**:
