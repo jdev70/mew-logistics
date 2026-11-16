@@ -1,5 +1,6 @@
 package mil.navy.nswc.mew.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -16,6 +17,7 @@ import java.util.UUID;
  * Abstract base entity mirroring Django's BaseModel with UUID primary key and audit timestamps.
  */
 @MappedSuperclass
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public abstract class BaseEntity {
 
     @Id

@@ -27,7 +27,7 @@ import {
 })
 export class MewApiService {
   private readonly http = inject(HttpClient);
-  readonly apiBaseUrl = 'http://localhost:8000/api/v1';
+  readonly apiBaseUrl = 'http://localhost:8080/api/v1';
 
   // Reactive Signals State (SV-4 State Management)
   readonly loading = signal<boolean>(false);
@@ -164,6 +164,33 @@ export class MewApiService {
       'BULK CSV EXPORT AUTHORIZED',
     ],
     can_export_csv: true,
+  });
+
+  // Persona-Driven CRUD Capabilities (mirrors backend RbacPolicyService)
+  readonly crudPermissions = computed(() => {
+    const ctx = this.activeRbacContext();
+    const role = ctx?.functional_role || 'SHIPBOARD_TECHNICIAN';
+    return {
+      role,
+      canCreateAsset: role === 'FLEET_READINESS_ANALYST',
+      canUpdateAsset:
+        role === 'FLEET_READINESS_ANALYST' ||
+        role === 'SHIPBOARD_TECHNICIAN' ||
+        role === 'WARFARE_CENTER_ENGINEER',
+      canDeleteAsset: role === 'FLEET_READINESS_ANALYST',
+      canCreateWorkOrder:
+        role === 'FLEET_READINESS_ANALYST' ||
+        role === 'SHIPBOARD_TECHNICIAN' ||
+        role === 'WARFARE_CENTER_ENGINEER',
+      canCloseWorkOrder:
+        role === 'FLEET_READINESS_ANALYST' || role === 'SHIPBOARD_TECHNICIAN',
+      canDeleteWorkOrder: role === 'FLEET_READINESS_ANALYST',
+      canCreateRequisition:
+        role === 'FLEET_READINESS_ANALYST' ||
+        role === 'UNIT_SUPPO' ||
+        role === 'SHORE_DEPOT_MANAGER',
+      canDeleteRequisition: role === 'FLEET_READINESS_ANALYST',
+    };
   });
 
   // Derived Fleet-Wide KPI Signals
@@ -462,6 +489,162 @@ export class MewApiService {
       `${this.apiBaseUrl}/dashboard/units/export_csv/?persona_id=${pid}${cls}`,
       '_blank'
     );
+  }
+
+  // =========================================================================
+  // PERSONA-SCOPED CRUD OPERATIONS (POST / PUT / DELETE)
+  // =========================================================================
+
+  createAsset(
+    payload: { serial_number: string; readiness_status: MewAsset['readiness_status']; operational_status?: string },
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      const created: MewAsset = {
+        id: `sim-asset-${Date.now()}`,
+        assignment_id: `ASGN-${Math.floor(1000 + Math.random() * 9000)}`,
+        serial_number: payload.serial_number,
+        system_id: 'SYS-101',
+        nomenclature: 'AN/SLQ-32(V)6',
+        common_name: 'SEWIP Block 2',
+        ew_category: 'Electronic Support (ES)',
+        asset_class: 'Electronic Support (ES)',
+        manufacturer: 'Lockheed Martin',
+        hull_number: 'DDG-51',
+        vessel_name: 'USS Arleigh Burke',
+        ship_class: 'Arleigh Burke-class Flight I',
+        domain: 'Surface',
+        mission_role_code: 'ASMD-EW',
+        mission_role_name: 'Anti-Ship Missile Defense',
+        quantity_installed: 1,
+        operational_status: payload.operational_status || 'FOC (Full Operational Capability)',
+        installation_date: new Date().toISOString().slice(0, 10),
+        assigned_unit_name: 'USS Arleigh Burke (DDG-51)',
+        current_location: null,
+        readiness_status: payload.readiness_status,
+        readiness_status_display: payload.readiness_status,
+        engine_hours: '1200.00',
+        last_status_change: new Date().toISOString(),
+        mtbf_hours: 2450,
+        mttr_hours: 4.5,
+        operational_availability_pct: 99.0,
+        active_work_orders: [],
+        pending_requisitions: [],
+      };
+      this.assets.update((list) => [created, ...list]);
+      onSuccess(`Created asset ${created.serial_number}.`);
+      return;
+    }
+
+    this.http
+      .post<MewAsset>(`${this.apiBaseUrl}/assets/`, payload, this.getHeaders())
+      .subscribe({
+        next: (res) => {
+          this.loadAllTelemetry();
+          onSuccess(`Created asset ${res.serial_number}.`);
+        },
+        error: (err) => onError(err?.error?.error || err?.message || 'Failed to create asset.'),
+      });
+  }
+
+  updateAssetStatus(
+    asset: MewAsset,
+    readinessStatus: MewAsset['readiness_status'],
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      this.assets.update((list) =>
+        list.map((a) =>
+          a.id === asset.id
+            ? { ...a, readiness_status: readinessStatus, readiness_status_display: readinessStatus }
+            : a
+        )
+      );
+      onSuccess(`Updated ${asset.serial_number} to ${readinessStatus}.`);
+      return;
+    }
+
+    this.http
+      .put<MewAsset>(
+        `${this.apiBaseUrl}/assets/${asset.id}/`,
+        { ...asset, readiness_status: readinessStatus },
+        this.getHeaders()
+      )
+      .subscribe({
+        next: () => {
+          this.loadAllTelemetry();
+          onSuccess(`Updated ${asset.serial_number} to ${readinessStatus}.`);
+        },
+        error: (err) => onError(err?.error?.error || err?.message || 'Failed to update asset.'),
+      });
+  }
+
+  deleteAsset(
+    assetId: string,
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      this.assets.update((list) => list.filter((a) => a.id !== assetId));
+      onSuccess('Asset deleted.');
+      return;
+    }
+
+    this.http
+      .delete<void>(`${this.apiBaseUrl}/assets/${assetId}/`, this.getHeaders())
+      .subscribe({
+        next: () => {
+          this.loadAllTelemetry();
+          onSuccess('Asset deleted.');
+        },
+        error: (err) => onError(err?.error?.error || err?.message || 'Failed to delete asset.'),
+      });
+  }
+
+  deleteWorkOrder(
+    woId: string,
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      this.workOrders.update((list) => list.filter((w) => w.id !== woId));
+      onSuccess('Work order deleted.');
+      return;
+    }
+
+    this.http
+      .delete<void>(`${this.apiBaseUrl}/work-orders/${woId}/`, this.getHeaders())
+      .subscribe({
+        next: () => {
+          this.loadAllTelemetry();
+          onSuccess('Work order deleted.');
+        },
+        error: (err) => onError(err?.error?.error || err?.message || 'Failed to delete work order.'),
+      });
+  }
+
+  deleteRequisition(
+    reqId: string,
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      this.requisitions.update((list) => list.filter((r) => r.id !== reqId));
+      onSuccess('Requisition deleted.');
+      return;
+    }
+
+    this.http
+      .delete<void>(`${this.apiBaseUrl}/requisitions/${reqId}/`, this.getHeaders())
+      .subscribe({
+        next: () => {
+          this.loadAllTelemetry();
+          onSuccess('Requisition deleted.');
+        },
+        error: (err) => onError(err?.error?.error || err?.message || 'Failed to delete requisition.'),
+      });
   }
 
   advanceWorkOrderStatus(

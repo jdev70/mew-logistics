@@ -138,6 +138,14 @@ export class AppComponent implements OnInit {
     subtext?: string;
   } | null>(null);
 
+  // =========================================================================
+  // PERSONA-SCOPED ASSET CRUD MODAL & FEEDBACK STATE
+  // =========================================================================
+  readonly newAssetModalOpen = signal<boolean>(false);
+  readonly newAssetSerial = signal<string>('');
+  readonly newAssetReadiness = signal<MewAsset['readiness_status']>('FMC');
+  readonly crudFeedback = signal<{ type: 'success' | 'error'; text: string } | null>(null);
+
   constructor() {
     // Automatically keep default detail selections populated whenever telemetry loads or filters change
     effect(
@@ -613,5 +621,42 @@ export class AppComponent implements OnInit {
       x: this.projectLonToX(node.lon),
       y: this.projectLatToY(node.lat),
     };
+  }
+
+  submitCreateAsset(): void {
+    const serial = this.newAssetSerial().trim();
+    if (!serial) {
+      this.crudFeedback.set({ type: 'error', text: 'Serial number is required.' });
+      return;
+    }
+    this.api.createAsset(
+      { serial_number: serial, readiness_status: this.newAssetReadiness() },
+      (msg) => {
+        this.crudFeedback.set({ type: 'success', text: msg });
+        this.newAssetSerial.set('');
+        this.newAssetModalOpen.set(false);
+      },
+      (err) => this.crudFeedback.set({ type: 'error', text: err })
+    );
+  }
+
+  changeAssetReadiness(asset: MewAsset, status: MewAsset['readiness_status']): void {
+    this.api.updateAssetStatus(
+      asset,
+      status,
+      (msg) => this.crudFeedback.set({ type: 'success', text: msg }),
+      (err) => this.crudFeedback.set({ type: 'error', text: err })
+    );
+  }
+
+  removeAsset(asset: MewAsset): void {
+    this.api.deleteAsset(
+      asset.id,
+      (msg) => {
+        this.crudFeedback.set({ type: 'success', text: msg });
+        this.selectedAsset.set(null);
+      },
+      (err) => this.crudFeedback.set({ type: 'error', text: err })
+    );
   }
 }

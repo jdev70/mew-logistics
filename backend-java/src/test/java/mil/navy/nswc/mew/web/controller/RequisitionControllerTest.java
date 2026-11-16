@@ -1,6 +1,7 @@
 package mil.navy.nswc.mew.web.controller;
 
 import mil.navy.nswc.mew.repository.RequisitionRepository;
+import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RequisitionService;
 import mil.navy.nswc.mew.web.dto.ReceiveShipmentRequest;
 import mil.navy.nswc.mew.web.dto.ReceiveShipmentResponse;
@@ -29,6 +30,9 @@ class RequisitionControllerTest {
 
     @MockBean
     private RequisitionService requisitionService;
+
+    @MockBean
+    private RbacPolicyService rbacPolicyService;
 
     @Test
     void receiveShipmentReturnsOkPayload() throws Exception {

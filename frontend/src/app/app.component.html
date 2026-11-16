@@ -1106,6 +1106,14 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
+              <button
+                *ngIf="api.crudPermissions().canCreateAsset"
+                type="button"
+                (click)="crudFeedback.set(null); newAssetModalOpen.set(true)"
+                class="px-2.5 py-1 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white transition"
+              >
+                + New Asset
+              </button>
               <input
                 type="text"
                 placeholder="Search hull, AN/SLQ-32, role, serial..."
@@ -1208,6 +1216,64 @@
               </h3>
               <div class="text-xs mono-data mew-text-secondary mt-0.5">
                 SN: {{ asset.serial_number }} &bull; OEM: {{ asset.manufacturer || 'DoD Prime' }}
+              </div>
+
+              <!-- Persona-Gated CRUD Action Bar -->
+              <div class="mt-3 pt-2.5 border-t mew-border flex flex-wrap items-center gap-1.5">
+                <button
+                  *ngIf="api.crudPermissions().canCreateAsset"
+                  type="button"
+                  (click)="crudFeedback.set(null); newAssetModalOpen.set(true)"
+                  class="px-2 py-1 rounded-sm text-[11px] mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white transition"
+                >
+                  + New Asset
+                </button>
+                <ng-container *ngIf="api.crudPermissions().canUpdateAsset">
+                  <button
+                    type="button"
+                    (click)="changeAssetReadiness(asset, 'FMC')"
+                    class="px-2 py-1 rounded-sm text-[10px] mono-data mew-elevated hover:bg-emerald-500/20 text-emerald-400"
+                  >
+                    Set FMC
+                  </button>
+                  <button
+                    type="button"
+                    (click)="changeAssetReadiness(asset, 'PMC')"
+                    class="px-2 py-1 rounded-sm text-[10px] mono-data mew-elevated hover:bg-amber-500/20 text-amber-400"
+                  >
+                    Set PMC
+                  </button>
+                  <button
+                    type="button"
+                    (click)="changeAssetReadiness(asset, 'NMCM')"
+                    class="px-2 py-1 rounded-sm text-[10px] mono-data mew-elevated hover:bg-rose-500/20 text-rose-400"
+                  >
+                    Set NMCM
+                  </button>
+                </ng-container>
+                <button
+                  *ngIf="api.crudPermissions().canDeleteAsset"
+                  type="button"
+                  (click)="removeAsset(asset)"
+                  class="ml-auto px-2 py-1 rounded-sm text-[11px] mono-data font-bold bg-rose-600/80 hover:bg-rose-500 text-white transition"
+                >
+                  Delete
+                </button>
+                <span
+                  *ngIf="!api.crudPermissions().canCreateAsset && !api.crudPermissions().canUpdateAsset && !api.crudPermissions().canDeleteAsset"
+                  class="text-[10px] mono-data text-amber-400"
+                >
+                  RBAC: {{ api.crudPermissions().role }} is read-only on Assets
+                </span>
+              </div>
+              <div
+                *ngIf="crudFeedback() as cfb"
+                class="mt-2 p-2 rounded-sm text-[11px] mono-data border"
+                [ngClass]="cfb.type === 'success'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                  : 'bg-rose-500/15 text-rose-300 border-rose-500/40'"
+              >
+                {{ cfb.text }}
               </div>
             </div>
 
@@ -2495,6 +2561,76 @@
         class="px-4 py-1.5 rounded-sm text-xs mono-data font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition"
       >
         Commit Warehouse Receipt
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================
+     CREATE ASSET MODAL (Persona-Gated CRUD)
+     ====================================================================== -->
+<div
+  *ngIf="newAssetModalOpen()"
+  class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4"
+>
+  <div class="mew-surface w-full max-w-md rounded-sm p-5 border border-sky-500/40 space-y-4">
+    <div class="flex items-start justify-between border-b mew-border pb-3">
+      <div>
+        <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">
+          Persona: {{ api.activeRbacContext().actor_name }} ({{ api.crudPermissions().role }})
+        </div>
+        <h3 class="text-base font-bold mew-text-primary">Register New MEW Asset</h3>
+      </div>
+      <button
+        type="button"
+        (click)="newAssetModalOpen.set(false)"
+        class="p-1.5 rounded-sm mew-elevated mew-text-secondary"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs mono-data uppercase mew-text-secondary mb-1">Serial Number</label>
+        <input
+          type="text"
+          placeholder="e.g., SLQ32V6-DDG51-002"
+          class="mew-input w-full rounded-sm px-3 py-2 text-xs mono-data"
+          [ngModel]="newAssetSerial()"
+          (ngModelChange)="newAssetSerial.set($event)"
+        />
+      </div>
+      <div>
+        <label class="block text-xs mono-data uppercase mew-text-secondary mb-1">Initial Readiness Status</label>
+        <select
+          class="mew-input w-full rounded-sm px-3 py-2 text-xs mono-data"
+          [ngModel]="newAssetReadiness()"
+          (ngModelChange)="newAssetReadiness.set($event)"
+        >
+          <option value="FMC">FMC - Fully Mission Capable</option>
+          <option value="PMC">PMC - Partially Mission Capable</option>
+          <option value="NMCM">NMCM - Non-Mission Capable (Maintenance)</option>
+          <option value="NMCS">NMCS - Non-Mission Capable (Supply)</option>
+          <option value="DLM">DLM - Depot Level Maintenance</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pt-3 border-t mew-border flex items-center justify-end gap-2">
+      <button
+        type="button"
+        (click)="newAssetModalOpen.set(false)"
+        class="px-4 py-1.5 rounded-sm text-xs mono-data mew-elevated mew-text-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="submitCreateAsset()"
+        class="px-4 py-1.5 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition"
+      >
+        Create Asset
       </button>
     </div>
   </div>
