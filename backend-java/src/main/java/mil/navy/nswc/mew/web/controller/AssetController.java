@@ -1,13 +1,21 @@
 package mil.navy.nswc.mew.web.controller;
 
 import mil.navy.nswc.mew.domain.entity.Asset;
+import mil.navy.nswc.mew.domain.entity.AssetModel;
+import mil.navy.nswc.mew.domain.entity.Installation;
+import mil.navy.nswc.mew.domain.entity.MilitaryUnit;
+import mil.navy.nswc.mew.domain.entity.MissionRole;
+import mil.navy.nswc.mew.domain.enums.CommandEchelon;
 import mil.navy.nswc.mew.domain.enums.ReadinessLevel;
 import mil.navy.nswc.mew.repository.AssetModelRepository;
 import mil.navy.nswc.mew.repository.AssetRepository;
+import mil.navy.nswc.mew.repository.InstallationRepository;
 import mil.navy.nswc.mew.repository.MilitaryUnitRepository;
+import mil.navy.nswc.mew.repository.MissionRoleRepository;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RbacPolicyService.Action;
 import mil.navy.nswc.mew.service.RbacPolicyService.Resource;
+import mil.navy.nswc.mew.service.exception.BusinessValidationException;
 import mil.navy.nswc.mew.service.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +32,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,21 +42,27 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/assets")
+@RequestMapping({"/api/v1/assets", "/api/v1/equipment"})
 public class AssetController {
 
     private final AssetRepository assetRepository;
     private final AssetModelRepository assetModelRepository;
     private final MilitaryUnitRepository unitRepository;
+    private final MissionRoleRepository missionRoleRepository;
+    private final InstallationRepository installationRepository;
     private final RbacPolicyService rbacPolicyService;
 
     public AssetController(AssetRepository assetRepository,
                            AssetModelRepository assetModelRepository,
                            MilitaryUnitRepository unitRepository,
+                           MissionRoleRepository missionRoleRepository,
+                           InstallationRepository installationRepository,
                            RbacPolicyService rbacPolicyService) {
         this.assetRepository = assetRepository;
         this.assetModelRepository = assetModelRepository;
         this.unitRepository = unitRepository;
+        this.missionRoleRepository = missionRoleRepository;
+        this.installationRepository = installationRepository;
         this.rbacPolicyService = rbacPolicyService;
     }
 
@@ -79,15 +94,62 @@ public class AssetController {
     @Transactional
     public ResponseEntity<Map<String, Object>> createAsset(
             @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
-            @Valid @RequestBody @NonNull Asset asset) {
+            @RequestBody @NonNull Map<String, Object> payload) {
         rbacPolicyService.requirePermission(personaId, Resource.ASSET, Action.CREATE, "/api/v1/assets/");
-        asset.setId(null);
-        if (asset.getAssetModel() == null) {
-            assetModelRepository.findAll().stream().findFirst().ifPresent(asset::setAssetModel);
+
+        String serialNumber = asString(payload.get("serial_number"));
+        if (serialNumber == null || serialNumber.isBlank()) {
+            throw new BusinessValidationException("serial_number is required.");
         }
-        if (asset.getAssignedUnit() == null) {
-            unitRepository.findAll().stream().findFirst().ifPresent(asset::setAssignedUnit);
+
+        Asset asset = new Asset();
+        asset.setSerialNumber(serialNumber.trim());
+        asset.setAssignmentId(asString(payload.get("assignment_id")));
+
+        String readiness = asString(payload.get("readiness_status"));
+        if (readiness != null && !readiness.isBlank()) {
+            asset.setReadinessStatus(ReadinessLevel.valueOf(readiness.trim()));
         }
+        String opStatus = asString(payload.get("operational_status"));
+        if (opStatus != null && !opStatus.isBlank()) {
+            asset.setOperationalStatus(opStatus);
+        }
+        if (payload.get("quantity_installed") instanceof Number) {
+            asset.setQuantityInstalled(((Number) payload.get("quantity_installed")).intValue());
+        }
+        String instDate = asString(payload.get("installation_date"));
+        if (instDate != null && !instDate.isBlank()) {
+            asset.setInstallationDate(LocalDate.parse(instDate));
+        }
+        if (payload.get("engine_hours") != null) {
+            asset.setEngineHours(new BigDecimal(String.valueOf(payload.get("engine_hours"))));
+        }
+        if (payload.get("mtbf_hours") instanceof Number) {
+            asset.setMtbfHours(((Number) payload.get("mtbf_hours")).doubleValue());
+        }
+        if (payload.get("mttr_hours") instanceof Number) {
+            asset.setMttrHours(((Number) payload.get("mttr_hours")).doubleValue());
+        }
+        if (payload.get("operational_availability_pct") instanceof Number) {
+            asset.setOperationalAvailabilityPct(((Number) payload.get("operational_availability_pct")).doubleValue());
+        }
+        String domain = asString(payload.get("domain"));
+        if (domain != null && !domain.isBlank()) {
+            asset.setDomain(domain.trim());
+        }
+        String branch = asString(payload.get("service_branch"));
+        if (branch != null && !branch.isBlank()) {
+            asset.setServiceBranch(branch.trim().toUpperCase());
+        } else {
+            asset.setServiceBranch(inferServiceBranch(asString(payload.get("assigned_unit_name")),
+                    asString(payload.get("serial_number"))));
+        }
+
+        asset.setAssetModel(resolveOrCreateAssetModel(payload));
+        asset.setMissionRole(resolveOrCreateMissionRole(payload));
+        asset.setCurrentLocation(resolveInstallation(payload));
+        asset.setAssignedUnit(resolveOrCreateUnit(payload, asset.getCurrentLocation()));
+
         Asset saved = assetRepository.save(asset);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
     }
@@ -126,6 +188,89 @@ public class AssetController {
         return ResponseEntity.noContent().build();
     }
 
+    private AssetModel resolveOrCreateAssetModel(Map<String, Object> payload) {
+        String systemId = asString(payload.get("system_id"));
+        String nomenclature = asString(payload.get("nomenclature"));
+        if (systemId != null && !systemId.isBlank()) {
+            return assetModelRepository.findBySystemId(systemId).orElseGet(() -> {
+                AssetModel m = new AssetModel();
+                m.setSystemId(systemId);
+                m.setNomenclature(nomenclature != null ? nomenclature : systemId);
+                m.setCommonName(defaultStr(asString(payload.get("common_name"))));
+                m.setEwCategory(defaultStr(asString(payload.get("ew_category"))));
+                m.setAssetClass(defaultStr(asString(payload.get("asset_class"))));
+                m.setManufacturer(defaultStr(asString(payload.get("manufacturer"))));
+                m.setCageCode(defaultStr(asString(payload.get("cage_code"))));
+                return assetModelRepository.save(m);
+            });
+        }
+        return assetModelRepository.findAll().stream().findFirst().orElse(null);
+    }
+
+    private MissionRole resolveOrCreateMissionRole(Map<String, Object> payload) {
+        String roleCode = asString(payload.get("mission_role_code"));
+        if (roleCode == null || roleCode.isBlank()) {
+            return null;
+        }
+        return missionRoleRepository.findByRoleCode(roleCode).orElseGet(() -> {
+            MissionRole r = new MissionRole();
+            r.setRoleId("ROLE-" + roleCode);
+            r.setRoleCode(roleCode);
+            String roleName = asString(payload.get("mission_role_name"));
+            r.setRoleName(roleName != null && !roleName.isBlank() ? roleName : roleCode);
+            return missionRoleRepository.save(r);
+        });
+    }
+
+    private Installation resolveInstallation(Map<String, Object> payload) {
+        String locId = asString(payload.get("current_location_id"));
+        if (locId != null && !locId.isBlank()) {
+            try {
+                UUID uuid = UUID.fromString(locId);
+                return installationRepository.findById(uuid).orElse(null);
+            } catch (IllegalArgumentException ignored) {
+                // Ignore non-UUID placeholders such as REPLACE-WITH-...
+            }
+        }
+        String instCode = asString(payload.get("installation_code"));
+        if (instCode != null && !instCode.isBlank()) {
+            return installationRepository.findByInstallationCode(instCode).orElse(null);
+        }
+        return null;
+    }
+
+    private MilitaryUnit resolveOrCreateUnit(Map<String, Object> payload, Installation preferredInst) {
+        String unitName = asString(payload.get("assigned_unit_name"));
+        if (unitName != null && !unitName.isBlank()) {
+            return unitRepository.findAll().stream()
+                    .filter(u -> unitName.equalsIgnoreCase(u.getName()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Installation inst = preferredInst != null ? preferredInst
+                                : installationRepository.findAll().stream().findFirst().orElse(null);
+                        if (inst == null) {
+                            return null;
+                        }
+                        MilitaryUnit u = new MilitaryUnit();
+                        u.setName(unitName);
+                        u.setUic(("U" + Math.abs(unitName.hashCode())).substring(0, 6));
+                        u.setEchelonLevel(CommandEchelon.COMBATANT_UNIT);
+                        u.setInstallation(inst);
+                        u.setCommandType(defaultStr(asString(payload.get("domain"))));
+                        return unitRepository.save(u);
+                    });
+        }
+        return unitRepository.findAll().stream().findFirst().orElse(null);
+    }
+
+    private String asString(Object val) {
+        return val != null ? String.valueOf(val) : null;
+    }
+
+    private String defaultStr(String val) {
+        return val != null ? val : "";
+    }
+
     private Map<String, Object> toDto(Asset a) {
         Map<String, Object> dto = new LinkedHashMap<>();
         dto.put("id", a.getId());
@@ -141,7 +286,12 @@ public class AssetController {
         dto.put("hull_number", a.getHull() != null ? a.getHull().getHullNumber() : null);
         dto.put("vessel_name", a.getHull() != null ? a.getHull().getVesselName() : null);
         dto.put("ship_class", a.getHull() != null ? a.getHull().getShipClass() : null);
-        dto.put("domain", a.getHull() != null ? a.getHull().getDomain() : "Surface");
+        dto.put("domain", resolveDomain(a));
+        dto.put("service_branch", a.getServiceBranch() != null && !a.getServiceBranch().isBlank()
+                ? a.getServiceBranch()
+                : inferServiceBranch(
+                        a.getAssignedUnit() != null ? a.getAssignedUnit().getName() : null,
+                        a.getSerialNumber()));
         dto.put("emcon_posture", a.getHull() != null && a.getHull().getEmconPosture() != null
                 ? a.getHull().getEmconPosture().name() : null);
         dto.put("mission_role_code", a.getMissionRole() != null ? a.getMissionRole().getRoleCode() : null);
@@ -169,5 +319,39 @@ public class AssetController {
         dto.put("active_work_orders", Collections.emptyList());
         dto.put("pending_requisitions", Collections.emptyList());
         return dto;
+    }
+
+    private String resolveDomain(Asset a) {
+        if (a.getDomain() != null && !a.getDomain().isBlank()) {
+            return a.getDomain();
+        }
+        if (a.getHull() != null && a.getHull().getDomain() != null && !a.getHull().getDomain().isBlank()) {
+            return a.getHull().getDomain();
+        }
+        if (a.getAssignedUnit() != null && a.getAssignedUnit().getCommandType() != null) {
+            String ct = a.getAssignedUnit().getCommandType();
+            if ("Ground".equalsIgnoreCase(ct) || "Airborne".equalsIgnoreCase(ct)
+                    || "Surface".equalsIgnoreCase(ct) || "Subsurface".equalsIgnoreCase(ct)) {
+                return ct;
+            }
+        }
+        return "Surface";
+    }
+
+    private String inferServiceBranch(String unitName, String serial) {
+        String combined = ((unitName != null ? unitName : "") + " " + (serial != null ? serial : "")).toUpperCase();
+        if (combined.contains("RADBN") || combined.contains("VMGR") || combined.contains("MARFOR")
+                || combined.contains("MEWG") || combined.contains("CESAS")) {
+            return "USMC";
+        }
+        if (combined.contains("CAVALRY") || combined.contains("CYBER") || combined.contains("AIRBORNE")
+                || combined.contains("TLS") || combined.contains("BCT")) {
+            return "USA";
+        }
+        if (combined.contains("ECS") || combined.contains("SWW") || combined.contains("AGRS")
+                || combined.contains("EA37B") || combined.contains("ALQ250")) {
+            return "USAF";
+        }
+        return "USN";
     }
 }

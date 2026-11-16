@@ -37,7 +37,12 @@ public class AnalyticsController {
             item.put("system_id", a.getAssetModel() != null ? a.getAssetModel().getSystemId() : "SYS-101");
             item.put("nomenclature", a.getAssetModel() != null ? a.getAssetModel().getNomenclature() : "MEW System");
             item.put("common_name", a.getAssetModel() != null ? a.getAssetModel().getCommonName() : "");
-            item.put("domain", a.getHull() != null ? a.getHull().getDomain() : "Surface");
+            String domain = a.getDomain() != null && !a.getDomain().isBlank()
+                    ? a.getDomain()
+                    : (a.getHull() != null && a.getHull().getDomain() != null
+                            ? a.getHull().getDomain()
+                            : "Surface");
+            item.put("domain", domain);
             item.put("total_count", 1);
             item.put("fmc_count", "FMC".equals(a.getReadinessStatus().name()) ? 1 : 0);
             item.put("avg_ao", a.getOperationalAvailabilityPct());

@@ -72,6 +72,12 @@ public class Asset extends BaseEntity {
     @Column(name = "operational_availability_pct", nullable = false)
     private Double operationalAvailabilityPct = 100.0;
 
+    @Column(name = "domain", length = 50)
+    private String domain;
+
+    @Column(name = "service_branch", length = 10)
+    private String serviceBranch;
+
     public String getAssignmentId() { return assignmentId; }
     public void setAssignmentId(String assignmentId) { this.assignmentId = assignmentId; }
     public AssetModel getAssetModel() { return assetModel; }
@@ -104,4 +110,8 @@ public class Asset extends BaseEntity {
     public void setMttrHours(Double mttrHours) { this.mttrHours = mttrHours; }
     public Double getOperationalAvailabilityPct() { return operationalAvailabilityPct; }
     public void setOperationalAvailabilityPct(Double operationalAvailabilityPct) { this.operationalAvailabilityPct = operationalAvailabilityPct; }
+    public String getDomain() { return domain; }
+    public void setDomain(String domain) { this.domain = domain; }
+    public String getServiceBranch() { return serviceBranch; }
+    public void setServiceBranch(String serviceBranch) { this.serviceBranch = serviceBranch; }
 }

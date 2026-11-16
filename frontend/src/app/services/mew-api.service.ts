@@ -274,6 +274,22 @@ export class MewApiService {
 
   switchPersona(personaId: string): void {
     this.activePersonaId.set(personaId);
+    const matched = this.rbacPersonas().find((p) => p.personnel_id === personaId);
+    if (matched) {
+      this.activeRbacContext.set({
+        persona_id: matched.personnel_id,
+        actor_name: matched.name,
+        functional_role: matched.functional_role,
+        personnel_category: matched.personnel_category,
+        security_clearance: matched.security_clearance,
+        assigned_uic: matched.assigned_uic,
+        installation_code: matched.installation_code,
+        subordinate_uics: [],
+        authorized_cage_codes: matched.authorized_cage_codes || [],
+        active_redaction_policies: [`PERSONA CRUD POLICY: ${matched.functional_role}`],
+        can_export_csv: matched.functional_role === 'FLEET_READINESS_ANALYST',
+      });
+    }
     this.loadAllTelemetry();
   }
 

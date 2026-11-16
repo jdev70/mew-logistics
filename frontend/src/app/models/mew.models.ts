@@ -13,7 +13,7 @@ export type MewViewpoint =
   | 'installations'
   | 'ledger';
 
-export type OperationalDomainFilter = 'ALL' | 'Surface' | 'Subsurface' | 'Airborne';
+export type OperationalDomainFilter = 'ALL' | 'Surface' | 'Subsurface' | 'Airborne' | 'Ground';
 
 export interface InstallationBase {
   id: string;
@@ -160,7 +160,8 @@ export interface MewAsset {
   hull_number: string | null;
   vessel_name: string | null;
   ship_class: string | null;
-  domain: 'Surface' | 'Subsurface' | 'Airborne' | string | null;
+  domain: 'Surface' | 'Subsurface' | 'Airborne' | 'Ground' | string | null;
+  service_branch?: 'USN' | 'USMC' | 'USA' | 'USAF' | string | null;
   emcon_posture?: string | null;
   mission_role_code: string | null;
   mission_role_name: string | null;

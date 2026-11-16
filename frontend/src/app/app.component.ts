@@ -42,7 +42,7 @@ export class AppComponent implements OnInit {
   readonly selectedAnalyticsComponent = signal<ComponentAnalyticsItem | null>(null);
   readonly selectedDepotRoute = signal<ProximityDepotRoute | null>(null);
   readonly optempoMultiplier = signal<number>(1.0);
-  readonly analyticsDomainFilter = signal<'ALL' | 'Surface' | 'Subsurface' | 'Airborne'>('ALL');
+  readonly analyticsDomainFilter = signal<'ALL' | 'Surface' | 'Subsurface' | 'Airborne' | 'Ground'>('ALL');
 
   readonly filteredAoSystems = computed(() => {
     const an = this.api.analytics();
@@ -93,6 +93,7 @@ export class AppComponent implements OnInit {
   readonly assetSearchQuery = signal<string>('');
   readonly selectedReadinessFilter = signal<string>('ALL');
   readonly selectedEwCategoryFilter = signal<string>('ALL');
+  readonly selectedBranchFilter = signal<string>('ALL');
   readonly selectedAsset = signal<MewAsset | null>(null);
 
   // =========================================================================
@@ -240,10 +241,16 @@ export class AppComponent implements OnInit {
 
   readonly filteredUnits = computed(() => {
     const domain = this.selectedDomain();
+    const branch = this.selectedBranchFilter();
     const q = this.unitSearchQuery().trim().toLowerCase();
     return this.api.units().filter((u) => {
       if (domain !== 'ALL' && !(u.command_type || '').toLowerCase().includes(domain.toLowerCase())) {
         return false;
+      }
+      if (branch !== 'ALL') {
+        const uic = (u.uic || '').toUpperCase();
+        const unitBranch = uic.startsWith('M') ? 'USMC' : uic.startsWith('W') ? 'USA' : uic.startsWith('F') ? 'USAF' : 'USN';
+        if (unitBranch !== branch) return false;
       }
       if (q) {
         const hay = `${u.name} ${u.uic} ${u.command_type} ${u.installation_name}`.toLowerCase();
@@ -257,12 +264,14 @@ export class AppComponent implements OnInit {
     const domain = this.selectedDomain();
     const readiness = this.selectedReadinessFilter();
     const category = this.selectedEwCategoryFilter();
+    const branch = this.selectedBranchFilter();
     const q = this.assetSearchQuery().trim().toLowerCase();
 
     return this.api.assets().filter((a) => {
       if (domain !== 'ALL' && a.domain !== domain) return false;
       if (readiness !== 'ALL' && a.readiness_status !== readiness) return false;
       if (category !== 'ALL' && a.ew_category !== category) return false;
+      if (branch !== 'ALL' && (a.service_branch || 'USN') !== branch) return false;
       if (q) {
         const hay = `${a.serial_number} ${a.nomenclature} ${a.common_name} ${a.hull_number || ''} ${
           a.vessel_name || ''
@@ -621,6 +630,10 @@ export class AppComponent implements OnInit {
       x: this.projectLonToX(node.lon),
       y: this.projectLatToY(node.lat),
     };
+  }
+
+  trackByPersonaId(_index: number, item: { personnel_id: string }): string {
+    return item.personnel_id;
   }
 
   submitCreateAsset(): void {

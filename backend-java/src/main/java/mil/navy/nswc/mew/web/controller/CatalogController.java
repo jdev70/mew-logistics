@@ -19,6 +19,7 @@ import mil.navy.nswc.mew.service.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,8 +31,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -101,8 +105,36 @@ public class CatalogController {
     }
 
     @GetMapping({"/personnel", "/personnel/"})
-    public List<Personnel> listPersonnel() {
-        return personnelRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPersonnel() {
+        return personnelRepository.findAll().stream().map(this::toPersonnelDto).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> toPersonnelDto(Personnel p) {
+        Map<String, Object> dto = new LinkedHashMap<>();
+        dto.put("id", p.getId());
+        dto.put("personnel_id", p.getPersonnelId());
+        dto.put("dod_id", p.getDodId());
+        dto.put("first_name", p.getFirstName());
+        dto.put("middle_initial", p.getMiddleInitial());
+        dto.put("last_name", p.getLastName());
+        dto.put("personnel_category", p.getPersonnelCategory());
+        dto.put("paygrade", p.getPaygrade());
+        dto.put("rank", p.getRank());
+        dto.put("rank_full", p.getRank() + " " + p.getFirstName() + " " + p.getLastName());
+        dto.put("specialty_code", p.getSpecialtyCode());
+        dto.put("title", p.getTitle());
+        dto.put("role", p.getTitle());
+        dto.put("functional_role", p.getFunctionalRole() != null ? p.getFunctionalRole().name() : "");
+        dto.put("assigned_uic", p.getAssignedUic());
+        dto.put("installation_code", p.getInstallation() != null ? p.getInstallation().getInstallationCode() : "");
+        dto.put("installation_deployed_at", p.getInstallation() != null ? p.getInstallation().getName() : "");
+        dto.put("installation_location", p.getInstallation() != null ? p.getInstallation().getLocationDisplay() : "");
+        dto.put("unit_name", p.getUnit() != null ? p.getUnit().getName() : "");
+        dto.put("security_clearance", p.getSecurityClearance());
+        dto.put("operational_status", p.getOperationalStatus());
+        dto.put("is_fully_deployable", !"Leave".equalsIgnoreCase(p.getOperationalStatus()));
+        return dto;
     }
 
     @PostMapping({"/personnel", "/personnel/"})
@@ -140,6 +172,7 @@ public class CatalogController {
     }
 
     @GetMapping({"/hulls", "/hulls/"})
+    @Transactional(readOnly = true)
     public List<NavalHull> listHulls() {
         return navalHullRepository.findAll();
     }
@@ -179,11 +212,13 @@ public class CatalogController {
     }
 
     @GetMapping({"/loadouts", "/loadouts/"})
+    @Transactional(readOnly = true)
     public List<HullSystemAssignment> listLoadouts() {
         return loadoutRepository.findAll();
     }
 
     @GetMapping({"/components", "/components/"})
+    @Transactional(readOnly = true)
     public List<MaterialCatalog> listComponents() {
         return materialRepository.findAll();
     }
@@ -223,7 +258,8 @@ public class CatalogController {
     }
 
     @GetMapping({"/security-audit-logs", "/security-audit-logs/"})
+    @Transactional(readOnly = true)
     public List<SecurityAuditLog> listAuditLogs() {
-        return auditLogRepository.findTop100ByOrderByCreatedAtDesc();
+        return auditLogRepository.findAllByOrderByCreatedAtDesc();
     }
 }

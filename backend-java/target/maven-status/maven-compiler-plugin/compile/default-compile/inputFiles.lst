@@ -17,6 +17,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\b
 C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\domain\entity\UnitReadinessSnapshot.java
 C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\domain\entity\Asset.java
 C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\web\controller\RbacPersonaController.java
+C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\config\OpenApiConfig.java
 C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\domain\entity\Requisition.java
 C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\repository\MissionRoleRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics-readiness-dashboard-java-spring-jpa\backend-java\src\main\java\mil\navy\nswc\mew\domain\entity\InventoryBalance.java

@@ -24,8 +24,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/requisitions")
@@ -45,8 +48,27 @@ public class RequisitionController {
 
     @GetMapping({ "", "/" })
     @Transactional(readOnly = true)
-    public List<Requisition> listRequisitions() {
-        return requisitionRepository.findAll();
+    public List<Map<String, Object>> listRequisitions() {
+        return requisitionRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> toDto(Requisition r) {
+        Map<String, Object> dto = new LinkedHashMap<>();
+        dto.put("id", r.getId());
+        dto.put("document_number", r.getDocumentNumber());
+        dto.put("material_name", r.getMaterial() != null ? r.getMaterial().getNomenclature() : "");
+        dto.put("nsn", r.getMaterial() != null ? r.getMaterial().getNsn() : "");
+        dto.put("cage_code", r.getMaterial() != null ? r.getMaterial().getCageCode() : "");
+        dto.put("unit_price", r.getMaterial() != null ? r.getMaterial().getUnitPrice() : 0);
+        dto.put("quantity", r.getQuantity());
+        dto.put("priority_display", r.getPriority() == 1 ? "Urgent / CASREP" : (r.getPriority() == 2 ? "Priority" : "Routine"));
+        dto.put("ipd_code", r.getIpdCode());
+        dto.put("supply_status_code", r.getSupplyStatusCode() != null ? r.getSupplyStatusCode().name() : "BA");
+        dto.put("requires_dlr_turn_in", r.isRequiresDlrTurnIn());
+        dto.put("work_order_jcn", r.getWorkOrder() != null ? r.getWorkOrder().getJcn() : null);
+        dto.put("status", r.getStatus());
+        dto.put("estimated_delivery_date", r.getEstimatedDeliveryDate());
+        return dto;
     }
 
     @GetMapping({ "/{id}", "/{id}/" })

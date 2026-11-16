@@ -9,6 +9,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -17,12 +18,13 @@ import java.util.UUID;
  * Abstract base entity mirroring Django's BaseModel with UUID primary key and audit timestamps.
  */
 @MappedSuperclass
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "hibernate_lazy_initializer", "handler"})
 public abstract class BaseEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @Type(type = "uuid-char")
     @Column(name = "id", updatable = false, nullable = false, length = 36)
     private UUID id;
 

@@ -193,13 +193,13 @@
 
       <!-- Compact Top Control & Inline HUD Telemetry Ribbon -->
       <header class="mew-surface border-b px-4 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2">
-        <!-- Left: Domain Filter Buttons -->
-        <div class="flex items-center gap-1.5">
+        <!-- Left: Domain & Branch Filter Buttons -->
+        <div class="flex flex-wrap items-center gap-1.5">
           <span class="text-[11px] mono-data uppercase tracking-wider mew-text-secondary mr-1">
             Domain:
           </span>
           <button
-            *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne']"
+            *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne', 'Ground']"
             type="button"
             (click)="setDomainFilter($any(dom))"
             [class]="selectedDomain() === dom
@@ -207,6 +207,20 @@
               : 'px-2.5 py-1 rounded-sm text-[11px] mono-data mew-elevated mew-text-secondary hover:text-sky-400 transition'"
           >
             {{ dom === 'ALL' ? 'ALL' : (dom | uppercase) }}
+          </button>
+
+          <span class="text-[11px] mono-data uppercase tracking-wider mew-text-secondary ml-2 mr-1">
+            Branch:
+          </span>
+          <button
+            *ngFor="let br of ['ALL', 'USN', 'USMC', 'USA', 'USAF']"
+            type="button"
+            (click)="selectedBranchFilter.set(br)"
+            [class]="selectedBranchFilter() === br
+              ? 'px-2 py-1 rounded-sm text-[11px] mono-data font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 transition'
+              : 'px-2 py-1 rounded-sm text-[11px] mono-data mew-elevated mew-text-secondary hover:text-emerald-400 transition'"
+          >
+            {{ br }}
           </button>
         </div>
 
@@ -249,7 +263,7 @@
               (ngModelChange)="api.switchPersona($event)"
               title="Switch active RBAC Role, Hierarchical UIC Scope, CAGE Vendor Scope, and Clearance"
             >
-              <option *ngFor="let p of api.rbacPersonas()" [value]="p.personnel_id">
+              <option *ngFor="let p of api.rbacPersonas(); trackBy: trackByPersonaId" [value]="p.personnel_id">
                 {{ p.name }} &mdash; {{ p.badge_label }}
               </option>
             </select>
@@ -360,7 +374,7 @@
                 </div>
                 <div class="flex items-center gap-1.5 text-[10px] mono-data">
                   <button
-                    *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne']"
+                    *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne', 'Ground']"
                     type="button"
                     (click)="analyticsDomainFilter.set($any(dom))"
                     [class]="analyticsDomainFilter() === dom
@@ -1121,6 +1135,18 @@
                 [ngModel]="assetSearchQuery()"
                 (ngModelChange)="assetSearchQuery.set($event)"
               />
+
+              <select
+                class="mew-input text-xs mono-data rounded-sm px-2.5 py-1"
+                [ngModel]="selectedBranchFilter()"
+                (ngModelChange)="selectedBranchFilter.set($event)"
+              >
+                <option value="ALL">All Branches</option>
+                <option value="USN">USN (Navy)</option>
+                <option value="USMC">USMC (Marines)</option>
+                <option value="USA">USA (Army)</option>
+                <option value="USAF">USAF (Air Force)</option>
+              </select>
 
               <select
                 class="mew-input text-xs mono-data rounded-sm px-2.5 py-1"

@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface SecurityAuditLogRepository extends JpaRepository<SecurityAuditLog, UUID> {
-    List<SecurityAuditLog> findTop100ByOrderByCreatedAtDesc();
+    List<SecurityAuditLog> findAllByOrderByCreatedAtDesc();
 }

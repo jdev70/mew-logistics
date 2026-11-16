@@ -4,7 +4,9 @@ import mil.navy.nswc.mew.domain.entity.Asset;
 import mil.navy.nswc.mew.domain.enums.ReadinessLevel;
 import mil.navy.nswc.mew.repository.AssetModelRepository;
 import mil.navy.nswc.mew.repository.AssetRepository;
+import mil.navy.nswc.mew.repository.InstallationRepository;
 import mil.navy.nswc.mew.repository.MilitaryUnitRepository;
+import mil.navy.nswc.mew.repository.MissionRoleRepository;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,12 @@ class AssetControllerTest {
 
     @MockBean
     private MilitaryUnitRepository unitRepository;
+
+    @MockBean
+    private MissionRoleRepository missionRoleRepository;
+
+    @MockBean
+    private InstallationRepository installationRepository;
 
     @MockBean
     private RbacPolicyService rbacPolicyService;

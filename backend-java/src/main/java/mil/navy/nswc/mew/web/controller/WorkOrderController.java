@@ -22,8 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/work-orders")
@@ -43,8 +46,32 @@ public class WorkOrderController {
 
     @GetMapping({"", "/"})
     @Transactional(readOnly = true)
-    public List<WorkOrder> listWorkOrders() {
-        return workOrderRepository.findAll();
+    public List<Map<String, Object>> listWorkOrders() {
+        return workOrderRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> toDto(WorkOrder w) {
+        Map<String, Object> dto = new LinkedHashMap<>();
+        dto.put("id", w.getId());
+        dto.put("jcn", w.getJcn());
+        dto.put("status", w.getStatus().name());
+        dto.put("status_display", w.getStatus().name());
+        dto.put("priority_code", w.getPriorityCode());
+        dto.put("priority_display", w.getPriorityCode() == 1 ? "1 - Mandatory / CASREP" : "2 - Essential");
+        dto.put("casrep_number", w.getCasrepNumber());
+        dto.put("is_grounding_fault", w.isGroundingFault());
+        dto.put("asset_serial", w.getAsset() != null ? w.getAsset().getSerialNumber() : "");
+        dto.put("system_nomenclature", w.getAsset() != null && w.getAsset().getAssetModel() != null
+                ? w.getAsset().getAssetModel().getNomenclature() : "");
+        dto.put("hull_number", w.getHull() != null ? w.getHull().getHullNumber() : null);
+        dto.put("vessel_name", w.getHull() != null ? w.getHull().getVesselName() : null);
+        dto.put("installation_code", w.getInstallation() != null ? w.getInstallation().getInstallationCode() : null);
+        dto.put("eic", w.getEic());
+        dto.put("apl_ael", w.getAplAel());
+        dto.put("work_center", w.getWorkCenter());
+        dto.put("description_of_fault", w.getDescriptionOfFault());
+        dto.put("created_at", w.getCreatedAt());
+        return dto;
     }
 
     @GetMapping({"/{id}", "/{id}/"})
