@@ -44,11 +44,13 @@ public class RequisitionController {
     }
 
     @GetMapping({ "", "/" })
+    @Transactional(readOnly = true)
     public List<Requisition> listRequisitions() {
         return requisitionRepository.findAll();
     }
 
     @GetMapping({ "/{id}", "/{id}/" })
+    @Transactional(readOnly = true)
     public Requisition getRequisition(@PathVariable @NonNull UUID id) {
         return requisitionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Requisition not found: " + id));

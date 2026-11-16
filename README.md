@@ -1,90 +1,103 @@
 # Maritime Electromagnetic Warfare (MEW) Logistics & Readiness Dashboard
 
 ## Executive Summary
-This project is a prototype logistics and readiness dashboard designed to track Maritime Electromagnetic Warfare (MEW) assets (e.g., AN/SLQ-32(V)6 SEWIP) across the naval fleet. Built using a decoupled Angular and Django REST Framework (DRF) architecture, this application demonstrates how modern, rapid software development can be aligned with strict Department of Defense Architecture Framework (DoDAF) interoperability requirements to support operations at NSWC Crane.
+This project is a decoupled, enterprise-ready logistics and readiness dashboard designed to track Maritime Electromagnetic Warfare (MEW) assets (e.g., `AN/SLQ-32(V)6 SEWIP`) across the naval fleet. Built on a **Java EE 8 (`javax.*`) / Spring MVC / Hibernate JPA** backend and an **Angular 17 / RxJS / PrimeNG** frontend, the system aligns with **Department of Defense Architecture Framework (DoDAF)** viewpoints to support fleet readiness and depot sustainment operations.
 
 ---
 
 ## DoDAF Architectural Alignment
 
-To ensure data interoperability and strict traceability to mission requirements, this application is modeled against the following DoDAF viewpoints:
-
-### Strategic & Operational 
-*   **CV-1 (Vision):** Provide logistics officers and product support managers with real-time visibility into MEW system deployment, maintenance, and operational statuses to ensure continuous fleet readiness.
-*   **OV-1 (High-Level Operational Concept):** Track the lifecycle of MEW hardware from depot-level maintenance (NSWC Crane) to active fleet deployment, enabling proactive identification of degraded systems before they impact mission capabilities.
-
-### Technical & Systems
-*   **DIV-2 (Logical Data Model):** A relational data architecture (implemented via PostgreSQL and Django Models) tracking MEW Assets, Naval Platforms (Vessels), and Operational Statuses. The schema is designed for eventual mapping to the DoDAF Meta Model (DM2).
-*   **SvcV-1 (Services Context Description):** A decoupled RESTful API layer (implemented via Django DRF). By separating the data layer from the user interface, the API can act as a microservice, allowing other DoD systems to securely consume MEW readiness data.
-*   **SV-4 (Systems Functionality Description):** A reactive client interface (implemented via Angular 17). It consumes the SvcV-1 API to render a dynamic, sortable PrimeNG data grid (`p-table`), allowing end-users to filter fleet readiness metrics in real-time.
-
----
-
-## Agile Execution Strategy
-
-Development was executed using iterative Agile methodologies to ensure continuous delivery of value without waiting for monolithic architecture approvals.
-
-*   **Epic 1: Data Interoperability & API Services (Sprint 1)**
-    *   Designed the DIV-2 PostgreSQL database schema.
-    *   Built the Django backend and DRF serializers.
-    *   Seeded the database with synthetic MEW asset and deployment data.
-    *   Exposed the SvcV-1 REST endpoints (`/api/mew-assets/`).
-*   **Epic 2: Systems Functionality & UI Integration (Sprint 2)**
-    *   Scaffolded the Angular 17+ workspace using Signals for state management.
-    *   Integrated PrimeNG component libraries and Tailwind CSS.
-    *   Implemented `HttpClient` services to consume the DRF API.
-    *   Delivered the SV-4 interactive data table for logistics filtering.
+* **CV-1 (Vision):** Provide logistics officers, depot managers, and product support managers with real-time visibility into MEW system deployment, maintenance, and operational availability (`Ao`).
+* **OV-1 (High-Level Operational Concept):** Track MEW hardware lifecycles from depot-level sustainment (NSWC Crane) to active fleet deployment, surfacing degraded systems and supply bottlenecks before they impact mission capability.
+* **DIV-2 (Logical Data Model):** Relational schema implemented via **Hibernate / JPA (`javax.persistence.*`)** modeling `Installation`, `MilitaryUnit`, `NavalHull`, `Personnel`, `AssetModel`, `MaterialCatalog`, `Asset`, `HullSystemAssignment`, `WorkOrder`, `WorkOrderPart`, `Requisition`, `InventoryBalance`, `InventoryTransaction`, `UnitReadinessSnapshot`, and `SecurityAuditLog`.
+* **SvcV-1 (Services Context Description):** Decoupled RESTful API layer implemented with pure **Spring MVC `@RestController`s** under `/api/v1/`, enforcing persona-scoped **RBAC/ABAC** policies and `SNAKE_CASE` JSON contracts.
+* **SV-4 (Systems Functionality Description):** Reactive **Angular 17** client using Signals, `HttpClient`, **RxJS**, **PrimeNG** (`p-table`), and **Tailwind CSS** to deliver real-time filtering, analytics, and persona-gated CRUD workflows.
 
 ---
 
 ## Technology Stack
 
-*   **Frontend (SV):** Angular 17 (Signals), PrimeNG (`p-table`), Tailwind CSS, RxJS.
-*   **Backend (SvcV/DIV):** Python 3.11+, Django 5.1, Django REST Framework (DRF).
-*   **Database (DIV):** PostgreSQL / SQLite (Local Dev).
+* **Backend (SvcV / DIV):** Java 17 (Java EE 8 `javax.*` target), Spring Boot 2.7.18, Spring MVC REST, Spring Data JPA / Hibernate 5.6, Maven (`WAR` packaging for WebLogic / JBoss or standalone execution)
+* **Database (DIV):** H2 (`MODE=Oracle`, file-backed local persistence at `./data/mewdb`), JNDI profile (`jdbc/MewLogisticsDS`) for Java EE application servers
+* **Testing:** JUnit 5 (Jupiter), Mockito, Spring `MockMvc` (`@WebMvcTest`)
+* **Frontend (SV):** Angular 17.3, TypeScript, RxJS 7.8, PrimeNG 17, Tailwind CSS
 
 ---
 
-## Local Development Setup
+## System Architecture & Core Patterns
 
-### Backend (Django & SvcV-1 API)
+* **Persona-Driven RBAC / ABAC ([RbacPolicyService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/RbacPolicyService.java)):** Incoming `POST`, `PUT`, and `DELETE` requests are authorized against the `X-MEW-Persona-ID` header (`FLEET_READINESS_ANALYST`, `SHIPBOARD_TECHNICIAN`, `UNIT_SUPPO`, `SHORE_DEPOT_MANAGER`, `WARFARE_CENTER_ENGINEER`), with all `ALLOW` and `DENY` decisions written to `SecurityAuditLog`.
+* **Immutable Inventory Ledger ([InventoryService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/InventoryService.java)):** Uses `PESSIMISTIC_WRITE` locking on `InventoryBalance` and appends immutable `InventoryTransaction` records (`@PreUpdate` blocks mutations).
+* **MILSTRIP Short-Ship Backorder Splitting ([RequisitionService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/RequisitionService.java)):** Receiving a partial shipment automatically splits the remaining quantity into a `-BO` backorder requisition (`BB` status) and credits warehouse stock (`D7` status).
+* **Automated Readiness Snapshots ([ReadinessSchedulerService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/ReadinessSchedulerService.java)):** `@Scheduled` cron job computing daily `UnitReadinessSnapshot` records.
+* **Local Dev Seeder ([DevDataInitializer.java](backend-java/src/main/java/mil/navy/nswc/mew/config/DevDataInitializer.java)):** Seeds sample installations, naval hulls, MEW assets, LRU inventory balances, work orders, and requisitions on first startup when using the `default` profile.
+
+---
+
+## Frequently Used Commands
+
+### Backend (`backend-java/`)
+
+> If `mvn` is not in your current shell `PATH`, invoke it via `"$env:USERPROFILE\tools\maven\apache-maven-3.9.9\bin\mvn.cmd"`.
+
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r backend\requirements.txt
-python backend\manage.py migrate
+cd backend-java
 
-# Seed the full MEW dataset (Installations, Personnel, Naval Hulls/Systems, Components & Analytics)
-python backend\manage.py seed_mew_data
+# Run JUnit 5 + Mockito unit & MockMvc tests
+mvn test
 
-# Or run individual MEW synthetic dataset generators (also exports CSV & JSON):
-python backend\manage.py generate_mew_installations
-python backend\manage.py generate_mew_personnel --count 1000
-python backend\manage.py generate_mew_loadouts
-python backend\manage.py generate_mew_components
+# Run tests offline (after initial dependency download)
+mvn -o test
 
-python backend\manage.py runserver
+# Package deployable WAR (target/mew-logistics-api.war)
+mvn package
+
+# Run locally on http://localhost:8080 (H2 file-backed DB + DevDataInitializer)
+mvn spring-boot:run
+
+# Run packaged WAR directly
+java -jar target\mew-logistics-api.war
 ```
 
-### Frontend (Angular 17+ SV-4 Tactical Dashboard)
+### H2 Database Console (Local Dev)
+While the backend is running, open **`http://localhost:8080/h2-console`**:
+* **JDBC URL:** `jdbc:h2:file:./data/mewdb;MODE=Oracle;AUTO_SERVER=TRUE`
+* **User Name:** `sa`
+* **Password:** *(leave blank)*
+
+### Frontend (`frontend/`)
+
 ```powershell
 cd frontend
-npm install
+
+# Clean install exact locked Angular 17 dependencies
+npm ci
+
+# Start dev server on http://localhost:4200
 npm start
-# Open http://localhost:4200
+
+# Production build check
+npm run build
 ```
 
 ---
 
-## Routing Structure (`SvcV-1` Services Context)
-**Maximizes extensibility** by isolating the MEW logistics routes behind the `/api/v1/` path in `core/urls.py` and delegating specifics to `mew_logistics/urls.py`, ensuring that future modules (e.g., if NAVSEA requests functionality to track Sonar or Radar systems next) can be added cleanly without disrupting existing Maritime Electromagnetic Warfare services:
+## REST API Routing (`SvcV-1` Services Context)
 
-*   `GET /api/v1/dashboard/units/` — Unit readiness aggregation, 30-day readiness trends, and `MTBF`/`MTTR`/`Ao` metrics (`?asset_class=...`).
-*   `GET /api/v1/dashboard/units/export_csv/` — Downloadable CSV report of fleet reliability metrics.
-*   `GET /api/v1/assets/` — Deployed MEW system instances (`AN/SLQ-32(V)6/7`, `Nulka`, `ODIN`, `AN/BLQ-10`, `AN/ALQ-249`) with active work orders and pending requisitions.
-*   `GET /api/v1/hulls/` & `GET /api/v1/loadouts/` — Naval Hulls (`DDG-51`, `CVN-78`, `SSN-774`, `VAQ-132`) and Hull-to-System loadout assignments.
-*   `GET /api/v1/installations/` & `GET /api/v1/personnel/` — 17 MEW shore installations and EW personnel billets (`CTT`, `EWO`, `EDO`, `GS-0855`, `GS-0346`, `FSR`).
-*   `GET /api/v1/components/` & `GET /api/v1/inventory-balances/` — MEW Line Replaceable Units (LRUs) catalog and warehouse stock levels.
-*   `GET /api/v1/requisitions/` & `POST /api/v1/requisitions/receive-shipment/` — MILSTRIP supply requisitions and scanner-ready warehouse shipment receipt (with automatic short-ship `-BO` backorder splitting).
-*   `GET /api/v1/work-orders/` & `GET /api/v1/inventory-transactions/` — Maintenance work orders and the immutable inventory audit ledger.
+Base URL: `http://localhost:8080/api/v1`
 
+* **Dashboard & Analytics:**
+  * `GET /dashboard/units/` (`?asset_class=...`) & `GET /dashboard/units/export_csv/`
+  * `GET /analytics/overview/`
+* **MEW Assets (Full CRUD):**
+  * `GET /assets/`, `GET /assets/{id}/`, `POST /assets/`, `PUT /assets/{id}/`, `DELETE /assets/{id}/`
+* **Work Orders (Full CRUD + Lifecycle):**
+  * `GET /work-orders/`, `GET /work-orders/{id}/`, `POST /work-orders/`, `PUT /work-orders/{id}/`, `DELETE /work-orders/{id}/`, `POST /work-orders/{id}/close/`
+* **Requisitions & Receiving (Full CRUD + MILSTRIP Receipt):**
+  * `GET /requisitions/`, `GET /requisitions/{id}/`, `POST /requisitions/`, `PUT /requisitions/{id}/`, `DELETE /requisitions/{id}/`
+  * `POST /requisitions/receive-shipment/`
+* **Inventory & Audit Trails:**
+  * `GET /inventory-balances/` & `GET /inventory-transactions/`
+  * `GET /security-audit-logs/` & `GET /rbac/personas/`
+* **Catalogs (Full CRUD):**
+  * `/installations/`, `/personnel/`, `/hulls/`, `/components/` (plus `GET /loadouts/`)

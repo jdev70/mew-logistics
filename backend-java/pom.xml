@@ -57,6 +57,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Microsoft SQL Server JDBC Driver (for local/enterprise SQL Server + SSMS) -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- H2 In-Memory DB (for local dev & automated tests) -->
         <dependency>
             <groupId>com.h2database</groupId>

@@ -94,6 +94,7 @@ public class AssetController {
 
     @PutMapping({ "/{id}", "/{id}/" })
     @Transactional
+    @SuppressWarnings("null")
     public Map<String, Object> updateAsset(
             @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
