@@ -1,1336 +1,1619 @@
-<!-- Top DoD Classification & DoDAF Alignment Banner -->
-<header class="class-banner unclass">
-  <div class="flex items-center gap-2">
-    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-    <span>UNCLASSIFIED // FOR OFFICIAL USE ONLY // MEW LOGISTICS &amp; READINESS C2 (NSWC CRANE)</span>
-  </div>
-  <div class="hidden md:flex items-center gap-4 text-emerald-300/90 mono-data">
-    <span>DoDAF: CV-1 | OV-1 | DIV-2 | SvcV-1 | SV-4</span>
-    <span>SYNC: {{ api.lastSyncedAt() | date:'HH:mm:ss' }} LOCAL</span>
-  </div>
-</header>
+<!-- ========================================================================
+     ZERO-SCROLL 100VH C2 WATCH FLOOR SHELL (Aligned with UI_DESIGN_CONSIDERATIONS.md)
+     ======================================================================== -->
+<div class="h-screen w-screen overflow-hidden flex flex-col select-none">
 
-<!-- Main Tactical Shell: Left Command Rail + Right Mission Workspace -->
-<div class="min-h-[calc(100vh-25px)] flex flex-col lg:flex-row">
+  <!-- Top DoD Classification Banner -->
+  <header class="class-banner unclass shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>UNCLASSIFIED // FOR OFFICIAL USE ONLY // MEW LOGISTICS &amp; READINESS C2 (NSWC CRANE)</span>
+    </div>
+    <div class="hidden md:flex items-center gap-4 text-emerald-300/90 mono-data">
+      <span>DoDAF: CV-1 | OV-1 | DIV-2 | SvcV-1 | SV-4</span>
+      <span>SYNC: {{ api.lastSyncedAt() | date:'HH:mm:ss' }} LOCAL</span>
+    </div>
+  </header>
 
-  <!-- ====================================================================
-       LEFT TACTICAL COMMAND RAIL (Persistent Sidebar)
-       ==================================================================== -->
-  <aside class="w-full lg:w-72 shrink-0 bg-[#0a1120] text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-800/90 flex flex-col justify-between">
-    <div>
-      <!-- Command Emblem & Title -->
-      <div class="p-5 border-b border-slate-800/80 flex items-center gap-3.5">
-        <div class="w-11 h-11 rounded-lg bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shadow-inner">
-          <i class="pi pi-compass text-xl"></i>
+  <!-- Main Workspace Container (Locked to Viewport Height) -->
+  <div class="flex-1 min-h-0 flex flex-row overflow-hidden">
+
+    <!-- ====================================================================
+         LEFT TACTICAL COMMAND RAIL (Persistent Sidebar)
+         ==================================================================== -->
+    <aside class="w-60 xl:w-64 shrink-0 bg-[#080c14] text-slate-200 border-r border-slate-800/90 flex flex-col justify-between overflow-y-auto">
+      <div>
+        <!-- Command Emblem & Title -->
+        <div class="px-4 py-3.5 border-b border-slate-800/80 flex items-center gap-3">
+          <div class="w-9 h-9 rounded bg-sky-500/15 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0">
+            <i class="pi pi-compass text-lg"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">NSWC CRANE // C2</div>
+            <h1 class="text-sm font-bold tracking-tight text-white truncate">MEW Readiness Hub</h1>
+            <div class="text-[10px] text-slate-400 mono-data truncate">AN/SLQ-32 SEWIP &amp; EW</div>
+          </div>
         </div>
-        <div>
-          <div class="text-xs font-mono uppercase tracking-wider text-cyan-400 font-semibold">NSWC CRANE // SPECTRUM C2</div>
-          <h1 class="text-base font-bold tracking-tight text-white leading-snug">MEW Readiness Hub</h1>
-          <div class="text-[11px] text-slate-400 font-mono">AN/SLQ-32 SEWIP &amp; Fleet EW</div>
-        </div>
-      </div>
 
-      <!-- Viewpoint Navigation Rail -->
-      <div class="p-3 space-y-1.5">
-        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-          Operational Viewpoints (SV-4)
-        </div>
+        <!-- Viewpoint Navigation Rail -->
+        <div class="p-2.5 space-y-1">
+          <div class="px-2.5 py-1 text-[10px] mono-data uppercase tracking-widest text-slate-400">
+            Operational Viewpoints
+          </div>
 
-        <!-- 1. Fleet Readiness & Ao -->
-        <button
-          type="button"
-          (click)="setViewpoint('readiness')"
-          [class]="activeViewpoint() === 'readiness'
-            ? 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-semibold text-sm transition-all'
-            : 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800/60 hover:text-white text-sm transition-all'"
-        >
-          <span class="flex items-center gap-3">
-            <i class="pi pi-chart-line text-sm"></i>
-            <span>Fleet Readiness &amp; Ao</span>
-          </span>
-          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300">
-            {{ api.fleetMetrics().avgAo }}%
-          </span>
-        </button>
-
-        <!-- 2. Naval Hull & System Loadouts -->
-        <button
-          type="button"
-          (click)="setViewpoint('loadouts')"
-          [class]="activeViewpoint() === 'loadouts'
-            ? 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-semibold text-sm transition-all'
-            : 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800/60 hover:text-white text-sm transition-all'"
-        >
-          <span class="flex items-center gap-3">
-            <i class="pi pi-shield text-sm"></i>
-            <span>Hull &amp; System Loadouts</span>
-          </span>
-          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-            {{ api.assets().length }}
-          </span>
-        </button>
-
-        <!-- 3. Depot Supply, LRUs & Maintenance -->
-        <button
-          type="button"
-          (click)="setViewpoint('supply')"
-          [class]="activeViewpoint() === 'supply'
-            ? 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-semibold text-sm transition-all'
-            : 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800/60 hover:text-white text-sm transition-all'"
-        >
-          <span class="flex items-center gap-3">
-            <i class="pi pi-box text-sm"></i>
-            <span>Supply, LRUs &amp; Maint</span>
-          </span>
-          <span
-            class="text-xs font-mono px-2 py-0.5 rounded"
-            [ngClass]="api.fleetMetrics().openRequisitionsCount > 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'"
+          <button
+            type="button"
+            (click)="setViewpoint('readiness')"
+            [class]="activeViewpoint() === 'readiness'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
           >
-            {{ api.fleetMetrics().openRequisitionsCount }} REQ
-          </span>
-        </button>
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-chart-line text-xs"></i>
+              <span>Fleet Readiness &amp; Ao</span>
+            </span>
+            <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-sky-300">
+              {{ api.fleetMetrics().avgAo }}%
+            </span>
+          </button>
 
-        <!-- 4. Shore Installations & Personnel -->
-        <button
-          type="button"
-          (click)="setViewpoint('installations')"
-          [class]="activeViewpoint() === 'installations'
-            ? 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-semibold text-sm transition-all'
-            : 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800/60 hover:text-white text-sm transition-all'"
-        >
-          <span class="flex items-center gap-3">
-            <i class="pi pi-users text-sm"></i>
-            <span>Bases &amp; EW Personnel</span>
-          </span>
-          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-            {{ api.personnel().length }}
-          </span>
-        </button>
+          <button
+            type="button"
+            (click)="setViewpoint('loadouts')"
+            [class]="activeViewpoint() === 'loadouts'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
+          >
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-shield text-xs"></i>
+              <span>Hull &amp; System Loadouts</span>
+            </span>
+            <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300">
+              {{ api.assets().length }}
+            </span>
+          </button>
 
-        <!-- 5. Immutable Inventory Audit Ledger -->
-        <button
-          type="button"
-          (click)="setViewpoint('ledger')"
-          [class]="activeViewpoint() === 'ledger'
-            ? 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-semibold text-sm transition-all'
-            : 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800/60 hover:text-white text-sm transition-all'"
-        >
-          <span class="flex items-center gap-3">
-            <i class="pi pi-history text-sm"></i>
-            <span>Immutable Audit Ledger</span>
-          </span>
-          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-            {{ api.transactions().length }}
-          </span>
-        </button>
-      </div>
-    </div>
+          <button
+            type="button"
+            (click)="setViewpoint('supply')"
+            [class]="activeViewpoint() === 'supply'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
+          >
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-box text-xs"></i>
+              <span>Supply, LRUs &amp; Maint</span>
+            </span>
+            <span
+              class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm"
+              [ngClass]="api.fleetMetrics().openRequisitionsCount > 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'"
+            >
+              {{ api.fleetMetrics().openRequisitionsCount }} REQ
+            </span>
+          </button>
 
-    <!-- Bottom DoDAF Architecture & Telemetry Status Box -->
-    <div class="p-4 m-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2.5 text-xs">
-      <div class="flex items-center justify-between">
-        <span class="font-mono text-[11px] uppercase text-slate-400">SvcV-1 API Telemetry</span>
-        <span
-          class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold"
-          [ngClass]="api.connectionMode() === 'LIVE_API'
-            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-            : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'"
-        >
-          {{ api.connectionMode() === 'LIVE_API' ? 'LIVE DRF API' : 'SIMULATED C2' }}
-        </span>
-      </div>
-      <p class="text-[11px] text-slate-400 leading-relaxed">
-        Tracks <span class="text-cyan-300 font-mono">AN/SLQ-32(V)6/7</span>, <span class="text-cyan-300 font-mono">Nulka</span>, <span class="text-cyan-300 font-mono">ODIN</span>, <span class="text-cyan-300 font-mono">BLQ-10</span> &amp; <span class="text-cyan-300 font-mono">ALQ-249</span> readiness from depot to fleet deployment.
-      </p>
-      <button
-        type="button"
-        (click)="openScannerModal()"
-        class="w-full py-2 px-3 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow transition"
-      >
-        <i class="pi pi-qrcode"></i>
-        <span>Scan / Receive Shipment</span>
-      </button>
-    </div>
-  </aside>
+          <button
+            type="button"
+            (click)="setViewpoint('installations')"
+            [class]="activeViewpoint() === 'installations'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
+          >
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-users text-xs"></i>
+              <span>Bases &amp; EW Personnel</span>
+            </span>
+            <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300">
+              {{ api.personnel().length }}
+            </span>
+          </button>
 
-  <!-- ====================================================================
-       MAIN MISSION WORKSPACE
-       ==================================================================== -->
-  <div class="flex-1 flex flex-col min-w-0">
-
-    <!-- Top Mission Control Bar -->
-    <header class="mew-surface border-b px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
-      <!-- Domain Filter Pills -->
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-mono uppercase tracking-wider mew-text-secondary mr-1">
-          Battlespace Domain:
-        </span>
-        <button
-          *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne']"
-          type="button"
-          (click)="setDomainFilter($any(dom))"
-          [class]="selectedDomain() === dom
-            ? 'px-3 py-1.5 rounded-md text-xs font-mono font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 transition'
-            : 'px-3 py-1.5 rounded-md text-xs font-mono mew-elevated mew-text-secondary hover:text-cyan-400 transition'"
-        >
-          {{ dom === 'ALL' ? 'ALL DOMAINS' : (dom | uppercase) }}
-        </button>
+          <button
+            type="button"
+            (click)="setViewpoint('ledger')"
+            [class]="activeViewpoint() === 'ledger'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
+          >
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-history text-xs"></i>
+              <span>Immutable Audit Ledger</span>
+            </span>
+            <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300">
+              {{ api.transactions().length }}
+            </span>
+          </button>
+        </div>
       </div>
 
-      <!-- Right Action Controls & Dual-Theme Switcher -->
-      <div class="flex items-center gap-2.5">
+      <!-- Compact Telemetry & Scanner Trigger Box -->
+      <div class="p-3 m-2.5 rounded-sm bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="mono-data text-[10px] uppercase text-slate-400">SvcV-1 Status</span>
+          <span
+            class="px-1.5 py-0.5 rounded-sm text-[10px] mono-data font-bold"
+            [ngClass]="api.connectionMode() === 'LIVE_API'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+              : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'"
+          >
+            {{ api.connectionMode() === 'LIVE_API' ? 'LIVE DRF API' : 'SIMULATED C2' }}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 text-[10px] mono-data">
+          <div class="bg-slate-950/70 p-1.5 rounded-sm border border-slate-800">
+            <div class="text-slate-400">MTBF / MTTR</div>
+            <div class="text-sky-300 font-bold">{{ api.fleetMetrics().avgMtbf }}h / {{ api.fleetMetrics().avgMttr }}h</div>
+          </div>
+          <div class="bg-slate-950/70 p-1.5 rounded-sm border border-slate-800">
+            <div class="text-slate-400">TS/SCI BILLETS</div>
+            <div class="text-indigo-300 font-bold">{{ api.fleetMetrics().tsSciCount }} / {{ api.fleetMetrics().totalPersonnel }}</div>
+          </div>
+        </div>
         <button
           type="button"
           (click)="openScannerModal()"
-          class="px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30 flex items-center gap-1.5 transition"
+          class="w-full py-1.5 px-2.5 rounded-sm bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow transition"
         >
-          <i class="pi pi-box text-xs"></i>
-          <span>Receive Parts</span>
-        </button>
-
-        <button
-          type="button"
-          (click)="api.exportFleetCsv()"
-          class="px-3 py-1.5 rounded-md text-xs font-semibold mew-elevated mew-text-primary hover:border-cyan-500/50 flex items-center gap-1.5 transition"
-          title="Download SvcV-1 Unit Reliability Metrics CSV"
-        >
-          <i class="pi pi-download text-xs text-cyan-400"></i>
-          <span>Export CSV</span>
-        </button>
-
-        <button
-          type="button"
-          (click)="api.loadAllTelemetry()"
-          class="px-3 py-1.5 rounded-md text-xs font-semibold mew-elevated mew-text-primary hover:border-cyan-500/50 flex items-center gap-1.5 transition"
-          title="Refresh DRF Telemetry"
-        >
-          <i class="pi pi-refresh text-xs text-cyan-400" [ngClass]="{'animate-spin': api.loading()}"></i>
-          <span>Sync</span>
-        </button>
-
-        <!-- Dual Theme Toggle Button (Aligned with UI_DESIGN_CONSIDERATIONS.md) -->
-        <button
-          type="button"
-          (click)="themeService.toggleTheme()"
-          class="px-3 py-1.5 rounded-sm text-xs mono-data font-semibold mew-elevated mew-text-primary hover:border-cyan-500/50 flex items-center gap-2 transition"
-          title="Toggle between Low-Light Tactical Dark Mode (CIC Watch Floor) and Daylight High-Contrast Mode"
-        >
-          <i
-            class="pi text-xs"
-            [ngClass]="themeService.currentTheme() === 'tactical-dark' ? 'pi-sun text-amber-400' : 'pi-moon text-sky-600'"
-          ></i>
-          <span>{{ themeService.currentTheme() === 'tactical-dark' ? 'TACTICAL DARK' : 'DAYLIGHT TACTICAL' }}</span>
+          <i class="pi pi-qrcode text-xs"></i>
+          <span>Scan / Receive Shipment</span>
         </button>
       </div>
-    </header>
+    </aside>
 
-    <!-- ==================================================================
-         TOP KPI STATUS RIBBON (Always Visible Across Viewpoints)
-         ================================================================== -->
-    <section class="px-6 pt-5 pb-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-      <!-- KPI 1: Operational Availability (Ao) -->
-      <div class="mew-surface rounded-xl p-4 border-l-4 border-l-cyan-500">
-        <div class="flex items-center justify-between text-xs font-mono uppercase mew-text-secondary">
-          <span>Operational Availability (Ao)</span>
-          <i class="pi pi-bolt text-cyan-400"></i>
-        </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-2xl font-bold font-mono text-cyan-400">{{ api.fleetMetrics().avgAo }}%</span>
-          <span class="text-xs mew-text-muted font-mono">Target &ge; 90.0%</span>
-        </div>
-        <div class="mt-2.5 w-full h-1.5 rounded-full bg-slate-700/40 overflow-hidden">
-          <div
-            class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full"
-            [style.width.%]="api.fleetMetrics().avgAo"
-          ></div>
-        </div>
-      </div>
+    <!-- ====================================================================
+         RIGHT MISSION VIEWPORT (Zero-Scroll Flex Column)
+         ==================================================================== -->
+    <div class="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
 
-      <!-- KPI 2: Fleet Mission Capable Breakdown -->
-      <div class="mew-surface rounded-xl p-4 border-l-4 border-l-emerald-500">
-        <div class="flex items-center justify-between text-xs font-mono uppercase mew-text-secondary">
-          <span>MEW Systems Readiness</span>
-          <span class="font-mono text-emerald-400 font-bold">{{ api.fleetMetrics().missionCapablePct }}% MC</span>
+      <!-- Compact Top Control & Inline HUD Telemetry Ribbon -->
+      <header class="mew-surface border-b px-4 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2">
+        <!-- Left: Domain Filter Buttons -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[11px] mono-data uppercase tracking-wider mew-text-secondary mr-1">
+            Domain:
+          </span>
+          <button
+            *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne']"
+            type="button"
+            (click)="setDomainFilter($any(dom))"
+            [class]="selectedDomain() === dom
+              ? 'px-2.5 py-1 rounded-sm text-[11px] mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50 transition'
+              : 'px-2.5 py-1 rounded-sm text-[11px] mono-data mew-elevated mew-text-secondary hover:text-sky-400 transition'"
+          >
+            {{ dom === 'ALL' ? 'ALL' : (dom | uppercase) }}
+          </button>
         </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-2xl font-bold font-mono mew-text-primary">{{ api.fleetMetrics().totalAssets }}</span>
-          <span class="text-xs mew-text-secondary">Installed Loadouts</span>
-        </div>
-        <div class="mt-2 flex items-center gap-1.5 text-[11px] font-mono">
-          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">{{ api.fleetMetrics().fmcCount }} FMC</span>
-          <span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">{{ api.fleetMetrics().pmcCount }} PMC</span>
-          <span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">{{ api.fleetMetrics().nmcsCount }} NMCS</span>
-          <span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">{{ api.fleetMetrics().nmcmCount }} NMCM</span>
-        </div>
-      </div>
 
-      <!-- KPI 3: Fleet Engineering Reliability (MTBF / MTTR) -->
-      <div class="mew-surface rounded-xl p-4 border-l-4 border-l-sky-500">
-        <div class="flex items-center justify-between text-xs font-mono uppercase mew-text-secondary">
-          <span>Reliability (MTBF / MTTR)</span>
-          <i class="pi pi-cog text-sky-400"></i>
-        </div>
-        <div class="mt-2 flex items-baseline justify-between">
-          <div>
-            <div class="text-xl font-bold font-mono mew-text-primary">{{ api.fleetMetrics().avgMtbf }}h</div>
-            <div class="text-[11px] mew-text-muted font-mono">Fleet Avg MTBF</div>
+        <!-- Center: High-Density Inline HUD Telemetry Chips (Replaces Bulky KPI Cards) -->
+        <div class="hidden xl:flex items-center gap-2 text-xs mono-data">
+          <div class="mew-elevated px-2.5 py-1 rounded-sm flex items-center gap-1.5">
+            <span class="mew-text-muted">Ao:</span>
+            <span class="font-bold text-sky-400">{{ api.fleetMetrics().avgAo }}%</span>
           </div>
-          <div class="text-right">
-            <div class="text-xl font-bold font-mono text-amber-400">{{ api.fleetMetrics().avgMttr }}h</div>
-            <div class="text-[11px] mew-text-muted font-mono">Mean Repair (MTTR)</div>
+          <div class="mew-elevated px-2.5 py-1 rounded-sm flex items-center gap-1.5">
+            <span class="text-emerald-400 font-bold">{{ api.fleetMetrics().fmcCount }} FMC</span>
+            <span class="mew-text-muted">|</span>
+            <span class="text-amber-400 font-bold">{{ api.fleetMetrics().pmcCount }} PMC</span>
+            <span class="mew-text-muted">|</span>
+            <span class="text-rose-400 font-bold">{{ api.fleetMetrics().nmcsCount }} NMCS</span>
+            <span class="mew-text-muted">|</span>
+            <span class="text-rose-400 font-bold">{{ api.fleetMetrics().nmcmCount }} NMCM</span>
+          </div>
+          <div class="mew-elevated px-2.5 py-1 rounded-sm flex items-center gap-1.5">
+            <span class="mew-text-muted">URGENT REQs:</span>
+            <span class="font-bold text-rose-400">{{ api.fleetMetrics().urgentRequisitionsCount }}</span>
+            <span class="mew-text-muted">/ {{ api.fleetMetrics().openRequisitionsCount }}</span>
+          </div>
+          <div class="mew-elevated px-2.5 py-1 rounded-sm flex items-center gap-1.5">
+            <span class="mew-text-muted">LOW STOCK LRUs:</span>
+            <span class="font-bold text-amber-400">{{ api.fleetMetrics().lowStockCount }}</span>
           </div>
         </div>
-      </div>
 
-      <!-- KPI 4: Supply Chain & CASREP Requisitions -->
-      <div class="mew-surface rounded-xl p-4 border-l-4 border-l-amber-500">
-        <div class="flex items-center justify-between text-xs font-mono uppercase mew-text-secondary">
-          <span>Active Supply Pipeline</span>
-          <i class="pi pi-truck text-amber-400"></i>
-        </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-2xl font-bold font-mono mew-text-primary">{{ api.fleetMetrics().openRequisitionsCount }}</span>
-          <span class="text-xs mew-text-secondary">Pending Orders</span>
-        </div>
-        <div class="mt-2 flex items-center gap-2 text-[11px] font-mono">
-          <span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">
-            {{ api.fleetMetrics().urgentRequisitionsCount }} Urgent (01)
-          </span>
-          <span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
-            {{ api.fleetMetrics().lowStockCount }} Low-Stock LRUs
-          </span>
-        </div>
-      </div>
+        <!-- Right: Action Buttons & Dual Theme Toggle -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="openScannerModal()"
+            class="px-2.5 py-1 rounded-sm text-xs mono-data font-semibold bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30 flex items-center gap-1.5 transition"
+          >
+            <i class="pi pi-box text-xs"></i>
+            <span>Receive</span>
+          </button>
 
-      <!-- KPI 5: MEW Personnel & Clearance Posture -->
-      <div class="mew-surface rounded-xl p-4 border-l-4 border-l-indigo-500">
-        <div class="flex items-center justify-between text-xs font-mono uppercase mew-text-secondary">
-          <span>EW Personnel Billets</span>
-          <i class="pi pi-id-card text-indigo-400"></i>
-        </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-2xl font-bold font-mono mew-text-primary">{{ api.fleetMetrics().deployablePersonnel }}</span>
-          <span class="text-xs mew-text-secondary">/ {{ api.fleetMetrics().totalPersonnel }} Deployable</span>
-        </div>
-        <div class="mt-2 flex items-center gap-2 text-[11px] font-mono">
-          <span class="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">
-            {{ api.fleetMetrics().tsSciCount }} TS/SCI Cleared
-          </span>
-          <span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400">
-            {{ api.installations().length }} Shore Bases
-          </span>
-        </div>
-      </div>
-    </section>
+          <button
+            type="button"
+            (click)="api.exportFleetCsv()"
+            class="px-2.5 py-1 rounded-sm text-xs mono-data font-semibold mew-elevated mew-text-primary hover:border-sky-500/50 flex items-center gap-1.5 transition"
+            title="Download Unit Reliability Metrics CSV"
+          >
+            <i class="pi pi-download text-xs text-sky-400"></i>
+            <span>CSV</span>
+          </button>
 
-    <!-- ==================================================================
-         VIEWPOINT 1: FLEET READINESS, 30-DAY TRENDS & CASREP ALERTS
-         ================================================================== -->
-    <main *ngIf="activeViewpoint() === 'readiness'" class="p-6 space-y-6">
+          <button
+            type="button"
+            (click)="api.loadAllTelemetry()"
+            class="px-2.5 py-1 rounded-sm text-xs mono-data font-semibold mew-elevated mew-text-primary hover:border-sky-500/50 flex items-center gap-1.5 transition"
+          >
+            <i class="pi pi-refresh text-xs text-sky-400" [ngClass]="{'animate-spin': api.loading()}"></i>
+            <span>Sync</span>
+          </button>
 
-      <!-- Top Row: 30-Day Readiness Trend Chart + Active CASREP / Down-Asset Alerts -->
-      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <button
+            type="button"
+            (click)="themeService.toggleTheme()"
+            class="px-2.5 py-1 rounded-sm text-xs mono-data font-semibold mew-elevated mew-text-primary hover:border-sky-500/50 flex items-center gap-1.5 transition"
+            title="Toggle Tactical Dark / Daylight Tactical Mode"
+          >
+            <i
+              class="pi text-xs"
+              [ngClass]="themeService.currentTheme() === 'tactical-dark' ? 'pi-sun text-amber-400' : 'pi-moon text-sky-600'"
+            ></i>
+            <span>{{ themeService.currentTheme() === 'tactical-dark' ? 'DARK' : 'DAYLIGHT' }}</span>
+          </button>
+        </div>
+      </header>
 
-        <!-- 30-Day Operational Readiness Trend Chart (7 cols) -->
-        <div class="xl:col-span-7 mew-surface rounded-xl p-5 flex flex-col justify-between">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b mew-border pb-3.5">
+      <!-- ==================================================================
+           VIEWPOINT 1: FLEET READINESS & UNIT COMMAND SPLIT WORKSPACE
+           (Left: Naval Units Grid | Right: Selected Unit Dossier, 30-Day Trend & CASREPs)
+           ================================================================== -->
+      <main *ngIf="activeViewpoint() === 'readiness'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+
+        <!-- LEFT PANE (7 cols): Naval Combatant Units & Detachments Master Grid -->
+        <section class="col-span-12 lg:col-span-7 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+          <div class="px-3.5 py-2.5 border-b mew-border flex items-center justify-between gap-2 shrink-0">
             <div>
-              <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">DIV-2 / SV-4 Time-Series Telemetry</div>
-              <h2 class="text-base font-bold mew-text-primary">30-Day Unit Operational Readiness Trend</h2>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400">SvcV-1 Unit Readiness Matrix (Click Row for Unit Dossier)</div>
+              <h2 class="text-sm font-bold mew-text-primary">Naval Combatant Units &amp; Shore EW Detachments ({{ filteredUnits().length }})</h2>
             </div>
-            <select
-              class="mew-input text-xs font-mono rounded-lg px-3 py-1.5"
-              [ngModel]="selectedUnitId()"
-              (ngModelChange)="selectedUnitId.set($event)"
-            >
-              <option value="ALL">Primary Combatant Command (Default)</option>
-              <option *ngFor="let u of filteredUnits()" [value]="u.id">
-                {{ u.name }} [{{ u.uic }}]
-              </option>
-            </select>
+            <input
+              type="text"
+              placeholder="Filter unit, UIC, or homeport..."
+              class="mew-input px-2.5 py-1 rounded-sm text-xs mono-data w-56"
+              [ngModel]="unitSearchQuery()"
+              (ngModelChange)="unitSearchQuery.set($event)"
+            />
           </div>
 
-          <!-- SVG Area & Line Chart -->
-          <div class="my-4 relative">
-            <svg viewBox="0 0 680 175" class="w-full h-44 overflow-visible">
+          <div class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="filteredUnits()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="name">Unit / Platform <p-sortIcon field="name"></p-sortIcon></th>
+                  <th pSortableColumn="uic" style="width: 85px">UIC <p-sortIcon field="uic"></p-sortIcon></th>
+                  <th pSortableColumn="installation_name">Homeport / Base <p-sortIcon field="installation_name"></p-sortIcon></th>
+                  <th pSortableColumn="personnel_readiness_pct" style="width: 110px">Pers % <p-sortIcon field="personnel_readiness_pct"></p-sortIcon></th>
+                  <th pSortableColumn="equipment_readiness_pct" style="width: 110px">Equip % <p-sortIcon field="equipment_readiness_pct"></p-sortIcon></th>
+                  <th pSortableColumn="fleet_avg_mtbf" style="width: 90px">MTBF <p-sortIcon field="fleet_avg_mtbf"></p-sortIcon></th>
+                  <th pSortableColumn="fleet_avg_ao" style="width: 85px">Ao % <p-sortIcon field="fleet_avg_ao"></p-sortIcon></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-u>
+                <tr
+                  (click)="selectUnit(u)"
+                  class="cursor-pointer"
+                  [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedUnit()?.id === u.id}"
+                >
+                  <td>
+                    <div class="font-semibold mew-text-primary text-xs">{{ u.name }}</div>
+                    <div class="text-[10px] mono-data mew-text-muted">{{ u.command_type }}</div>
+                  </td>
+                  <td class="mono-data text-xs text-sky-400 font-bold">{{ u.uic }}</td>
+                  <td class="text-xs mew-text-secondary truncate">{{ u.installation_name }}</td>
+                  <td class="mono-data text-xs">
+                    <span class="font-bold text-indigo-400">{{ u.personnel_readiness_pct | number:'1.0-1' }}%</span>
+                  </td>
+                  <td class="mono-data text-xs">
+                    <span
+                      class="font-bold"
+                      [ngClass]="u.equipment_readiness_pct >= 85 ? 'text-emerald-400' : 'text-amber-400'"
+                    >
+                      {{ u.equipment_readiness_pct | number:'1.0-1' }}%
+                    </span>
+                  </td>
+                  <td class="mono-data text-xs">{{ (u.fleet_avg_mtbf || 0) | number:'1.0-0' }}h</td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="(u.fleet_avg_ao || 100) >= 92 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
+                    >
+                      {{ (u.fleet_avg_ao || 100) | number:'1.1-1' }}%
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </section>
+
+        <!-- RIGHT PANE (5 cols): Selected Unit Dossier, 30-Day Readiness Trend & Active CASREPs -->
+        <section class="col-span-12 lg:col-span-5 h-full min-h-0 flex flex-col gap-3 overflow-y-auto pr-0.5">
+
+          <!-- Selected Unit Command Header Card -->
+          <div *ngIf="selectedUnit() as unit" class="mew-surface rounded-sm p-3.5 shrink-0 border-l-4 border-l-sky-400">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">{{ unit.uic }}</span>
+                  <span class="text-[11px] mono-data mew-text-secondary">{{ unit.command_type }}</span>
+                </div>
+                <h3 class="text-base font-bold mew-text-primary mt-1">{{ unit.name }}</h3>
+                <div class="text-xs mono-data mew-text-secondary">Stationed: {{ unit.installation_name }}</div>
+              </div>
+              <div class="text-right mono-data">
+                <div class="text-[10px] uppercase mew-text-muted">Unit Ao</div>
+                <div class="text-xl font-bold text-sky-400">{{ (unit.fleet_avg_ao || 100) | number:'1.1-1' }}%</div>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-4 gap-2 text-center mono-data text-xs">
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[10px] mew-text-muted">EQUIP MC</div>
+                <div class="font-bold text-emerald-400">{{ unit.equipment_readiness_pct | number:'1.0-1' }}%</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[10px] mew-text-muted">PERS READY</div>
+                <div class="font-bold text-indigo-400">{{ unit.personnel_readiness_pct | number:'1.0-1' }}%</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[10px] mew-text-muted">AVG MTBF</div>
+                <div class="font-bold mew-text-primary">{{ (unit.fleet_avg_mtbf || 0) | number:'1.0-0' }}h</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[10px] mew-text-muted">AVG MTTR</div>
+                <div class="font-bold text-amber-400">{{ (unit.fleet_avg_mttr || 0) | number:'1.1-1' }}h</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 30-Day Operational Readiness Trend Chart for Selected Unit -->
+          <div class="mew-surface rounded-sm p-3.5 shrink-0">
+            <div class="flex items-center justify-between border-b mew-border pb-2 mb-2.5">
+              <div>
+                <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400">30-Day Readiness Telemetry</div>
+                <h3 class="text-xs font-bold mew-text-primary">
+                  {{ selectedUnit()?.name || 'Fleet' }} &mdash; Operational Readiness Rate
+                </h3>
+              </div>
+              <span class="text-[11px] mono-data text-sky-400">
+                {{ activeTrendSeries().length }} Daily Snapshots
+              </span>
+            </div>
+
+            <svg viewBox="0 0 520 120" class="w-full h-28 overflow-visible">
               <defs>
-                <linearGradient id="readinessGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.38" />
-                  <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0" />
+                <linearGradient id="readinessGradSplit" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35" />
+                  <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
                 </linearGradient>
               </defs>
-              <!-- Horizontal Reference Grid Lines -->
-              <line x1="0" y1="25" x2="680" y2="25" stroke="currentColor" class="text-slate-700/40" stroke-dasharray="4 4" />
-              <line x1="0" y1="85" x2="680" y2="85" stroke="currentColor" class="text-slate-700/40" stroke-dasharray="4 4" />
-              <line x1="0" y1="145" x2="680" y2="145" stroke="currentColor" class="text-slate-700/40" stroke-dasharray="4 4" />
-
-              <!-- Area & Polyline -->
-              <polygon *ngIf="trendSvgArea()" [attr.points]="trendSvgArea()" fill="url(#readinessGrad)" />
+              <line x1="0" y1="15" x2="520" y2="15" stroke="currentColor" class="text-slate-700/40" stroke-dasharray="3 3" />
+              <line x1="0" y1="60" x2="520" y2="60" stroke="currentColor" class="text-slate-700/40" stroke-dasharray="3 3" />
+              <line x1="0" y1="105" x2="520" y2="105" stroke="currentColor" class="text-slate-700/40" stroke-dasharray="3 3" />
+              <polygon *ngIf="trendSvgArea()" [attr.points]="trendSvgArea()" fill="url(#readinessGradSplit)" />
               <polyline
                 *ngIf="trendSvgPolyline()"
                 fill="none"
-                stroke="#06b6d4"
-                stroke-width="2.5"
+                stroke="#38bdf8"
+                stroke-width="2.2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 [attr.points]="trendSvgPolyline()"
               />
             </svg>
 
-            <!-- Recent Snapshot Pills -->
-            <div class="mt-2 grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div class="mt-2 grid grid-cols-5 gap-1.5">
               <div
-                *ngFor="let snap of activeTrendSeries().slice(-6)"
-                class="mew-elevated rounded-lg p-2 text-center font-mono"
+                *ngFor="let snap of activeTrendSeries().slice(-5)"
+                class="mew-elevated rounded-sm p-1.5 text-center mono-data"
               >
-                <div class="text-[10px] mew-text-muted">{{ snap.snapshot_date | slice:5:10 }}</div>
-                <div class="text-xs font-bold text-cyan-400">{{ snap.operational_readiness_rate | number:'1.0-1' }}%</div>
-                <div class="text-[10px] mew-text-secondary">
-                  {{ snap.fmc_assets }}F / {{ snap.pmc_assets }}P / {{ snap.nmc_assets }}N
-                </div>
+                <div class="text-[9px] mew-text-muted">{{ snap.snapshot_date | slice:5:10 }}</div>
+                <div class="text-[11px] font-bold text-sky-400">{{ snap.operational_readiness_rate | number:'1.0-0' }}%</div>
+                <div class="text-[9px] mew-text-secondary">{{ snap.fmc_assets }}F/{{ snap.pmc_assets }}P/{{ snap.nmc_assets }}N</div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Active CASREPs & Degraded MEW Assets Panel (5 cols) -->
-        <div class="xl:col-span-5 mew-surface rounded-xl p-5 flex flex-col">
-          <div class="flex items-center justify-between border-b mew-border pb-3.5">
-            <div>
-              <div class="text-[11px] font-mono uppercase tracking-wider text-rose-400">OV-1 Proactive Fault Identification</div>
-              <h2 class="text-base font-bold mew-text-primary">Active CASREPs &amp; Degraded Systems</h2>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-              {{ downAssetsList().length }} Degraded
-            </span>
-          </div>
-
-          <div class="mt-3 space-y-3 overflow-y-auto max-h-72 pr-1">
-            <div
-              *ngFor="let down of downAssetsList()"
-              class="mew-elevated rounded-lg p-3.5 border-l-4"
-              [ngClass]="down.readiness_status === 'PMC' ? 'border-l-amber-400' : 'border-l-rose-500'"
-            >
-              <div class="flex items-start justify-between gap-2">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded" [ngClass]="readinessBadgeClass(down.readiness_status)">
-                      {{ down.readiness_status }}
-                    </span>
-                    <span class="text-sm font-bold mew-text-primary">
-                      {{ down.nomenclature }} ({{ down.common_name }})
-                    </span>
-                  </div>
-                  <div class="text-xs font-mono mew-text-secondary mt-1">
-                    {{ down.vessel_name || down.assigned_unit_name }} {{ down.hull_number ? '[' + down.hull_number + ']' : '' }}
-                    &bull; {{ down.current_location?.name }}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  (click)="inspectAsset(down)"
-                  class="text-xs font-mono text-cyan-400 hover:underline shrink-0"
-                >
-                  Inspect &rarr;
-                </button>
-              </div>
-
-              <!-- Active Fault Description -->
-              <div *ngIf="down.active_work_orders?.length" class="mt-2 text-xs mew-text-secondary bg-slate-950/40 rounded p-2 font-mono">
-                <span class="text-rose-400 font-semibold">FAULT:</span>
-                {{ down.active_work_orders[0].description_of_fault }}
-                <span class="text-cyan-400 ml-1">({{ down.active_work_orders[0].technician_name }})</span>
-              </div>
-
-              <!-- Pending Requisition Link -->
-              <div *ngIf="down.pending_requisitions?.length" class="mt-2 flex items-center justify-between text-[11px] font-mono">
-                <span class="text-amber-400">
-                  AWAITING: {{ down.pending_requisitions[0].document_number }} &mdash; {{ down.pending_requisitions[0].material_name }}
-                </span>
-                <button
-                  type="button"
-                  (click)="openScannerModal(down.pending_requisitions[0])"
-                  class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
-                >
-                  Receive Part
-                </button>
-              </div>
-            </div>
-
-            <div *ngIf="downAssetsList().length === 0" class="py-10 text-center mew-text-secondary text-sm">
-              All MEW systems in this domain are Fully Mission Capable (FMC).
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom Row: Naval Unit & Platform Readiness PrimeNG Data Grid -->
-      <div class="mew-surface rounded-xl overflow-hidden">
-        <div class="p-4 border-b mew-border flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">SvcV-1 Unit Readiness Aggregation</div>
-            <h2 class="text-base font-bold mew-text-primary">Naval Combatant Units &amp; EW Detachments Readiness</h2>
-          </div>
-          <span class="text-xs font-mono mew-text-secondary">
-            Showing {{ filteredUnits().length }} Naval Commands
-          </span>
-        </div>
-
-        <p-table
-          [value]="filteredUnits()"
-          [paginator]="true"
-          [rows]="8"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="name">Naval Unit / Platform <p-sortIcon field="name"></p-sortIcon></th>
-              <th pSortableColumn="uic">UIC <p-sortIcon field="uic"></p-sortIcon></th>
-              <th pSortableColumn="command_type">Command / Force <p-sortIcon field="command_type"></p-sortIcon></th>
-              <th pSortableColumn="installation_name">Homeport / Installation <p-sortIcon field="installation_name"></p-sortIcon></th>
-              <th pSortableColumn="personnel_readiness_pct">Personnel Readiness <p-sortIcon field="personnel_readiness_pct"></p-sortIcon></th>
-              <th pSortableColumn="equipment_readiness_pct">Equipment Readiness <p-sortIcon field="equipment_readiness_pct"></p-sortIcon></th>
-              <th pSortableColumn="fleet_avg_mtbf">Avg MTBF <p-sortIcon field="fleet_avg_mtbf"></p-sortIcon></th>
-              <th pSortableColumn="fleet_avg_mttr">Avg MTTR <p-sortIcon field="fleet_avg_mttr"></p-sortIcon></th>
-              <th pSortableColumn="fleet_avg_ao">Unit Ao (%) <p-sortIcon field="fleet_avg_ao"></p-sortIcon></th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-u>
-            <tr>
-              <td class="font-semibold mew-text-primary">{{ u.name }}</td>
-              <td class="font-mono text-xs text-cyan-400">{{ u.uic }}</td>
-              <td>
-                <span class="px-2 py-0.5 rounded text-xs font-mono mew-elevated mew-text-secondary">
-                  {{ u.command_type }}
-                </span>
-              </td>
-              <td class="text-xs mew-text-secondary">{{ u.installation_name }}</td>
-              <td class="font-mono text-xs">
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-1.5 rounded-full bg-slate-700/40 overflow-hidden">
-                    <div class="h-full bg-indigo-400" [style.width.%]="u.personnel_readiness_pct"></div>
-                  </div>
-                  <span>{{ u.personnel_readiness_pct | number:'1.0-1' }}%</span>
-                </div>
-              </td>
-              <td class="font-mono text-xs">
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-1.5 rounded-full bg-slate-700/40 overflow-hidden">
-                    <div
-                      class="h-full"
-                      [ngClass]="u.equipment_readiness_pct >= 85 ? 'bg-emerald-400' : 'bg-amber-400'"
-                      [style.width.%]="u.equipment_readiness_pct"
-                    ></div>
-                  </div>
-                  <span>{{ u.equipment_readiness_pct | number:'1.0-1' }}%</span>
-                </div>
-              </td>
-              <td class="font-mono text-xs">{{ (u.fleet_avg_mtbf || 0) | number:'1.1-1' }} hrs</td>
-              <td class="font-mono text-xs text-amber-400">{{ (u.fleet_avg_mttr || 0) | number:'1.1-1' }} hrs</td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono font-bold"
-                  [ngClass]="(u.fleet_avg_ao || 100) >= 92 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'"
-                >
-                  {{ (u.fleet_avg_ao || 100) | number:'1.1-1' }}%
-                </span>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </main>
-
-    <!-- ==================================================================
-         VIEWPOINT 2: NAVAL HULL & MEW SYSTEM LOADOUT MATRIX (SV-4 p-table)
-         ================================================================== -->
-    <main *ngIf="activeViewpoint() === 'loadouts'" class="p-6 space-y-5">
-      <div class="mew-surface rounded-xl overflow-hidden">
-        <!-- Filter Ribbon -->
-        <div class="p-4 border-b mew-border flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">SV-4 Systems Functionality Matrix</div>
-            <h2 class="text-base font-bold mew-text-primary">Naval Hull &amp; MEW System Loadout Registry</h2>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Search Input -->
-            <div class="relative">
-              <i class="pi pi-search absolute left-3 top-2.5 text-xs mew-text-muted"></i>
-              <input
-                type="text"
-                placeholder="Search hull, AN/SLQ-32, role, serial..."
-                class="mew-input pl-8 pr-3 py-1.5 rounded-lg text-xs font-mono w-64"
-                [ngModel]="assetSearchQuery()"
-                (ngModelChange)="assetSearchQuery.set($event)"
-              />
-            </div>
-
-            <!-- Readiness Filter -->
-            <select
-              class="mew-input text-xs font-mono rounded-lg px-3 py-1.5"
-              [ngModel]="selectedReadinessFilter()"
-              (ngModelChange)="selectedReadinessFilter.set($event)"
-            >
-              <option value="ALL">All Readiness States</option>
-              <option value="FMC">FMC - Fully Mission Capable</option>
-              <option value="PMC">PMC - Partially Mission Capable</option>
-              <option value="NMCS">NMCS - Non-Mission Capable (Supply)</option>
-              <option value="NMCM">NMCM - Non-Mission Capable (Maint)</option>
-              <option value="DLM">DLM - Depot Level Maintenance</option>
-            </select>
-
-            <!-- EW Category Filter -->
-            <select
-              class="mew-input text-xs font-mono rounded-lg px-3 py-1.5"
-              [ngModel]="selectedEwCategoryFilter()"
-              (ngModelChange)="selectedEwCategoryFilter.set($event)"
-            >
-              <option value="ALL">All EW System Categories</option>
-              <option *ngFor="let cat of ewCategories()" [value]="cat">{{ cat }}</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- PrimeNG p-table for MEW Loadouts -->
-        <p-table
-          [value]="filteredAssets()"
-          [paginator]="true"
-          [rows]="10"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="hull_number">Hull / Platform <p-sortIcon field="hull_number"></p-sortIcon></th>
-              <th pSortableColumn="domain">Domain <p-sortIcon field="domain"></p-sortIcon></th>
-              <th pSortableColumn="nomenclature">MEW System Nomenclature <p-sortIcon field="nomenclature"></p-sortIcon></th>
-              <th pSortableColumn="ew_category">EW Category <p-sortIcon field="ew_category"></p-sortIcon></th>
-              <th pSortableColumn="mission_role_code">Tactical Role <p-sortIcon field="mission_role_code"></p-sortIcon></th>
-              <th pSortableColumn="quantity_installed">Qty <p-sortIcon field="quantity_installed"></p-sortIcon></th>
-              <th pSortableColumn="readiness_status">Readiness <p-sortIcon field="readiness_status"></p-sortIcon></th>
-              <th pSortableColumn="mtbf_hours">MTBF <p-sortIcon field="mtbf_hours"></p-sortIcon></th>
-              <th pSortableColumn="operational_availability_pct">Ao (%) <p-sortIcon field="operational_availability_pct"></p-sortIcon></th>
-              <th>Diagnostics</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-asset>
-            <tr>
-              <td>
-                <div class="font-bold mew-text-primary">{{ asset.vessel_name || asset.assigned_unit_name }}</div>
-                <div class="text-xs font-mono text-cyan-400">
-                  {{ asset.hull_number || 'SHORE' }} &bull; {{ asset.current_location?.name }}
-                </div>
-              </td>
-              <td>
-                <span class="px-2 py-0.5 rounded text-[11px] font-mono" [ngClass]="domainBadgeClass(asset.domain)">
-                  {{ asset.domain || 'Surface' }}
-                </span>
-              </td>
-              <td>
-                <div class="font-mono font-bold mew-text-primary">{{ asset.nomenclature }}</div>
-                <div class="text-xs mew-text-secondary">{{ asset.common_name || asset.manufacturer }}</div>
-              </td>
-              <td class="text-xs mew-text-secondary">{{ asset.ew_category || asset.asset_class }}</td>
-              <td>
-                <span class="px-2 py-0.5 rounded text-xs font-mono mew-elevated text-cyan-300">
-                  {{ asset.mission_role_code || 'EW-CORE' }}
-                </span>
-                <div class="text-[11px] mew-text-muted mt-0.5">{{ asset.mission_role_name }}</div>
-              </td>
-              <td class="font-mono text-xs text-center">{{ asset.quantity_installed || 1 }}</td>
-              <td>
-                <span class="px-2.5 py-1 rounded text-xs font-mono font-bold" [ngClass]="readinessBadgeClass(asset.readiness_status)">
-                  {{ asset.readiness_status }}
-                </span>
-              </td>
-              <td class="font-mono text-xs">{{ asset.mtbf_hours | number:'1.0-1' }}h</td>
-              <td>
-                <span
-                  class="font-mono text-xs font-bold"
-                  [ngClass]="asset.operational_availability_pct >= 90 ? 'text-emerald-400' : 'text-amber-400'"
-                >
-                  {{ asset.operational_availability_pct | number:'1.1-1' }}%
-                </span>
-              </td>
-              <td>
-                <button
-                  type="button"
-                  (click)="inspectAsset(asset)"
-                  class="px-2.5 py-1 rounded text-xs font-mono mew-elevated hover:border-cyan-500/50 text-cyan-400 transition"
-                >
-                  Inspect ({{ asset.active_work_orders.length + asset.pending_requisitions.length }})
-                </button>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </main>
-
-    <!-- ==================================================================
-         VIEWPOINT 3: DEPOT SUPPLY, WAREHOUSE LRUs, REQUISITIONS & WORK ORDERS
-         ================================================================== -->
-    <main *ngIf="activeViewpoint() === 'supply'" class="p-6 space-y-5">
-      <!-- Sub-Navigation & Action Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            (click)="supplySubTab.set('inventory')"
-            [class]="supplySubTab() === 'inventory'
-              ? 'px-4 py-2 rounded-lg text-xs font-mono font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-              : 'px-4 py-2 rounded-lg text-xs font-mono mew-surface mew-text-secondary'"
-          >
-            1. Warehouse LRU Balances ({{ api.inventoryBalances().length }})
-          </button>
-          <button
-            type="button"
-            (click)="supplySubTab.set('requisitions')"
-            [class]="supplySubTab() === 'requisitions'
-              ? 'px-4 py-2 rounded-lg text-xs font-mono font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-              : 'px-4 py-2 rounded-lg text-xs font-mono mew-surface mew-text-secondary'"
-          >
-            2. MILSTRIP Requisitions ({{ api.requisitions().length }})
-          </button>
-          <button
-            type="button"
-            (click)="supplySubTab.set('workorders')"
-            [class]="supplySubTab() === 'workorders'
-              ? 'px-4 py-2 rounded-lg text-xs font-mono font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-              : 'px-4 py-2 rounded-lg text-xs font-mono mew-surface mew-text-secondary'"
-          >
-            3. Maintenance Work Orders ({{ api.workOrders().length }})
-          </button>
-        </div>
-
-        <button
-          type="button"
-          (click)="openScannerModal()"
-          class="px-4 py-2 rounded-lg text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 shadow transition"
-        >
-          <i class="pi pi-qrcode"></i>
-          <span>Open Barcode Shipment Receiver</span>
-        </button>
-      </div>
-
-      <!-- SUB-TAB 1: Warehouse LRU Inventory Balances -->
-      <div *ngIf="supplySubTab() === 'inventory'" class="mew-surface rounded-xl overflow-hidden">
-        <div class="p-4 border-b mew-border flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">NSWC Crane &amp; Fleet Homeport Provisioning</div>
-            <h2 class="text-base font-bold mew-text-primary">MEW Line Replaceable Units (LRU) Warehouse Stock</h2>
-          </div>
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2 text-xs font-mono mew-text-secondary cursor-pointer">
-              <input
-                type="checkbox"
-                class="rounded text-cyan-500"
-                [ngModel]="showOnlyLowStock()"
-                (ngModelChange)="showOnlyLowStock.set($event)"
-              />
-              <span>Show Only Below Reorder Point</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Filter NSN, LRU, or Base..."
-              class="mew-input px-3 py-1.5 rounded-lg text-xs font-mono w-60"
-              [ngModel]="inventorySearchQuery()"
-              (ngModelChange)="inventorySearchQuery.set($event)"
-            />
-          </div>
-        </div>
-
-        <p-table
-          [value]="filteredInventoryBalances()"
-          [paginator]="true"
-          [rows]="10"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="installation_code">Installation <p-sortIcon field="installation_code"></p-sortIcon></th>
-              <th pSortableColumn="component_id">Component ID <p-sortIcon field="component_id"></p-sortIcon></th>
-              <th pSortableColumn="nsn">NSN <p-sortIcon field="nsn"></p-sortIcon></th>
-              <th pSortableColumn="nomenclature">LRU / Component Nomenclature <p-sortIcon field="nomenclature"></p-sortIcon></th>
-              <th pSortableColumn="component_category">Subsystem Category <p-sortIcon field="component_category"></p-sortIcon></th>
-              <th pSortableColumn="unit_price">Unit Price <p-sortIcon field="unit_price"></p-sortIcon></th>
-              <th pSortableColumn="quantity_on_hand">On Hand <p-sortIcon field="quantity_on_hand"></p-sortIcon></th>
-              <th pSortableColumn="reorder_point">Reorder Pt <p-sortIcon field="reorder_point"></p-sortIcon></th>
-              <th>Supply Posture</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-bal>
-            <tr>
-              <td>
-                <div class="font-mono font-bold text-cyan-400 text-xs">{{ bal.installation_code }}</div>
-                <div class="text-[11px] mew-text-secondary">{{ bal.installation_name }}</div>
-              </td>
-              <td class="font-mono text-xs">{{ bal.component_id }}</td>
-              <td class="font-mono text-xs mew-text-secondary">{{ bal.nsn }}</td>
-              <td>
-                <div class="font-semibold mew-text-primary">{{ bal.nomenclature }}</div>
-                <span *ngIf="bal.critical_item" class="text-[10px] font-mono text-rose-400 uppercase">
-                  &bull; Critical Mission LRU
-                </span>
-              </td>
-              <td class="text-xs mew-text-secondary">{{ bal.component_category }}</td>
-              <td class="font-mono text-xs">${{ bal.unit_price | number:'1.0-0' }}</td>
-              <td class="font-mono text-sm font-bold" [ngClass]="bal.quantity_on_hand <= bal.reorder_point ? 'text-rose-400' : 'text-emerald-400'">
-                {{ bal.quantity_on_hand }}
-              </td>
-              <td class="font-mono text-xs mew-text-secondary">{{ bal.reorder_point }} (Safety: {{ bal.safety_stock }})</td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono font-semibold"
-                  [ngClass]="bal.quantity_on_hand <= bal.reorder_point
-                    ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
-                    : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'"
-                >
-                  {{ bal.quantity_on_hand <= bal.reorder_point ? 'REPLENISH REQ' : 'STOCKED' }}
-                </span>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-
-      <!-- SUB-TAB 2: Supply Requisitions -->
-      <div *ngIf="supplySubTab() === 'requisitions'" class="mew-surface rounded-xl overflow-hidden">
-        <div class="p-4 border-b mew-border flex items-center justify-between">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-amber-400">MILSTRIP Supply Pipeline</div>
-            <h2 class="text-base font-bold mew-text-primary">Active &amp; Completed Supply Requisitions</h2>
-          </div>
-        </div>
-
-        <p-table
-          [value]="api.requisitions()"
-          [paginator]="true"
-          [rows]="10"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="document_number">Document Number <p-sortIcon field="document_number"></p-sortIcon></th>
-              <th pSortableColumn="nsn">NSN <p-sortIcon field="nsn"></p-sortIcon></th>
-              <th pSortableColumn="material_name">LRU Nomenclature <p-sortIcon field="material_name"></p-sortIcon></th>
-              <th pSortableColumn="quantity">Qty <p-sortIcon field="quantity"></p-sortIcon></th>
-              <th pSortableColumn="priority_display">MILSTRIP Priority <p-sortIcon field="priority_display"></p-sortIcon></th>
-              <th pSortableColumn="status">Shipment Status <p-sortIcon field="status"></p-sortIcon></th>
-              <th pSortableColumn="estimated_delivery_date">Est. Delivery <p-sortIcon field="estimated_delivery_date"></p-sortIcon></th>
-              <th>Warehouse Action</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-req>
-            <tr>
-              <td class="font-mono font-bold text-cyan-400">{{ req.document_number }}</td>
-              <td class="font-mono text-xs mew-text-secondary">{{ req.nsn }}</td>
-              <td class="font-semibold mew-text-primary">{{ req.material_name }}</td>
-              <td class="font-mono font-bold">{{ req.quantity }}</td>
-              <td>
-                <span class="px-2 py-0.5 rounded text-xs font-mono font-semibold" [ngClass]="priorityBadgeClass(req.priority_display)">
-                  {{ req.priority_display }}
-                </span>
-              </td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono"
-                  [ngClass]="req.status === 'Received'
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
-                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
-                >
-                  {{ req.status }}
-                </span>
-              </td>
-              <td class="font-mono text-xs mew-text-secondary">{{ req.estimated_delivery_date || 'TBD' }}</td>
-              <td>
-                <button
-                  *ngIf="req.status !== 'Received'"
-                  type="button"
-                  (click)="openScannerModal(req)"
-                  class="px-2.5 py-1 rounded text-xs font-mono font-semibold bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30 transition"
-                >
-                  Receive Shipment
-                </button>
-                <span *ngIf="req.status === 'Received'" class="text-xs font-mono mew-text-muted">
-                  Logged in Ledger
-                </span>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-
-      <!-- SUB-TAB 3: Maintenance Work Orders -->
-      <div *ngIf="supplySubTab() === 'workorders'" class="mew-surface rounded-xl overflow-hidden">
-        <div class="p-4 border-b mew-border">
-          <div class="text-[11px] font-mono uppercase tracking-wider text-rose-400">Shipboard &amp; Depot Maintenance</div>
-          <h2 class="text-base font-bold mew-text-primary">MEW Technical Work Orders</h2>
-        </div>
-
-        <p-table
-          [value]="api.workOrders()"
-          [paginator]="true"
-          [rows]="10"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="date_opened">Opened <p-sortIcon field="date_opened"></p-sortIcon></th>
-              <th pSortableColumn="description_of_fault">Fault Description &amp; LRU Diagnostic <p-sortIcon field="description_of_fault"></p-sortIcon></th>
-              <th pSortableColumn="technician_name">Assigned Technician <p-sortIcon field="technician_name"></p-sortIcon></th>
-              <th pSortableColumn="is_grounding_fault">Severity <p-sortIcon field="is_grounding_fault"></p-sortIcon></th>
-              <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-wo>
-            <tr>
-              <td class="font-mono text-xs mew-text-secondary">{{ wo.date_opened | date:'yyyy-MM-dd HH:mm' }}</td>
-              <td class="font-medium mew-text-primary">{{ wo.description_of_fault }}</td>
-              <td class="font-mono text-xs text-cyan-400">{{ wo.technician_name }}</td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono font-bold"
-                  [ngClass]="wo.is_grounding_fault
-                    ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
-                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
-                >
-                  {{ wo.is_grounding_fault ? 'CASREP / GROUNDING' : 'DEGRADED / MINOR' }}
-                </span>
-              </td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono"
-                  [ngClass]="wo.status === 'Closed' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-cyan-500/15 text-cyan-300'"
-                >
-                  {{ wo.status }}
-                </span>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </main>
-
-    <!-- ==================================================================
-         VIEWPOINT 4: MEW SHORE INSTALLATIONS & PERSONNEL ROSTER
-         ================================================================== -->
-    <main *ngIf="activeViewpoint() === 'installations'" class="p-6 space-y-6">
-
-      <!-- Shore Installations Cards Grid -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">Shore Infrastructure &amp; Fleet Homeports</div>
-            <h2 class="text-base font-bold mew-text-primary">
-              MEW Installations (Click a Base to Filter Personnel Roster)
-            </h2>
-          </div>
-          <button
-            *ngIf="selectedInstallationCode() !== 'ALL'"
-            type="button"
-            (click)="selectedInstallationCode.set('ALL')"
-            class="text-xs font-mono text-cyan-400 hover:underline"
-          >
-            Clear Base Filter ({{ selectedInstallationCode() }}) &times;
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <div
-            *ngFor="let inst of api.installations()"
-            (click)="selectInstallationForPersonnel(inst.installation_code)"
-            class="mew-surface rounded-xl p-4 cursor-pointer transition-all hover:border-cyan-500/60"
-            [ngClass]="{'ring-2 ring-cyan-500': selectedInstallationCode() === inst.installation_code}"
-          >
-            <div class="flex items-start justify-between gap-2">
+          <!-- Active CASREPs & Degraded Systems List -->
+          <div class="mew-surface rounded-sm p-3.5 flex-1 min-h-[180px] flex flex-col">
+            <div class="flex items-center justify-between border-b mew-border pb-2 mb-2.5">
               <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-mono text-xs font-bold text-cyan-400">{{ inst.installation_code || inst.dodaac }}</span>
-                  <span class="text-xs font-mono mew-text-muted">&bull; {{ inst.location_display || inst.region }}</span>
-                </div>
-                <h3 class="text-sm font-bold mew-text-primary mt-0.5">{{ inst.name }}</h3>
+                <div class="text-[10px] mono-data uppercase tracking-wider text-rose-400">OV-1 Degraded &amp; CASREP Systems</div>
+                <h3 class="text-xs font-bold mew-text-primary">Active Faults Holding Up Readiness</h3>
               </div>
-              <span
-                class="px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0"
-                [ngClass]="(inst.readiness_rating || '').startsWith('C1')
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'"
-              >
-                {{ (inst.readiness_rating || 'C1').slice(0, 2) }}
+              <span class="dod-tag bg-rose-500/15 text-rose-400 border border-rose-500/40">
+                {{ downAssetsList().length }} Degraded
               </span>
             </div>
 
-            <p class="mt-2 text-xs mew-text-secondary line-clamp-1">
-              {{ inst.primary_ew_focus || inst.mission_category }}
-            </p>
+            <div class="space-y-2 overflow-y-auto flex-1 pr-1">
+              <div
+                *ngFor="let down of downAssetsList()"
+                class="mew-elevated rounded-sm p-2.5 border-l-2"
+                [ngClass]="down.readiness_status === 'PMC' ? 'border-l-amber-400' : 'border-l-rose-500'"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="dod-tag" [ngClass]="readinessBadgeClass(down.readiness_status)">
+                      {{ down.readiness_status }}
+                    </span>
+                    <span class="text-xs font-bold mew-text-primary truncate">
+                      {{ down.nomenclature }} ({{ down.hull_number || 'SHORE' }})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="selectAsset(down)"
+                    class="text-[11px] mono-data text-sky-400 hover:underline shrink-0"
+                  >
+                    Open Dossier &rarr;
+                  </button>
+                </div>
 
-            <div class="mt-3 pt-2.5 border-t mew-border flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
-              <div class="flex items-center gap-1.5">
-                <span *ngIf="inst.scif_accredited" class="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">SCIF</span>
-                <span *ngIf="inst.rf_anechoic_chamber" class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400">RF CHAMBER</span>
-              </div>
-              <div class="mew-text-secondary">
-                DSN {{ inst.dsn_prefix || '312' }} &bull; {{ inst.personnel_count || 0 }} Billets
+                <div *ngIf="down.active_work_orders.length" class="mt-1.5 text-[11px] mono-data mew-text-secondary line-clamp-2">
+                  <span class="text-rose-400 font-bold">FAULT:</span>
+                  {{ down.active_work_orders[0].description_of_fault }}
+                </div>
+
+                <div *ngIf="down.pending_requisitions.length" class="mt-1.5 flex items-center justify-between text-[10px] mono-data">
+                  <span class="text-amber-400 truncate">
+                    REQ: {{ down.pending_requisitions[0].document_number }} ({{ down.pending_requisitions[0].material_name }})
+                  </span>
+                  <button
+                    type="button"
+                    (click)="openScannerModal(down.pending_requisitions[0])"
+                    class="px-2 py-0.5 rounded-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 shrink-0"
+                  >
+                    Receive
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
 
-      <!-- MEW Personnel Roster p-table -->
-      <div class="mew-surface rounded-xl overflow-hidden">
-        <div class="p-4 border-b mew-border flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-400">EW Technicians, Officers, Scientists &amp; FSRs</div>
-            <h2 class="text-base font-bold mew-text-primary">MEW Personnel &amp; Billet Readiness Roster</h2>
+      <!-- ==================================================================
+           VIEWPOINT 2: NAVAL HULL & MEW SYSTEM LOADOUT SPLIT WORKSPACE
+           (Left: Filterable Loadout Grid | Right: Technical & Diagnostic Dossier)
+           ================================================================== -->
+      <main *ngIf="activeViewpoint() === 'loadouts'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+
+        <!-- LEFT PANE (8 cols): Naval Hull & MEW System Loadout Grid -->
+        <section class="col-span-12 lg:col-span-7 xl:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+          <!-- Filter Toolbar -->
+          <div class="px-3.5 py-2.5 border-b mew-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400">SV-4 Systems Functionality Matrix (Click Row for Dossier)</div>
+              <h2 class="text-sm font-bold mew-text-primary">Naval Hull &amp; MEW System Loadouts ({{ filteredAssets().length }})</h2>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search hull, AN/SLQ-32, role, serial..."
+                class="mew-input px-2.5 py-1 rounded-sm text-xs mono-data w-52"
+                [ngModel]="assetSearchQuery()"
+                (ngModelChange)="assetSearchQuery.set($event)"
+              />
+
+              <select
+                class="mew-input text-xs mono-data rounded-sm px-2.5 py-1"
+                [ngModel]="selectedReadinessFilter()"
+                (ngModelChange)="selectedReadinessFilter.set($event)"
+              >
+                <option value="ALL">All Readiness</option>
+                <option value="FMC">FMC - Capable</option>
+                <option value="PMC">PMC - Degraded</option>
+                <option value="NMCS">NMCS - Supply</option>
+                <option value="NMCM">NMCM - Maint</option>
+                <option value="DLM">DLM - Depot</option>
+              </select>
+
+              <select
+                class="mew-input text-xs mono-data rounded-sm px-2.5 py-1"
+                [ngModel]="selectedEwCategoryFilter()"
+                (ngModelChange)="selectedEwCategoryFilter.set($event)"
+              >
+                <option value="ALL">All EW Categories</option>
+                <option *ngFor="let cat of ewCategories()" [value]="cat">{{ cat }}</option>
+              </select>
+            </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2.5">
-            <input
-              type="text"
-              placeholder="Search name, NEC, rank, EDIPI..."
-              class="mew-input px-3 py-1.5 rounded-lg text-xs font-mono w-56"
-              [ngModel]="personnelSearchQuery()"
-              (ngModelChange)="personnelSearchQuery.set($event)"
-            />
-
-            <select
-              class="mew-input text-xs font-mono rounded-lg px-3 py-1.5"
-              [ngModel]="selectedPersonnelCategory()"
-              (ngModelChange)="selectedPersonnelCategory.set($event)"
+          <div class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="filteredAssets()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
             >
-              <option value="ALL">All Personnel Categories</option>
-              <option value="Active_Duty_Enlisted">Active Duty Enlisted (CTT/AT)</option>
-              <option value="Active_Duty_Officer">Active Duty Officer (EWO/EDO)</option>
-              <option value="DoD_Civilian">DoD Civilian (GS Engineer/Logistics)</option>
-              <option value="Defense_Contractor">Defense Contractor (OEM FSR)</option>
-            </select>
-
-            <select
-              class="mew-input text-xs font-mono rounded-lg px-3 py-1.5"
-              [ngModel]="selectedClearanceFilter()"
-              (ngModelChange)="selectedClearanceFilter.set($event)"
-            >
-              <option value="ALL">All Clearances</option>
-              <option value="TS/SCI">TS/SCI</option>
-              <option value="Secret">Secret</option>
-            </select>
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="hull_number" style="width: 95px">Hull <p-sortIcon field="hull_number"></p-sortIcon></th>
+                  <th pSortableColumn="vessel_name">Vessel / Squadron <p-sortIcon field="vessel_name"></p-sortIcon></th>
+                  <th pSortableColumn="domain" style="width: 95px">Domain <p-sortIcon field="domain"></p-sortIcon></th>
+                  <th pSortableColumn="nomenclature">MEW System <p-sortIcon field="nomenclature"></p-sortIcon></th>
+                  <th pSortableColumn="mission_role_code" style="width: 115px">Role <p-sortIcon field="mission_role_code"></p-sortIcon></th>
+                  <th pSortableColumn="readiness_status" style="width: 85px">Status <p-sortIcon field="readiness_status"></p-sortIcon></th>
+                  <th pSortableColumn="operational_availability_pct" style="width: 85px">Ao % <p-sortIcon field="operational_availability_pct"></p-sortIcon></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-asset>
+                <tr
+                  (click)="selectedAsset.set(asset)"
+                  class="cursor-pointer"
+                  [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedAsset()?.id === asset.id}"
+                >
+                  <td class="mono-data text-xs font-bold text-sky-400">{{ asset.hull_number || 'SHORE' }}</td>
+                  <td>
+                    <div class="font-semibold mew-text-primary text-xs">{{ asset.vessel_name || asset.assigned_unit_name }}</div>
+                    <div class="text-[10px] mew-text-muted truncate">{{ asset.current_location?.name }}</div>
+                  </td>
+                  <td>
+                    <span class="dod-tag" [ngClass]="domainBadgeClass(asset.domain)">
+                      {{ asset.domain || 'Surface' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="mono-data font-bold mew-text-primary text-xs">{{ asset.nomenclature }}</div>
+                    <div class="text-[10px] mew-text-secondary truncate">{{ asset.common_name }}</div>
+                  </td>
+                  <td class="mono-data text-xs text-sky-300">{{ asset.mission_role_code || 'EW-CORE' }}</td>
+                  <td>
+                    <span class="dod-tag" [ngClass]="readinessBadgeClass(asset.readiness_status)">
+                      {{ asset.readiness_status }}
+                    </span>
+                  </td>
+                  <td class="mono-data text-xs font-bold" [ngClass]="asset.operational_availability_pct >= 90 ? 'text-emerald-400' : 'text-amber-400'">
+                    {{ asset.operational_availability_pct | number:'1.1-1' }}%
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
           </div>
-        </div>
+        </section>
 
-        <p-table
-          [value]="filteredPersonnel()"
-          [paginator]="true"
-          [rows]="10"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="personnel_id">Billet ID <p-sortIcon field="personnel_id"></p-sortIcon></th>
-              <th pSortableColumn="rank">Rank / Grade <p-sortIcon field="rank"></p-sortIcon></th>
-              <th pSortableColumn="last_name">Name &amp; EDIPI <p-sortIcon field="last_name"></p-sortIcon></th>
-              <th pSortableColumn="specialty_code">NEC / Designator / Series <p-sortIcon field="specialty_code"></p-sortIcon></th>
-              <th pSortableColumn="title">Billet Title &amp; Role <p-sortIcon field="title"></p-sortIcon></th>
-              <th pSortableColumn="installation_code">Assigned Base <p-sortIcon field="installation_code"></p-sortIcon></th>
-              <th pSortableColumn="security_clearance">Clearance <p-sortIcon field="security_clearance"></p-sortIcon></th>
-              <th pSortableColumn="operational_status">Operational Status <p-sortIcon field="operational_status"></p-sortIcon></th>
-              <th pSortableColumn="projected_rotation_date">PRD / Rotation <p-sortIcon field="projected_rotation_date"></p-sortIcon></th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-p>
-            <tr>
-              <td class="font-mono text-xs text-cyan-400 font-semibold">{{ p.personnel_id }}</td>
-              <td>
-                <div class="font-mono font-bold mew-text-primary">{{ p.rank }}</div>
-                <div class="text-[11px] font-mono mew-text-muted">{{ p.paygrade }}</div>
-              </td>
-              <td>
-                <div class="font-semibold mew-text-primary">
-                  {{ p.last_name }}, {{ p.first_name }} {{ p.middle_initial }}.
+        <!-- RIGHT PANE (4 cols): Detailed MEW System & Hull Technical Dossier -->
+        <section class="col-span-12 lg:col-span-5 xl:col-span-4 h-full min-h-0 mew-surface rounded-sm p-4 flex flex-col gap-3.5 overflow-y-auto">
+          <ng-container *ngIf="selectedAsset() as asset; else noAssetSelected">
+            <!-- Dossier Header -->
+            <div class="border-b mew-border pb-3">
+              <div class="flex items-center justify-between gap-2">
+                <span class="dod-tag" [ngClass]="readinessBadgeClass(asset.readiness_status)">
+                  {{ asset.readiness_status }} &mdash; {{ asset.readiness_status_display }}
+                </span>
+                <span class="text-[11px] mono-data text-sky-400 font-bold">{{ asset.assignment_id || asset.system_id }}</span>
+              </div>
+              <h3 class="text-base font-bold mew-text-primary mt-2">
+                {{ asset.nomenclature }} ({{ asset.common_name }})
+              </h3>
+              <div class="text-xs mono-data mew-text-secondary mt-0.5">
+                SN: {{ asset.serial_number }} &bull; OEM: {{ asset.manufacturer || 'DoD Prime' }}
+              </div>
+            </div>
+
+            <!-- Platform & Tactical Role Metadata Grid -->
+            <div class="grid grid-cols-2 gap-2 text-xs mono-data">
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Host Naval Hull</div>
+                <div class="font-bold mew-text-primary mt-0.5">{{ asset.vessel_name || asset.assigned_unit_name }}</div>
+                <div class="text-[11px] text-sky-400">{{ asset.hull_number }} &bull; {{ asset.ship_class }}</div>
+              </div>
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Tactical Mission Role</div>
+                <div class="font-bold text-sky-300 mt-0.5">{{ asset.mission_role_code }}</div>
+                <div class="text-[11px] mew-text-secondary truncate">{{ asset.mission_role_name }}</div>
+              </div>
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Homeport / Location</div>
+                <div class="font-bold mew-text-primary mt-0.5">{{ asset.current_location?.name }}</div>
+                <div class="text-[11px] mew-text-secondary">{{ asset.current_location?.location_display }}</div>
+              </div>
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Capability Baseline</div>
+                <div class="font-bold text-emerald-400 mt-0.5">{{ asset.operational_status }}</div>
+                <div class="text-[11px] mew-text-secondary">Qty: {{ asset.quantity_installed }} &bull; Inst: {{ asset.installation_date }}</div>
+              </div>
+            </div>
+
+            <!-- Reliability Telemetry Strip -->
+            <div class="grid grid-cols-4 gap-2 text-center mono-data text-xs">
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">AO %</div>
+                <div class="font-bold text-sky-400">{{ asset.operational_availability_pct }}%</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">MTBF</div>
+                <div class="font-bold mew-text-primary">{{ asset.mtbf_hours }}h</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">MTTR</div>
+                <div class="font-bold text-amber-400">{{ asset.mttr_hours }}h</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">OP HRS</div>
+                <div class="font-bold mew-text-primary">{{ asset.engine_hours }}</div>
+              </div>
+            </div>
+
+            <!-- Active Work Orders -->
+            <div>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-rose-400 mb-1.5 font-bold">
+                Active Maintenance Work Orders ({{ asset.active_work_orders.length }})
+              </div>
+              <div *ngIf="asset.active_work_orders.length; else noAssetWos" class="space-y-1.5">
+                <div *ngFor="let wo of asset.active_work_orders" class="mew-elevated p-2.5 rounded-sm text-xs mono-data">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-rose-400">{{ wo.is_grounding_fault ? 'CASREP GROUNDING' : 'MINOR FAULT' }}</span>
+                    <span class="text-sky-400">{{ wo.status }}</span>
+                  </div>
+                  <div class="mew-text-primary mt-1">{{ wo.description_of_fault }}</div>
+                  <div class="text-[10px] mew-text-muted mt-1">Tech: {{ wo.technician_name }} &bull; {{ wo.date_opened | date:'yyyy-MM-dd' }}</div>
                 </div>
-                <div class="text-[11px] font-mono mew-text-muted">DoD ID: {{ p.dod_id }}</div>
-              </td>
-              <td class="font-mono text-xs text-cyan-300">{{ p.specialty_code }}</td>
-              <td>
-                <div class="text-xs font-semibold mew-text-primary">{{ p.title }}</div>
-                <div class="text-[11px] mew-text-secondary line-clamp-1">{{ p.role }}</div>
-              </td>
-              <td>
-                <div class="font-mono text-xs font-bold mew-text-primary">{{ p.installation_code }}</div>
-                <div class="text-[11px] mew-text-muted">{{ p.installation_location }}</div>
-              </td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono font-semibold"
-                  [ngClass]="p.security_clearance === 'TS/SCI'
-                    ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/40'
-                    : 'bg-sky-500/15 text-sky-400 border border-sky-500/40'"
-                >
-                  {{ p.security_clearance }}
-                </span>
-              </td>
-              <td>
-                <span
-                  class="px-2 py-0.5 rounded text-xs font-mono"
-                  [ngClass]="p.operational_status === 'Leave'
-                    ? 'bg-amber-500/15 text-amber-400'
-                    : 'bg-emerald-500/15 text-emerald-400'"
-                >
-                  {{ p.operational_status }}
-                </span>
-              </td>
-              <td class="font-mono text-xs mew-text-secondary">{{ p.projected_rotation_date }}</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </main>
+              </div>
+              <ng-template #noAssetWos>
+                <div class="mew-elevated p-2.5 rounded-sm text-xs mono-data text-emerald-400">
+                  No active faults. All BIT diagnostics nominal.
+                </div>
+              </ng-template>
+            </div>
 
-    <!-- ==================================================================
-         VIEWPOINT 5: IMMUTABLE INVENTORY AUDIT LEDGER
-         ================================================================== -->
-    <main *ngIf="activeViewpoint() === 'ledger'" class="p-6 space-y-5">
-      <div class="mew-surface rounded-xl overflow-hidden">
-        <div class="p-4 border-b mew-border flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">DIV-2 Cryptographic / Immutable Audit Trail</div>
-            <h2 class="text-base font-bold mew-text-primary">Warehouse Receipt &amp; Work-Order Deduction Ledger</h2>
+            <!-- Pending Requisitions -->
+            <div>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-amber-400 mb-1.5 font-bold">
+                Tied Supply Requisitions ({{ asset.pending_requisitions.length }})
+              </div>
+              <div *ngIf="asset.pending_requisitions.length; else noAssetReqs" class="space-y-1.5">
+                <div *ngFor="let req of asset.pending_requisitions" class="mew-elevated p-2.5 rounded-sm text-xs mono-data flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="font-bold text-sky-400">{{ req.document_number }} ({{ req.priority_display }})</div>
+                    <div class="mew-text-primary truncate">{{ req.quantity }}x {{ req.material_name }}</div>
+                    <div class="text-[10px] mew-text-muted">NSN: {{ req.nsn }} &bull; Est: {{ req.estimated_delivery_date }}</div>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="openScannerModal(req)"
+                    class="px-2.5 py-1 rounded-sm bg-emerald-600 hover:bg-emerald-500 text-white font-bold shrink-0"
+                  >
+                    Receive
+                  </button>
+                </div>
+              </div>
+              <ng-template #noAssetReqs>
+                <div class="mew-elevated p-2.5 rounded-sm text-xs mono-data mew-text-secondary">
+                  No open part requisitions tied to this asset.
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Compatible Spare LRUs / Components -->
+            <div>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 mb-1.5 font-bold">
+                Authorized Spare LRUs ({{ selectedAssetCompatibleComponents().length }})
+              </div>
+              <div class="space-y-1.5">
+                <div
+                  *ngFor="let cmp of selectedAssetCompatibleComponents()"
+                  class="mew-elevated p-2 rounded-sm text-xs mono-data flex items-center justify-between"
+                >
+                  <div class="min-w-0">
+                    <div class="font-semibold mew-text-primary truncate">{{ cmp.nomenclature }}</div>
+                    <div class="text-[10px] mew-text-muted">{{ cmp.component_id }} &bull; NSN {{ cmp.nsn }}</div>
+                  </div>
+                  <span class="text-sky-400 font-bold shrink-0">${{ cmp.unit_price | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #noAssetSelected>
+            <div class="my-auto text-center mew-text-secondary text-xs mono-data">
+              Select a Naval Hull / MEW System row on the left to inspect its technical dossier.
+            </div>
+          </ng-template>
+        </section>
+      </main>
+
+      <!-- ==================================================================
+           VIEWPOINT 3: SUPPLY, WAREHOUSE LRUs & DOCKED SHIPMENT RECEIVER
+           (Left: Inventory / Requisitions / WorkOrders Grid | Right: LRU Dossier & Scanner)
+           ================================================================== -->
+      <main *ngIf="activeViewpoint() === 'supply'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+
+        <!-- LEFT PANE (8 cols): Tabbed Supply & Maintenance Data Grid -->
+        <section class="col-span-12 lg:col-span-7 xl:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+          <!-- Sub-Tab & Filter Toolbar -->
+          <div class="px-3.5 py-2.5 border-b mew-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                (click)="supplySubTab.set('inventory')"
+                [class]="supplySubTab() === 'inventory'
+                  ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                  : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+              >
+                LRU Stock ({{ filteredInventoryBalances().length }})
+              </button>
+              <button
+                type="button"
+                (click)="supplySubTab.set('requisitions')"
+                [class]="supplySubTab() === 'requisitions'
+                  ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                  : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+              >
+                Requisitions ({{ api.requisitions().length }})
+              </button>
+              <button
+                type="button"
+                (click)="supplySubTab.set('workorders')"
+                [class]="supplySubTab() === 'workorders'
+                  ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                  : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+              >
+                Work Orders ({{ api.workOrders().length }})
+              </button>
+            </div>
+
+            <div *ngIf="supplySubTab() === 'inventory'" class="flex items-center gap-2.5">
+              <label class="flex items-center gap-1.5 text-xs mono-data mew-text-secondary cursor-pointer">
+                <input
+                  type="checkbox"
+                  [ngModel]="showOnlyLowStock()"
+                  (ngModelChange)="showOnlyLowStock.set($event)"
+                />
+                <span>Low Stock Only</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Filter NSN, LRU, Base..."
+                class="mew-input px-2.5 py-1 rounded-sm text-xs mono-data w-48"
+                [ngModel]="inventorySearchQuery()"
+                (ngModelChange)="inventorySearchQuery.set($event)"
+              />
+            </div>
           </div>
 
-          <div class="flex items-center gap-2.5">
+          <!-- SUB-TAB 1: Warehouse LRU Balances Table -->
+          <div *ngIf="supplySubTab() === 'inventory'" class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="filteredInventoryBalances()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="installation_code" style="width: 115px">Base <p-sortIcon field="installation_code"></p-sortIcon></th>
+                  <th pSortableColumn="component_id" style="width: 90px">LRU ID <p-sortIcon field="component_id"></p-sortIcon></th>
+                  <th pSortableColumn="nsn" style="width: 135px">NSN <p-sortIcon field="nsn"></p-sortIcon></th>
+                  <th pSortableColumn="nomenclature">LRU Nomenclature <p-sortIcon field="nomenclature"></p-sortIcon></th>
+                  <th pSortableColumn="quantity_on_hand" style="width: 85px">On Hand <p-sortIcon field="quantity_on_hand"></p-sortIcon></th>
+                  <th pSortableColumn="reorder_point" style="width: 85px">ROP <p-sortIcon field="reorder_point"></p-sortIcon></th>
+                  <th style="width: 105px">Posture</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-bal>
+                <tr
+                  (click)="selectBalanceRecord(bal)"
+                  class="cursor-pointer"
+                  [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedBalance()?.id === bal.id}"
+                >
+                  <td class="mono-data text-xs font-bold text-sky-400">{{ bal.installation_code }}</td>
+                  <td class="mono-data text-xs">{{ bal.component_id }}</td>
+                  <td class="mono-data text-xs mew-text-secondary">{{ bal.nsn }}</td>
+                  <td>
+                    <div class="font-semibold mew-text-primary text-xs">{{ bal.nomenclature }}</div>
+                    <div class="text-[10px] mew-text-muted">{{ bal.component_category }}</div>
+                  </td>
+                  <td class="mono-data text-xs font-bold" [ngClass]="bal.quantity_on_hand <= bal.reorder_point ? 'text-rose-400' : 'text-emerald-400'">
+                    {{ bal.quantity_on_hand }}
+                  </td>
+                  <td class="mono-data text-xs mew-text-secondary">{{ bal.reorder_point }}</td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="bal.quantity_on_hand <= bal.reorder_point
+                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
+                        : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'"
+                    >
+                      {{ bal.quantity_on_hand <= bal.reorder_point ? 'LOW STOCK' : 'NOMINAL' }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- SUB-TAB 2: Supply Requisitions Table -->
+          <div *ngIf="supplySubTab() === 'requisitions'" class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="api.requisitions()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="document_number" style="width: 140px">Document # <p-sortIcon field="document_number"></p-sortIcon></th>
+                  <th pSortableColumn="nsn" style="width: 135px">NSN <p-sortIcon field="nsn"></p-sortIcon></th>
+                  <th pSortableColumn="material_name">LRU Nomenclature <p-sortIcon field="material_name"></p-sortIcon></th>
+                  <th pSortableColumn="quantity" style="width: 65px">Qty <p-sortIcon field="quantity"></p-sortIcon></th>
+                  <th pSortableColumn="priority_display" style="width: 115px">Priority <p-sortIcon field="priority_display"></p-sortIcon></th>
+                  <th pSortableColumn="status" style="width: 105px">Status <p-sortIcon field="status"></p-sortIcon></th>
+                  <th style="width: 115px">Action</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-req>
+                <tr
+                  (click)="selectRequisitionForReceipt(req)"
+                  class="cursor-pointer"
+                  [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': scannerDocNumber() === req.document_number}"
+                >
+                  <td class="mono-data text-xs font-bold text-sky-400">{{ req.document_number }}</td>
+                  <td class="mono-data text-xs mew-text-secondary">{{ req.nsn }}</td>
+                  <td class="font-semibold mew-text-primary text-xs">{{ req.material_name }}</td>
+                  <td class="mono-data text-xs font-bold">{{ req.quantity }}</td>
+                  <td>
+                    <span class="dod-tag" [ngClass]="priorityBadgeClass(req.priority_display)">
+                      {{ req.priority_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="req.status === 'Received'
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
+                    >
+                      {{ req.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      *ngIf="req.status !== 'Received'"
+                      type="button"
+                      (click)="selectRequisitionForReceipt(req); $event.stopPropagation()"
+                      class="px-2 py-0.5 rounded-sm text-[11px] mono-data font-bold bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30"
+                    >
+                      Load Scanner &rarr;
+                    </button>
+                    <span *ngIf="req.status === 'Received'" class="text-[11px] mono-data mew-text-muted">Completed</span>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- SUB-TAB 3: Maintenance Work Orders Table -->
+          <div *ngIf="supplySubTab() === 'workorders'" class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="api.workOrders()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="date_opened" style="width: 130px">Opened <p-sortIcon field="date_opened"></p-sortIcon></th>
+                  <th pSortableColumn="description_of_fault">Fault Description &amp; LRU Diagnostic <p-sortIcon field="description_of_fault"></p-sortIcon></th>
+                  <th pSortableColumn="technician_name" style="width: 135px">Technician <p-sortIcon field="technician_name"></p-sortIcon></th>
+                  <th pSortableColumn="is_grounding_fault" style="width: 115px">Severity <p-sortIcon field="is_grounding_fault"></p-sortIcon></th>
+                  <th pSortableColumn="status" style="width: 105px">Status <p-sortIcon field="status"></p-sortIcon></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-wo>
+                <tr>
+                  <td class="mono-data text-xs mew-text-secondary">{{ wo.date_opened | date:'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="text-xs mew-text-primary">{{ wo.description_of_fault }}</td>
+                  <td class="mono-data text-xs text-sky-400">{{ wo.technician_name }}</td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="wo.is_grounding_fault
+                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
+                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
+                    >
+                      {{ wo.is_grounding_fault ? 'CASREP' : 'MINOR' }}
+                    </span>
+                  </td>
+                  <td class="mono-data text-xs text-sky-300">{{ wo.status }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </section>
+
+        <!-- RIGHT PANE (4 cols): Selected LRU Dossier + Docked Barcode Shipment Receiver -->
+        <section class="col-span-12 lg:col-span-5 xl:col-span-4 h-full min-h-0 flex flex-col gap-3 overflow-y-auto">
+
+          <!-- Selected LRU Component & Warehouse Stock Detail Card -->
+          <div *ngIf="selectedBalance() as bal" class="mew-surface rounded-sm p-3.5 shrink-0">
+            <div class="flex items-center justify-between border-b mew-border pb-2">
+              <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">{{ bal.component_id }}</span>
+              <span class="mono-data text-xs mew-text-secondary">NSN: {{ bal.nsn }}</span>
+            </div>
+            <h3 class="text-sm font-bold mew-text-primary mt-2">{{ bal.nomenclature }}</h3>
+            <div class="text-xs mono-data mew-text-secondary mt-0.5">
+              Warehouse: <span class="text-sky-400 font-bold">{{ bal.installation_code }}</span> ({{ bal.installation_name }})
+            </div>
+
+            <div class="mt-3 grid grid-cols-3 gap-2 text-center mono-data text-xs">
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">ON HAND</div>
+                <div class="text-base font-bold" [ngClass]="bal.quantity_on_hand <= bal.reorder_point ? 'text-rose-400' : 'text-emerald-400'">
+                  {{ bal.quantity_on_hand }}
+                </div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">REORDER PT</div>
+                <div class="text-base font-bold mew-text-primary">{{ bal.reorder_point }}</div>
+              </div>
+              <div class="mew-elevated p-2 rounded-sm">
+                <div class="text-[9px] mew-text-muted">UNIT PRICE</div>
+                <div class="text-base font-bold text-sky-400">${{ bal.unit_price | number:'1.0-0' }}</div>
+              </div>
+            </div>
+
+            <!-- Catalog Technical Metadata -->
+            <div *ngIf="selectedBalanceCatalogDetail() as cat" class="mt-2.5 pt-2.5 border-t mew-border grid grid-cols-2 gap-2 text-[11px] mono-data">
+              <div><span class="mew-text-muted">OEM:</span> {{ cat.manufacturer }}</div>
+              <div><span class="mew-text-muted">CAGE:</span> {{ cat.cage_code }}</div>
+              <div><span class="mew-text-muted">P/N:</span> {{ cat.part_number }}</div>
+              <div><span class="mew-text-muted">Lead Time:</span> {{ cat.lead_time_days }}d</div>
+              <div class="col-span-2">
+                <span class="mew-text-muted">Compatible Systems:</span>
+                <span class="text-sky-400 ml-1">{{ (cat.compatible_system_ids || []).join(', ') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Docked MILSTRIP Barcode Shipment Receiver Panel -->
+          <div class="mew-surface rounded-sm p-3.5 flex-1 flex flex-col justify-between border-t-2 border-t-emerald-500">
+            <div class="space-y-3">
+              <div class="border-b mew-border pb-2">
+                <div class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">
+                  Docked SvcV-1 Barcode Receiver
+                </div>
+                <h3 class="text-sm font-bold mew-text-primary">Receive MILSTRIP Shipment &amp; Auto-Split Backorders</h3>
+              </div>
+
+              <div>
+                <label class="block text-[10px] mono-data uppercase mew-text-secondary mb-1">
+                  Pending Requisition Document Number
+                </label>
+                <select
+                  class="mew-input w-full rounded-sm px-2.5 py-1.5 text-xs mono-data mb-1.5"
+                  [ngModel]="scannerDocNumber()"
+                  (ngModelChange)="onScannerRequisitionChange($event)"
+                >
+                  <option value="">-- Select Open Requisition --</option>
+                  <option *ngFor="let r of pendingRequisitionsList()" [value]="r.document_number">
+                    {{ r.document_number }} | {{ r.material_name }} (Qty: {{ r.quantity }})
+                  </option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Or scan Document # (e.g., REQ-MEW-0014)"
+                  class="mew-input w-full rounded-sm px-2.5 py-1.5 text-xs mono-data"
+                  [ngModel]="scannerDocNumber()"
+                  (ngModelChange)="scannerDocNumber.set($event)"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[10px] mono-data uppercase mew-text-secondary mb-1">
+                  Quantity Received (Less than ordered creates -BO Backorder)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  class="mew-input w-full rounded-sm px-2.5 py-1.5 text-xs mono-data"
+                  [ngModel]="scannerReceivedQty()"
+                  (ngModelChange)="scannerReceivedQty.set($event)"
+                />
+              </div>
+
+              <div
+                *ngIf="scannerFeedback() as fb"
+                class="p-2.5 rounded-sm text-xs mono-data border"
+                [ngClass]="fb.type === 'success'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                  : 'bg-rose-500/15 text-rose-300 border-rose-500/40'"
+              >
+                <div class="font-bold">{{ fb.text }}</div>
+                <div *ngIf="fb.subtext" class="mt-1 text-amber-300">{{ fb.subtext }}</div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              (click)="submitShipmentReceipt()"
+              class="mt-3 w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition"
+            >
+              Commit Warehouse Receipt to Ledger
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <!-- ==================================================================
+           VIEWPOINT 4: SHORE INSTALLATIONS, PERSONNEL & DOSSIER (3-COLUMN SPLIT)
+           (Col 1: Shore Bases List | Col 2: Base Command Header + Filtered Roster | Col 3: Personnel Dossier)
+           ================================================================== -->
+      <main *ngIf="activeViewpoint() === 'installations'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+
+        <!-- COLUMN 1 (3 cols): Compact Scrollable Shore Installations Master List -->
+        <section class="col-span-12 lg:col-span-3 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+          <div class="p-3 border-b mew-border space-y-2 shrink-0">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">
+                1. Shore Installations ({{ filteredInstallationsList().length }})
+              </span>
+              <button
+                *ngIf="selectedInstallationCode() !== 'ALL'"
+                type="button"
+                (click)="selectInstallation('ALL')"
+                class="text-[10px] mono-data text-sky-400 hover:underline"
+              >
+                Show All
+              </button>
+            </div>
             <input
               type="text"
-              placeholder="Search ref doc, NSN, base, tech..."
-              class="mew-input px-3 py-1.5 rounded-lg text-xs font-mono w-64"
-              [ngModel]="ledgerSearchQuery()"
-              (ngModelChange)="ledgerSearchQuery.set($event)"
+              placeholder="Search NSWC Crane, Norfolk..."
+              class="mew-input w-full px-2.5 py-1 rounded-sm text-xs mono-data"
+              [ngModel]="installationSearchQuery()"
+              (ngModelChange)="installationSearchQuery.set($event)"
             />
-            <select
-              class="mew-input text-xs font-mono rounded-lg px-3 py-1.5"
-              [ngModel]="ledgerTypeFilter()"
-              (ngModelChange)="ledgerTypeFilter.set($event)"
-            >
-              <option value="ALL">All Transaction Types</option>
-              <option value="RCT">RCT - Receipts (+)</option>
-              <option value="DED">DED - Work Order Deductions (-)</option>
-            </select>
           </div>
-        </div>
 
-        <p-table
-          [value]="filteredTransactions()"
-          [paginator]="true"
-          [rows]="12"
-          [rowHover]="true"
-          styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="created_at">Timestamp <p-sortIcon field="created_at"></p-sortIcon></th>
-              <th pSortableColumn="reference_document">Reference Document <p-sortIcon field="reference_document"></p-sortIcon></th>
-              <th pSortableColumn="transaction_type">Type <p-sortIcon field="transaction_type"></p-sortIcon></th>
-              <th pSortableColumn="installation_name">Installation Warehouse <p-sortIcon field="installation_name"></p-sortIcon></th>
-              <th pSortableColumn="nsn">NSN <p-sortIcon field="nsn"></p-sortIcon></th>
-              <th pSortableColumn="nomenclature">LRU Nomenclature <p-sortIcon field="nomenclature"></p-sortIcon></th>
-              <th pSortableColumn="quantity">Delta <p-sortIcon field="quantity"></p-sortIcon></th>
-              <th>Balance Transition</th>
-              <th pSortableColumn="performed_by_name">Verified By <p-sortIcon field="performed_by_name"></p-sortIcon></th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-tx>
-            <tr>
-              <td class="font-mono text-xs mew-text-secondary">{{ tx.created_at | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-              <td class="font-mono text-xs font-bold text-cyan-400">{{ tx.reference_document }}</td>
-              <td>
+          <div class="flex-1 min-h-0 overflow-y-auto p-2 space-y-1.5">
+            <!-- 'ALL BASES' Master Selector -->
+            <button
+              type="button"
+              (click)="selectInstallation('ALL')"
+              class="w-full text-left p-2.5 rounded-sm transition border"
+              [ngClass]="selectedInstallationCode() === 'ALL'
+                ? 'bg-sky-500/15 border-sky-400 text-white'
+                : 'mew-elevated mew-text-secondary hover:border-sky-500/40'"
+            >
+              <div class="flex items-center justify-between text-xs mono-data font-bold">
+                <span class="text-sky-400">ALL SHORE INSTALLATIONS</span>
+                <span>{{ api.personnel().length }} PERS</span>
+              </div>
+              <div class="text-[11px] mew-text-muted mt-0.5">
+                Global Fleet Homeports &amp; Warfare Centers
+              </div>
+            </button>
+
+            <!-- Individual Shore Installation Items -->
+            <div
+              *ngFor="let inst of filteredInstallationsList()"
+              (click)="selectInstallation(inst.installation_code || inst.dodaac)"
+              class="p-2.5 rounded-sm cursor-pointer transition border"
+              [ngClass]="selectedInstallationCode() === (inst.installation_code || inst.dodaac)
+                ? 'bg-sky-500/15 border-sky-400'
+                : 'mew-elevated hover:border-sky-500/40'"
+            >
+              <div class="flex items-center justify-between gap-1">
+                <span class="mono-data text-xs font-bold text-sky-400">
+                  {{ inst.installation_code || inst.dodaac }}
+                </span>
                 <span
-                  class="px-2 py-0.5 rounded text-xs font-mono font-bold"
+                  class="dod-tag"
+                  [ngClass]="(inst.readiness_rating || 'C1').startsWith('C1')
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'"
+                >
+                  {{ (inst.readiness_rating || 'C1').slice(0, 2) }}
+                </span>
+              </div>
+              <div class="text-xs font-semibold mew-text-primary mt-0.5 truncate">{{ inst.name }}</div>
+              <div class="mt-1 flex items-center justify-between text-[10px] mono-data mew-text-muted">
+                <span>{{ inst.location_display || inst.region }}</span>
+                <span class="text-sky-300">{{ inst.personnel_count || 0 }} Billets</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- COLUMN 2 (5 cols): Selected Installation Detail Banner + Instant Filtered Roster Grid -->
+        <section class="col-span-12 lg:col-span-5 h-full min-h-0 flex flex-col gap-2.5 overflow-hidden">
+
+          <!-- Selected Installation Command Dossier Banner (Always at Top of Center Column) -->
+          <div class="mew-surface rounded-sm p-3 shrink-0 border-l-4 border-l-sky-400">
+            <ng-container *ngIf="activeInstallationDetail() as inst; else allBasesBanner">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 text-xs mono-data">
+                    <span class="font-bold text-sky-400">{{ inst.installation_code }}</span>
+                    <span class="mew-text-muted">| DoDAAC: {{ inst.dodaac }}</span>
+                    <span class="mew-text-muted">| DSN: 312-{{ inst.dsn_prefix }}</span>
+                  </div>
+                  <h3 class="text-sm font-bold mew-text-primary mt-0.5 truncate">{{ inst.name }}</h3>
+                  <div class="text-[11px] mew-text-secondary truncate">
+                    Focus: {{ inst.primary_ew_focus || inst.mission_category }}
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-1 shrink-0 mono-data">
+                  <span class="dod-tag bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    {{ inst.readiness_rating || 'C1_FMC' }}
+                  </span>
+                  <span class="text-[10px] mew-text-muted">
+                    {{ inst.latitude }}, {{ inst.longitude }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mt-2 pt-2 border-t mew-border flex flex-wrap items-center justify-between gap-2 text-[10px] mono-data">
+                <div class="flex items-center gap-1.5">
+                  <span *ngIf="inst.scif_accredited" class="px-1.5 py-0.5 rounded-sm bg-indigo-500/20 text-indigo-300">SCIF ACCREDITED</span>
+                  <span *ngIf="inst.rf_anechoic_chamber" class="px-1.5 py-0.5 rounded-sm bg-sky-500/20 text-sky-300">RF ANECHOIC CHAMBER</span>
+                  <span class="px-1.5 py-0.5 rounded-sm mew-elevated mew-text-secondary">{{ inst.mission_category }}</span>
+                </div>
+                <span class="mew-text-secondary">
+                  Filtered: <strong class="text-sky-400">{{ filteredPersonnel().length }}</strong> Personnel &bull;
+                  <strong class="text-emerald-400">{{ installationHousedAssets().length }}</strong> Systems
+                </span>
+              </div>
+            </ng-container>
+
+            <ng-template #allBasesBanner>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">
+                    Global MEW Shore Network
+                  </div>
+                  <h3 class="text-sm font-bold mew-text-primary">
+                    All {{ api.installations().length }} MEW Installations Selected (Click any base on the left to drill down)
+                  </h3>
+                </div>
+                <div class="text-right mono-data text-xs">
+                  <div class="font-bold text-sky-400">{{ filteredPersonnel().length }} Matching Personnel</div>
+                  <div class="text-[10px] mew-text-muted">{{ installationHousedAssets().length }} Housed Systems</div>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Center Filtered Roster / Housed Systems Grid (Immediately Visible, No Scrolling Down!) -->
+          <div class="flex-1 min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+            <!-- Sub-tab & Filter Bar -->
+            <div class="p-2.5 border-b mew-border space-y-2 shrink-0">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    (click)="installationDetailTab.set('personnel')"
+                    [class]="installationDetailTab() === 'personnel'
+                      ? 'px-2.5 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                      : 'px-2.5 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+                  >
+                    Assigned Personnel ({{ filteredPersonnel().length }})
+                  </button>
+                  <button
+                    type="button"
+                    (click)="installationDetailTab.set('assets')"
+                    [class]="installationDetailTab() === 'assets'
+                      ? 'px-2.5 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                      : 'px-2.5 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+                  >
+                    Housed MEW Systems ({{ installationHousedAssets().length }})
+                  </button>
+                </div>
+              </div>
+
+              <!-- Personnel Filter Controls -->
+              <div *ngIf="installationDetailTab() === 'personnel'" class="grid grid-cols-3 gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Search name, NEC, EDIPI..."
+                  class="mew-input px-2 py-1 rounded-sm text-xs mono-data"
+                  [ngModel]="personnelSearchQuery()"
+                  (ngModelChange)="personnelSearchQuery.set($event)"
+                />
+                <select
+                  class="mew-input text-xs mono-data rounded-sm px-2 py-1"
+                  [ngModel]="selectedPersonnelCategory()"
+                  (ngModelChange)="selectedPersonnelCategory.set($event)"
+                >
+                  <option value="ALL">All Categories</option>
+                  <option value="Active_Duty_Enlisted">Enlisted (CTT/AT)</option>
+                  <option value="Active_Duty_Officer">Officer (EWO/EDO)</option>
+                  <option value="DoD_Civilian">DoD Civilian (GS)</option>
+                  <option value="Defense_Contractor">Contractor (FSR)</option>
+                </select>
+                <select
+                  class="mew-input text-xs mono-data rounded-sm px-2 py-1"
+                  [ngModel]="selectedClearanceFilter()"
+                  (ngModelChange)="selectedClearanceFilter.set($event)"
+                >
+                  <option value="ALL">All Clearances</option>
+                  <option value="TS/SCI">TS/SCI</option>
+                  <option value="Secret">Secret</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Internally Scrollable Personnel Table -->
+            <div *ngIf="installationDetailTab() === 'personnel'" class="flex-1 min-h-0 overflow-hidden">
+              <p-table
+                [value]="filteredPersonnel()"
+                [scrollable]="true"
+                scrollHeight="flex"
+                [rowHover]="true"
+                styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="rank" style="width: 85px">Rank <p-sortIcon field="rank"></p-sortIcon></th>
+                    <th pSortableColumn="last_name">Name <p-sortIcon field="last_name"></p-sortIcon></th>
+                    <th pSortableColumn="specialty_code">NEC / Series <p-sortIcon field="specialty_code"></p-sortIcon></th>
+                    <th pSortableColumn="installation_code" style="width: 95px">Base <p-sortIcon field="installation_code"></p-sortIcon></th>
+                    <th pSortableColumn="security_clearance" style="width: 75px">Clr <p-sortIcon field="security_clearance"></p-sortIcon></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-p>
+                  <tr
+                    (click)="selectPersonnelRecord(p)"
+                    class="cursor-pointer"
+                    [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedPersonnel()?.id === p.id}"
+                  >
+                    <td class="mono-data text-xs font-bold text-sky-400">{{ p.rank }}</td>
+                    <td>
+                      <div class="font-semibold mew-text-primary text-xs">{{ p.last_name }}, {{ p.first_name }}</div>
+                      <div class="text-[10px] mono-data mew-text-muted">{{ p.personnel_id }}</div>
+                    </td>
+                    <td class="mono-data text-[11px] mew-text-secondary truncate">{{ p.specialty_code }}</td>
+                    <td class="mono-data text-xs">{{ p.installation_code }}</td>
+                    <td>
+                      <span
+                        class="dod-tag"
+                        [ngClass]="p.security_clearance === 'TS/SCI'
+                          ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/40'
+                          : 'bg-sky-500/15 text-sky-400 border border-sky-500/40'"
+                      >
+                        {{ p.security_clearance }}
+                      </span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+
+            <!-- Internally Scrollable Housed Assets Table -->
+            <div *ngIf="installationDetailTab() === 'assets'" class="flex-1 min-h-0 overflow-hidden">
+              <p-table
+                [value]="installationHousedAssets()"
+                [scrollable]="true"
+                scrollHeight="flex"
+                [rowHover]="true"
+                styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="hull_number" style="width: 85px">Hull <p-sortIcon field="hull_number"></p-sortIcon></th>
+                    <th pSortableColumn="nomenclature">MEW System <p-sortIcon field="nomenclature"></p-sortIcon></th>
+                    <th pSortableColumn="readiness_status" style="width: 80px">Status <p-sortIcon field="readiness_status"></p-sortIcon></th>
+                    <th pSortableColumn="operational_availability_pct" style="width: 80px">Ao % <p-sortIcon field="operational_availability_pct"></p-sortIcon></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-a>
+                  <tr (click)="selectAsset(a)" class="cursor-pointer">
+                    <td class="mono-data text-xs font-bold text-sky-400">{{ a.hull_number || 'SHORE' }}</td>
+                    <td>
+                      <div class="font-semibold mew-text-primary text-xs">{{ a.nomenclature }} ({{ a.common_name }})</div>
+                      <div class="text-[10px] mew-text-muted">{{ a.vessel_name || a.assigned_unit_name }}</div>
+                    </td>
+                    <td>
+                      <span class="dod-tag" [ngClass]="readinessBadgeClass(a.readiness_status)">{{ a.readiness_status }}</span>
+                    </td>
+                    <td class="mono-data text-xs font-bold text-emerald-400">{{ a.operational_availability_pct }}%</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        </section>
+
+        <!-- COLUMN 3 (4 cols): Detailed Personnel Security & Billet Dossier -->
+        <section class="col-span-12 lg:col-span-4 h-full min-h-0 mew-surface rounded-sm p-4 flex flex-col gap-3.5 overflow-y-auto">
+          <ng-container *ngIf="selectedPersonnel() as p; else noPersonnelSelected">
+            <!-- Dossier Header -->
+            <div class="border-b mew-border pb-3">
+              <div class="flex items-center justify-between gap-2">
+                <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">
+                  {{ p.personnel_id }}
+                </span>
+                <span
+                  class="dod-tag"
+                  [ngClass]="p.security_clearance === 'TS/SCI'
+                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                    : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'"
+                >
+                  <i class="pi pi-lock text-[10px]"></i>
+                  <span>{{ p.security_clearance }} CLEARED</span>
+                </span>
+              </div>
+
+              <h3 class="text-base font-bold mew-text-primary mt-2">
+                {{ p.rank }} {{ p.first_name }} {{ p.middle_initial }}. {{ p.last_name }}
+              </h3>
+              <div class="text-xs mono-data text-sky-400">
+                {{ p.rank_full }} ({{ p.paygrade }})
+              </div>
+              <div class="text-[11px] mono-data mew-text-muted mt-0.5">
+                DoD EDIPI: {{ p.dod_id }} &bull; Category: {{ p.personnel_category }}
+              </div>
+            </div>
+
+            <!-- Qualification & Billet Role Box -->
+            <div class="mew-elevated p-3 rounded-sm space-y-1.5 text-xs">
+              <div class="text-[10px] mono-data uppercase mew-text-muted">NEC / Designator / Occupational Series</div>
+              <div class="mono-data font-bold text-sky-300">{{ p.specialty_code }}</div>
+              <div class="text-[10px] mono-data uppercase mew-text-muted pt-1">Billet Title &amp; Operational Scope</div>
+              <div class="font-semibold mew-text-primary">{{ p.title }}</div>
+              <p class="text-[11px] mew-text-secondary leading-relaxed">{{ p.role }}</p>
+            </div>
+
+            <!-- Readiness & Deployment Status Grid -->
+            <div class="grid grid-cols-2 gap-2 text-xs mono-data">
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Operational Status</div>
+                <div class="font-bold text-emerald-400 mt-0.5">{{ p.operational_status }}</div>
+              </div>
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Deployability</div>
+                <div class="font-bold mt-0.5" [ngClass]="p.is_fully_deployable !== false ? 'text-emerald-400' : 'text-amber-400'">
+                  {{ p.is_fully_deployable !== false ? 'FULLY DEPLOYABLE' : 'RESTRICTED / LEAVE' }}
+                </div>
+              </div>
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Assigned Base</div>
+                <div class="font-bold text-sky-400 mt-0.5">{{ p.installation_code }}</div>
+                <div class="text-[10px] mew-text-secondary truncate">{{ p.installation_deployed_at }}</div>
+              </div>
+              <div class="mew-elevated p-2.5 rounded-sm">
+                <div class="text-[10px] uppercase mew-text-muted">Tour Rotation (PRD)</div>
+                <div class="font-bold mew-text-primary mt-0.5">{{ p.projected_rotation_date }}</div>
+                <div class="text-[10px] mew-text-secondary">Assigned: {{ p.date_assigned }}</div>
+              </div>
+            </div>
+
+            <!-- Direct Tactical Communications -->
+            <div class="mew-elevated p-3 rounded-sm space-y-1 text-xs mono-data">
+              <div class="text-[10px] uppercase mew-text-muted">Official DoD Communications</div>
+              <div class="flex items-center justify-between">
+                <span class="mew-text-secondary">DSN Phone:</span>
+                <span class="font-bold text-sky-400">{{ p.dsn_phone }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="mew-text-secondary">NIPR Email:</span>
+                <span class="font-bold mew-text-primary truncate">{{ p.official_email }}</span>
+              </div>
+            </div>
+
+            <!-- Assigned Work Orders for this Technician -->
+            <div>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 mb-1.5 font-bold">
+                Assigned Maintenance Actions ({{ selectedPersonnelWorkOrders().length }})
+              </div>
+              <div *ngIf="selectedPersonnelWorkOrders().length; else noTechWos" class="space-y-1.5">
+                <div *ngFor="let wo of selectedPersonnelWorkOrders()" class="mew-elevated p-2 rounded-sm text-xs mono-data">
+                  <div class="flex items-center justify-between">
+                    <span class="text-rose-400 font-bold">{{ wo.is_grounding_fault ? 'CASREP' : 'MAINT' }}</span>
+                    <span class="text-sky-400">{{ wo.status }}</span>
+                  </div>
+                  <div class="mew-text-primary mt-0.5 line-clamp-2">{{ wo.description_of_fault }}</div>
+                </div>
+              </div>
+              <ng-template #noTechWos>
+                <div class="mew-elevated p-2 rounded-sm text-[11px] mono-data mew-text-secondary">
+                  Standing watch / PMS oversight at {{ p.installation_code }}.
+                </div>
+              </ng-template>
+            </div>
+          </ng-container>
+
+          <ng-template #noPersonnelSelected>
+            <div class="my-auto text-center mew-text-secondary text-xs mono-data">
+              Select a personnel record in the center table to view their security &amp; billet dossier.
+            </div>
+          </ng-template>
+        </section>
+      </main>
+
+      <!-- ==================================================================
+           VIEWPOINT 5: IMMUTABLE INVENTORY AUDIT LEDGER SPLIT WORKSPACE
+           (Left: Ledger Grid | Right: Cryptographic Transaction Verification Dossier)
+           ================================================================== -->
+      <main *ngIf="activeViewpoint() === 'ledger'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+
+        <!-- LEFT PANE (8 cols): Immutable Ledger Table -->
+        <section class="col-span-12 lg:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+          <div class="px-3.5 py-2.5 border-b mew-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div>
+              <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400">DIV-2 Immutable Audit Trail</div>
+              <h2 class="text-sm font-bold mew-text-primary">Warehouse Receipt &amp; Work-Order Deduction Ledger ({{ filteredTransactions().length }})</h2>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search ref doc, NSN, base, tech..."
+                class="mew-input px-2.5 py-1 rounded-sm text-xs mono-data w-56"
+                [ngModel]="ledgerSearchQuery()"
+                (ngModelChange)="ledgerSearchQuery.set($event)"
+              />
+              <select
+                class="mew-input text-xs mono-data rounded-sm px-2.5 py-1"
+                [ngModel]="ledgerTypeFilter()"
+                (ngModelChange)="ledgerTypeFilter.set($event)"
+              >
+                <option value="ALL">All Types</option>
+                <option value="RCT">RCT - Receipts (+)</option>
+                <option value="DED">DED - Deductions (-)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="filteredTransactions()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="created_at" style="width: 140px">Timestamp <p-sortIcon field="created_at"></p-sortIcon></th>
+                  <th pSortableColumn="reference_document" style="width: 155px">Reference Doc <p-sortIcon field="reference_document"></p-sortIcon></th>
+                  <th pSortableColumn="transaction_type" style="width: 110px">Type <p-sortIcon field="transaction_type"></p-sortIcon></th>
+                  <th pSortableColumn="nomenclature">LRU Nomenclature <p-sortIcon field="nomenclature"></p-sortIcon></th>
+                  <th pSortableColumn="quantity" style="width: 75px">Delta <p-sortIcon field="quantity"></p-sortIcon></th>
+                  <th style="width: 110px">Balance</th>
+                  <th pSortableColumn="performed_by_name" style="width: 140px">Verified By <p-sortIcon field="performed_by_name"></p-sortIcon></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-tx>
+                <tr
+                  (click)="selectedTransaction.set(tx)"
+                  class="cursor-pointer"
+                  [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedTransaction()?.id === tx.id}"
+                >
+                  <td class="mono-data text-xs mew-text-secondary">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="mono-data text-xs font-bold text-sky-400">{{ tx.reference_document }}</td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="tx.transaction_type === 'RCT'
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-rose-500/15 text-rose-400 border border-rose-500/40'"
+                    >
+                      {{ tx.transaction_type_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="font-semibold mew-text-primary text-xs">{{ tx.nomenclature }}</div>
+                    <div class="text-[10px] mono-data mew-text-muted">{{ tx.nsn }} &bull; {{ tx.installation_name }}</div>
+                  </td>
+                  <td class="mono-data text-xs font-bold" [ngClass]="tx.transaction_type === 'RCT' ? 'text-emerald-400' : 'text-rose-400'">
+                    {{ tx.transaction_type === 'RCT' ? '+' : '-' }}{{ tx.quantity }}
+                  </td>
+                  <td class="mono-data text-xs mew-text-secondary">
+                    {{ tx.previous_balance }} &rarr; <strong class="mew-text-primary">{{ tx.new_balance }}</strong>
+                  </td>
+                  <td class="mono-data text-xs text-sky-300">{{ tx.performed_by_name }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </section>
+
+        <!-- RIGHT PANE (4 cols): Selected Ledger Transaction Verification Dossier -->
+        <section class="col-span-12 lg:col-span-4 h-full min-h-0 mew-surface rounded-sm p-4 flex flex-col gap-3.5 overflow-y-auto">
+          <ng-container *ngIf="selectedTransaction() as tx">
+            <div class="border-b mew-border pb-3">
+              <div class="flex items-center justify-between">
+                <span
+                  class="dod-tag"
                   [ngClass]="tx.transaction_type === 'RCT'
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
                     : 'bg-rose-500/15 text-rose-400 border border-rose-500/40'"
                 >
                   {{ tx.transaction_type_display }}
                 </span>
-              </td>
-              <td class="text-xs mew-text-secondary">{{ tx.installation_name }}</td>
-              <td class="font-mono text-xs mew-text-secondary">{{ tx.nsn }}</td>
-              <td class="font-semibold mew-text-primary">{{ tx.nomenclature }}</td>
-              <td
-                class="font-mono text-xs font-bold"
-                [ngClass]="tx.transaction_type === 'RCT' ? 'text-emerald-400' : 'text-rose-400'"
-              >
-                {{ tx.transaction_type === 'RCT' ? '+' : '-' }}{{ tx.quantity }}
-              </td>
-              <td class="font-mono text-xs mew-text-secondary">
-                {{ tx.previous_balance }} &rarr; <span class="font-bold mew-text-primary">{{ tx.new_balance }}</span>
-              </td>
-              <td class="font-mono text-xs text-cyan-300">{{ tx.performed_by_name }}</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- Bottom DoD Classification Banner -->
-<footer class="class-banner unclass">
-  <span>UNCLASSIFIED // FOR OFFICIAL USE ONLY</span>
-  <span class="mono-data">MARITIME ELECTROMAGNETIC WARFARE (MEW) C2 // DoDAF SV-4 CLIENT</span>
-</footer>
-
-<!-- ======================================================================
-     ASSET DIAGNOSTIC & MAINTENANCE INSPECTOR DRAWER (Modal Overlay)
-     ====================================================================== -->
-<div
-  *ngIf="inspectedAsset() as asset"
-  class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-end p-4"
->
-  <div class="mew-surface w-full max-w-xl h-full max-h-[92vh] rounded-2xl p-6 flex flex-col justify-between overflow-y-auto border border-cyan-500/40">
-    <div class="space-y-4">
-      <div class="flex items-start justify-between border-b mew-border pb-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold" [ngClass]="readinessBadgeClass(asset.readiness_status)">
-              {{ asset.readiness_status }}
-            </span>
-            <span class="font-mono text-xs text-cyan-400">{{ asset.serial_number }}</span>
-          </div>
-          <h3 class="text-lg font-bold mew-text-primary mt-1">
-            {{ asset.nomenclature }} &mdash; {{ asset.common_name }}
-          </h3>
-          <p class="text-xs font-mono mew-text-secondary">
-            Platform: {{ asset.vessel_name || asset.assigned_unit_name }} ({{ asset.hull_number || 'SHORE' }})
-          </p>
-        </div>
-        <button
-          type="button"
-          (click)="closeAssetInspector()"
-          class="p-1.5 rounded-lg mew-elevated mew-text-secondary hover:text-white"
-        >
-          <i class="pi pi-times"></i>
-        </button>
-      </div>
-
-      <!-- Telemetry Grid -->
-      <div class="grid grid-cols-3 gap-3 font-mono">
-        <div class="mew-elevated rounded-lg p-3">
-          <div class="text-[10px] uppercase mew-text-muted">Operational Ao</div>
-          <div class="text-base font-bold text-cyan-400">{{ asset.operational_availability_pct }}%</div>
-        </div>
-        <div class="mew-elevated rounded-lg p-3">
-          <div class="text-[10px] uppercase mew-text-muted">MTBF / MTTR</div>
-          <div class="text-base font-bold mew-text-primary">{{ asset.mtbf_hours }}h / {{ asset.mttr_hours }}h</div>
-        </div>
-        <div class="mew-elevated rounded-lg p-3">
-          <div class="text-[10px] uppercase mew-text-muted">Operating Hours</div>
-          <div class="text-base font-bold mew-text-primary">{{ asset.engine_hours }} hrs</div>
-        </div>
-      </div>
-
-      <!-- Active Work Orders -->
-      <div>
-        <h4 class="text-xs font-mono uppercase tracking-wider text-rose-400 mb-2">
-          Active Maintenance Work Orders ({{ asset.active_work_orders.length }})
-        </h4>
-        <div *ngIf="asset.active_work_orders.length; else noWos" class="space-y-2">
-          <div *ngFor="let wo of asset.active_work_orders" class="mew-elevated rounded-lg p-3 text-xs font-mono space-y-1">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-rose-400">{{ wo.is_grounding_fault ? 'GROUNDING CASREP' : 'MINOR FAULT' }}</span>
-              <span class="text-cyan-400">{{ wo.status }}</span>
+                <span class="mono-data text-xs text-sky-400 font-bold">{{ tx.reference_document }}</span>
+              </div>
+              <h3 class="text-base font-bold mew-text-primary mt-2">{{ tx.nomenclature }}</h3>
+              <div class="text-xs mono-data mew-text-secondary">NSN: {{ tx.nsn }}</div>
             </div>
-            <p class="mew-text-primary">{{ wo.description_of_fault }}</p>
-            <div class="mew-text-muted">Technician: {{ wo.technician_name }} &bull; {{ wo.date_opened | date:'short' }}</div>
-          </div>
-        </div>
-        <ng-template #noWos>
-          <div class="mew-elevated rounded-lg p-3 text-xs font-mono text-emerald-400">
-            No open maintenance faults. System operating within baseline specifications.
-          </div>
-        </ng-template>
-      </div>
 
-      <!-- Pending Supply Requisitions -->
-      <div>
-        <h4 class="text-xs font-mono uppercase tracking-wider text-amber-400 mb-2">
-          Tied Supply Requisitions ({{ asset.pending_requisitions.length }})
-        </h4>
-        <div *ngIf="asset.pending_requisitions.length; else noReqs" class="space-y-2">
-          <div *ngFor="let req of asset.pending_requisitions" class="mew-elevated rounded-lg p-3 text-xs font-mono flex items-center justify-between">
-            <div>
-              <div class="font-bold text-cyan-400">{{ req.document_number }} ({{ req.priority_display }})</div>
-              <div class="mew-text-primary">{{ req.quantity }}x {{ req.material_name }} ({{ req.nsn }})</div>
-              <div class="mew-text-muted">Status: {{ req.status }} &bull; Est: {{ req.estimated_delivery_date }}</div>
+            <div class="mew-elevated p-3 rounded-sm text-center mono-data">
+              <div class="text-[10px] uppercase mew-text-muted">Immutable Stock Balance Transition</div>
+              <div class="mt-2 flex items-center justify-center gap-4 text-lg font-bold">
+                <span class="mew-text-secondary">{{ tx.previous_balance }}</span>
+                <span [ngClass]="tx.transaction_type === 'RCT' ? 'text-emerald-400' : 'text-rose-400'">
+                  ({{ tx.transaction_type === 'RCT' ? '+' : '-' }}{{ tx.quantity }}) &rarr;
+                </span>
+                <span class="text-sky-400">{{ tx.new_balance }}</span>
+              </div>
             </div>
-            <button
-              type="button"
-              (click)="closeAssetInspector(); openScannerModal(req)"
-              class="px-2.5 py-1.5 rounded bg-emerald-600 text-white font-semibold"
-            >
-              Receive
-            </button>
-          </div>
-        </div>
-        <ng-template #noReqs>
-          <div class="mew-elevated rounded-lg p-3 text-xs font-mono mew-text-secondary">
-            No pending supply requisitions tied to this asset.
-          </div>
-        </ng-template>
-      </div>
-    </div>
 
-    <div class="pt-4 border-t mew-border flex justify-end">
-      <button
-        type="button"
-        (click)="closeAssetInspector()"
-        class="px-4 py-2 rounded-lg text-xs font-mono font-semibold mew-elevated mew-text-primary"
-      >
-        Close Diagnostic View
-      </button>
+            <div class="space-y-2 text-xs mono-data mew-elevated p-3 rounded-sm">
+              <div class="flex justify-between">
+                <span class="mew-text-muted">Warehouse:</span>
+                <span class="mew-text-primary font-semibold">{{ tx.installation_name }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="mew-text-muted">Verified By:</span>
+                <span class="text-sky-400 font-semibold">{{ tx.performed_by_name }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="mew-text-muted">Timestamp:</span>
+                <span class="mew-text-primary">{{ tx.created_at | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="mew-text-muted">Ledger Lock:</span>
+                <span class="text-emerald-400 font-bold">IMMUTABLE // VERIFIED</span>
+              </div>
+            </div>
+          </ng-container>
+        </section>
+      </main>
     </div>
   </div>
+
+  <!-- Bottom DoD Classification Banner -->
+  <footer class="class-banner unclass shrink-0">
+    <span>UNCLASSIFIED // FOR OFFICIAL USE ONLY</span>
+    <span class="mono-data">MARITIME ELECTROMAGNETIC WARFARE (MEW) C2 // DoDAF SV-4 CLIENT</span>
+  </footer>
 </div>
 
 <!-- ======================================================================
-     WAREHOUSE BARCODE SCANNER / RECEIVE SHIPMENT MODAL
-     (Exercises POST /api/v1/requisitions/receive-shipment/ & Short-Ship Split)
+     QUICK BARCODE SCANNER / RECEIVE SHIPMENT MODAL (Accessible from Any View)
      ====================================================================== -->
 <div
   *ngIf="scannerModalOpen()"
   class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4"
 >
-  <div class="mew-surface w-full max-w-lg rounded-2xl p-6 border border-cyan-500/40 space-y-4">
+  <div class="mew-surface w-full max-w-lg rounded-sm p-5 border border-sky-500/40 space-y-4">
     <div class="flex items-start justify-between border-b mew-border pb-3">
       <div>
-        <div class="text-[11px] font-mono uppercase tracking-wider text-emerald-400">SvcV-1 Automated Warehouse Receipt</div>
-        <h3 class="text-lg font-bold mew-text-primary">Scan / Receive MILSTRIP Requisition</h3>
+        <div class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">SvcV-1 Automated Warehouse Receipt</div>
+        <h3 class="text-base font-bold mew-text-primary">Scan / Receive MILSTRIP Requisition</h3>
       </div>
       <button
         type="button"
         (click)="closeScannerModal()"
-        class="p-1.5 rounded-lg mew-elevated mew-text-secondary"
+        class="p-1.5 rounded-sm mew-elevated mew-text-secondary"
       >
         <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <p class="text-xs mew-text-secondary leading-relaxed">
-      Receiving a shipment triggers Django Ledger Signals to increment <span class="font-mono text-cyan-400">InventoryBalance</span>, write an immutable <span class="font-mono text-cyan-400">RCT</span> audit transaction, and automatically split a <span class="font-mono text-amber-400">-BO</span> backorder if a partial quantity is received.
-    </p>
-
     <div class="space-y-3">
       <div>
-        <label class="block text-xs font-mono uppercase mew-text-secondary mb-1">
+        <label class="block text-xs mono-data uppercase mew-text-secondary mb-1">
           Select Pending Requisition or Scan Document Number
         </label>
         <select
-          class="mew-input w-full rounded-lg px-3 py-2 text-xs font-mono mb-2"
+          class="mew-input w-full rounded-sm px-3 py-2 text-xs mono-data mb-2"
           [ngModel]="scannerDocNumber()"
           (ngModelChange)="onScannerRequisitionChange($event)"
         >
@@ -1342,30 +1625,29 @@
         <input
           type="text"
           placeholder="Or scan/type Document Number (e.g., REQ-MEW-0014)"
-          class="mew-input w-full rounded-lg px-3 py-2 text-xs font-mono"
+          class="mew-input w-full rounded-sm px-3 py-2 text-xs mono-data"
           [ngModel]="scannerDocNumber()"
           (ngModelChange)="scannerDocNumber.set($event)"
         />
       </div>
 
       <div>
-        <label class="block text-xs font-mono uppercase mew-text-secondary mb-1">
+        <label class="block text-xs mono-data uppercase mew-text-secondary mb-1">
           Quantity Physically Received (Enter less than ordered to test Short-Ship Backorder)
         </label>
         <input
           type="number"
           min="1"
-          class="mew-input w-full rounded-lg px-3 py-2 text-xs font-mono"
+          class="mew-input w-full rounded-sm px-3 py-2 text-xs mono-data"
           [ngModel]="scannerReceivedQty()"
           (ngModelChange)="scannerReceivedQty.set($event)"
         />
       </div>
     </div>
 
-    <!-- Feedback Alert -->
     <div
       *ngIf="scannerFeedback() as fb"
-      class="p-3 rounded-lg text-xs font-mono border"
+      class="p-3 rounded-sm text-xs mono-data border"
       [ngClass]="fb.type === 'success'
         ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
         : 'bg-rose-500/15 text-rose-300 border-rose-500/40'"
@@ -1374,18 +1656,18 @@
       <div *ngIf="fb.subtext" class="mt-1 text-amber-300">{{ fb.subtext }}</div>
     </div>
 
-    <div class="pt-3 border-t mew-border flex items-center justify-end gap-2.5">
+    <div class="pt-3 border-t mew-border flex items-center justify-end gap-2">
       <button
         type="button"
         (click)="closeScannerModal()"
-        class="px-4 py-2 rounded-lg text-xs font-mono mew-elevated mew-text-secondary"
+        class="px-4 py-1.5 rounded-sm text-xs mono-data mew-elevated mew-text-secondary"
       >
-        Cancel
+        Close
       </button>
       <button
         type="button"
         (click)="submitShipmentReceipt()"
-        class="px-4 py-2 rounded-lg text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition"
+        class="px-4 py-1.5 rounded-sm text-xs mono-data font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition"
       >
         Commit Warehouse Receipt
       </button>
