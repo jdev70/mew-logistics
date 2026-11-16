@@ -404,6 +404,24 @@ def sync_components_and_simulate_logistics(
         for sid in comp["compatible_system_ids"]:
             components_by_sys_id.setdefault(sid, []).append(mat_obj)
 
+    # Link Hierarchical Bill of Materials (BOM) parent_lru relationships
+    bom_parent_links = {
+        "CMP-201": "CMP-202",  # Low-Band RF Receiver -> High-Band DREX Assembly
+        "CMP-205": "CMP-202",  # SEI Signal Processor Blade -> High-Band DREX Assembly
+        "CMP-216": "CMP-202",  # High-Voltage Power Conditioning -> High-Band DREX Assembly
+        "CMP-204": "CMP-203",  # DRFM Coherent Jammer Card -> GaN Solid-State AESA T/R Module
+        "CMP-214": "CMP-203",  # Wideband Interferometer DF Element -> GaN AESA T/R Module
+        "CMP-206": "CMP-207",  # Mk 234 Nulka Decoy Canister -> Mk 53 Launcher FCIU
+        "CMP-209": "CMP-208",  # Electro-Optical Gimbal Servo -> ODIN Laser Optical Bench
+        "CMP-211": "CMP-210",  # OE-538 Coaxial Feedthrough & Seal -> Submarine RF Downconverter
+        "CMP-213": "CMP-212",  # Airborne Pod Cooling Pump -> ALQ-249 RAT Power Generator
+    }
+    for child_id, parent_id in bom_parent_links.items():
+        if child_id in components_by_id and parent_id in components_by_id:
+            child_obj = components_by_id[child_id]
+            child_obj.parent_lru = components_by_id[parent_id]
+            child_obj.save(update_fields=["parent_lru"])
+
     # 2. Provision Warehouse Inventory Balances at all active Installations
     installations = list(Installation.objects.all())
     all_personnel = list(Personnel.objects.all())
@@ -450,9 +468,17 @@ def sync_components_and_simulate_logistics(
     wo_count = 0
     req_count = 0
     req_seq = 1
+    jcn_seq = 1
+    casrep_seq = 1
+
+    qa_leads = [
+        p
+        for p in all_personnel
+        if p.rank in ("CTTC", "CTT1", "LCDR", "CDR", "CIV (GS-13)", "CIV (GS-14)")
+    ] or all_personnel
 
     for idx, asset in enumerate(assets):
-        sys_id = asset.asset_model.system_id
+        sys_id = asset.asset_model.system_id or "SYS-101"
         compat_parts = components_by_sys_id.get(sys_id) or list(
             components_by_id.values()
         )
@@ -462,6 +488,25 @@ def sync_components_and_simulate_logistics(
             f"Scheduled LRU replacement and calibration for {primary_part.nomenclature}",
         )
 
+        # Map domain/system to realistic Navy Work Center, EIC, and APL/AEL
+        domain_str = asset.hull.domain if asset.hull else "Surface"
+        work_center = (
+            "AT01"
+            if domain_str == "Airborne"
+            else ("ET03" if domain_str == "Subsurface" else "CE02")
+        )
+        uic_prefix = (
+            asset.assigned_unit.uic[:5].upper()
+            if asset.assigned_unit and asset.assigned_unit.uic
+            else "N2001"
+        )
+        eic_code = f"D7{sys_id[-3:]}00"
+        apl_code = f"8810{sys_id[-3:]}{primary_part.component_id[-3:]}A"
+        needs_mdf_zero = any(
+            k in primary_part.component_category
+            for k in ("DRFM", "Receiver", "Emulation")
+        )
+
         # Select a technician stationed at the asset's installation (fallback to any technician)
         local_techs = [
             p
@@ -469,6 +514,7 @@ def sync_components_and_simulate_logistics(
             if p.installation_id == asset.current_location_id
         ] or all_personnel
         tech = random.choice(local_techs) if local_techs else None
+        qa_insp = random.choice(qa_leads) if qa_leads else tech
         clerk = random.choice(local_techs) if local_techs else None
 
         # A) Every asset gets 1 to 2 historical CLOSED WorkOrders + RECEIVED Requisitions
@@ -478,10 +524,10 @@ def sync_components_and_simulate_logistics(
             hist_part = random.choice(compat_parts)
             hist_qty = random.randint(1, 2)
             days_ago_open = random.randint(12, 45)
-            repair_duration_hours = random.uniform(6.0, 38.0)
+            repair_duration_hours = round(random.uniform(6.0, 38.0), 1)
 
             # First simulate receiving a supply replenishment for this part
-            doc_num = f"REQ-MEW-{req_seq:04d}"
+            doc_num = f"{uic_prefix}6{random.randint(100, 319)}{req_seq:04d}"
             req_seq += 1
             hist_req = Requisition.objects.create(
                 document_number=doc_num,
@@ -489,35 +535,55 @@ def sync_components_and_simulate_logistics(
                 material=hist_part,
                 quantity=hist_qty + 1,
                 priority=Requisition.UrgencyPriority.ROUTINE,
+                ipd_code="13",
+                supply_status_code=Requisition.SupplyStatusCode.BV_SHIPPED,
                 tied_to_asset=asset,
                 status="Submitted",
                 estimated_delivery_date=(now - timedelta(days=days_ago_open)).date(),
             )
             hist_req._received_by = clerk
             hist_req.status = "Received"
-            hist_req.save(update_fields=["status"])
+            hist_req.save(update_fields=["status", "supply_status_code"])
             req_count += 1
 
             # Create and close the historical WorkOrder (triggers inventory deduction signal)
+            jcn_str = f"{uic_prefix}-{work_center[:2]}-{jcn_seq:04d}"
+            jcn_seq += 1
             hist_wo = WorkOrder.objects.create(
+                jcn=jcn_str,
                 asset=asset,
+                hull=asset.hull,
+                installation=asset.current_location,
+                eic=eic_code,
+                apl_ael=apl_code,
+                work_center=work_center,
                 technician=tech,
+                qa_inspector=qa_insp,
+                priority_code=WorkOrder.TypeAvailabilityPriority.ESSENTIAL,
+                when_discovered_code=random.choice(["B", "C", "D", "F"]),
+                equipment_status_code=WorkOrder.EquipmentOperabilityCode.NON_OPERATIONAL,
+                malfunction_code=random.choice(["020", "127", "160", "290", "374", "520"]),
                 description_of_fault=fault_by_component_id.get(
                     hist_part.component_id,
                     f"Replaced degraded {hist_part.nomenclature}",
                 ),
+                org_man_hours=round(repair_duration_hours * 0.65, 1),
+                depot_man_hours=round(repair_duration_hours * 0.35, 1),
+                tag_out_verified=True,
+                esd_precautions_verified=True,
+                cwp_controlled_work_package=domain_str == "Subsurface",
+                requires_mdf_zeroization=needs_mdf_zero,
+                mdf_zeroization_verified=needs_mdf_zero,
                 is_grounding_fault=True,
-                status="Open",
+                status=WorkOrder.MAFStatus.IN_WORK,
             )
             WorkOrderPart.objects.create(
                 work_order=hist_wo,
                 material=hist_part,
                 quantity=hist_qty,
             )
-            hist_wo.status = "Closed"
-            hist_wo.date_closed = now - timedelta(
-                days=days_ago_open - 2
-            )
+            hist_wo.status = WorkOrder.MAFStatus.CLOSED
+            hist_wo.date_closed = now - timedelta(days=days_ago_open - 2)
             hist_wo.save(update_fields=["status", "date_closed"])
             wo_count += 1
 
@@ -553,19 +619,41 @@ def sync_components_and_simulate_logistics(
         #    - ~10% Non-Mission Capable Maintenance (NMCM - grounding fault, parts on hand)
         bucket = idx % 10
         if bucket in (0,):  # NMCS: Grounding Work Order + Pending Urgent Requisition
+            jcn_str = f"{uic_prefix}-{work_center[:2]}-{jcn_seq:04d}"
+            jcn_seq += 1
+            casrep_str = f"CASREP-26-{casrep_seq:03d}"
+            casrep_seq += 1
             open_wo = WorkOrder.objects.create(
+                jcn=jcn_str,
+                casrep_number=casrep_str,
                 asset=asset,
+                hull=asset.hull,
+                installation=asset.current_location,
+                eic=eic_code,
+                apl_ael=apl_code,
+                work_center=work_center,
                 technician=tech,
+                priority_code=WorkOrder.TypeAvailabilityPriority.MANDATORY_CASREP,
+                when_discovered_code="D",
+                equipment_status_code=WorkOrder.EquipmentOperabilityCode.NON_OPERATIONAL,
+                malfunction_code=random.choice(["020", "160", "290", "374"]),
                 description_of_fault=f"[CASREP / NMCS] {fault_desc}",
+                org_man_hours=4.5,
+                depot_man_hours=0.0,
+                tag_out_verified=True,
+                esd_precautions_verified=True,
+                cwp_controlled_work_package=domain_str == "Subsurface",
+                requires_mdf_zeroization=needs_mdf_zero,
+                mdf_zeroization_verified=False,
                 is_grounding_fault=True,
-                status="Awaiting Parts",
+                status=WorkOrder.MAFStatus.AWAITING_PARTS,
             )
             WorkOrderPart.objects.create(
                 work_order=open_wo,
                 material=primary_part,
                 quantity=1,
             )
-            doc_num = f"REQ-MEW-{req_seq:04d}"
+            doc_num = f"{uic_prefix}6320{req_seq:04d}"
             req_seq += 1
             Requisition.objects.create(
                 document_number=doc_num,
@@ -573,6 +661,8 @@ def sync_components_and_simulate_logistics(
                 material=primary_part,
                 quantity=random.randint(1, 2),
                 priority=Requisition.UrgencyPriority.URGENT,
+                ipd_code="01",
+                supply_status_code=Requisition.SupplyStatusCode.BV_SHIPPED,
                 tied_to_asset=asset,
                 work_order=open_wo,
                 status="In Transit",
@@ -584,12 +674,35 @@ def sync_components_and_simulate_logistics(
             req_count += 1
 
         elif bucket in (1,):  # NMCM: Grounding Work Order with parts on hand
+            jcn_str = f"{uic_prefix}-{work_center[:2]}-{jcn_seq:04d}"
+            jcn_seq += 1
+            casrep_str = f"CASREP-26-{casrep_seq:03d}"
+            casrep_seq += 1
             open_wo = WorkOrder.objects.create(
+                jcn=jcn_str,
+                casrep_number=casrep_str,
                 asset=asset,
+                hull=asset.hull,
+                installation=asset.current_location,
+                eic=eic_code,
+                apl_ael=apl_code,
+                work_center=work_center,
                 technician=tech,
+                qa_inspector=qa_insp,
+                priority_code=WorkOrder.TypeAvailabilityPriority.MANDATORY_CASREP,
+                when_discovered_code="F",
+                equipment_status_code=WorkOrder.EquipmentOperabilityCode.NON_OPERATIONAL,
+                malfunction_code=random.choice(["020", "127", "374"]),
                 description_of_fault=f"[TECH ASSIST / NMCM] {fault_desc}",
+                org_man_hours=8.0,
+                depot_man_hours=12.5,
+                tag_out_verified=True,
+                esd_precautions_verified=True,
+                cwp_controlled_work_package=True,
+                requires_mdf_zeroization=needs_mdf_zero,
+                mdf_zeroization_verified=False,
                 is_grounding_fault=True,
-                status="In Progress",
+                status=WorkOrder.MAFStatus.IN_WORK,
             )
             WorkOrderPart.objects.create(
                 work_order=open_wo,
@@ -599,19 +712,38 @@ def sync_components_and_simulate_logistics(
             wo_count += 1
 
         elif bucket in (2, 3):  # PMC: Non-grounding degraded fault + Priority Requisition
+            jcn_str = f"{uic_prefix}-{work_center[:2]}-{jcn_seq:04d}"
+            jcn_seq += 1
             open_wo = WorkOrder.objects.create(
+                jcn=jcn_str,
                 asset=asset,
+                hull=asset.hull,
+                installation=asset.current_location,
+                eic=eic_code,
+                apl_ael=apl_code,
+                work_center=work_center,
                 technician=tech,
+                priority_code=WorkOrder.TypeAvailabilityPriority.ESSENTIAL,
+                when_discovered_code="B",
+                equipment_status_code=WorkOrder.EquipmentOperabilityCode.REDUCED_CAPABILITY,
+                malfunction_code=random.choice(["127", "160", "520"]),
                 description_of_fault=f"[DEGRADED / PMC] {fault_desc}",
+                org_man_hours=3.0,
+                depot_man_hours=0.0,
+                tag_out_verified=True,
+                esd_precautions_verified=True,
+                cwp_controlled_work_package=False,
+                requires_mdf_zeroization=needs_mdf_zero,
+                mdf_zeroization_verified=False,
                 is_grounding_fault=False,
-                status="Open",
+                status=WorkOrder.MAFStatus.OPEN,
             )
             WorkOrderPart.objects.create(
                 work_order=open_wo,
                 material=primary_part,
                 quantity=1,
             )
-            doc_num = f"REQ-MEW-{req_seq:04d}"
+            doc_num = f"{uic_prefix}6320{req_seq:04d}"
             req_seq += 1
             Requisition.objects.create(
                 document_number=doc_num,
@@ -619,6 +751,8 @@ def sync_components_and_simulate_logistics(
                 material=primary_part,
                 quantity=1,
                 priority=Requisition.UrgencyPriority.PRIORITY,
+                ipd_code="03",
+                supply_status_code=Requisition.SupplyStatusCode.BA_IN_PROCESS,
                 tied_to_asset=asset,
                 work_order=open_wo,
                 status="Submitted",
@@ -650,6 +784,7 @@ def _backfill_unit_readiness_trends(days: int = 30):
     """
     today = timezone.now().date()
     units = list(MilitaryUnit.objects.all())
+    snapshots_to_create = []
 
     for unit in units:
         today_snap = UnitReadinessSnapshot.objects.filter(
@@ -660,6 +795,11 @@ def _backfill_unit_readiness_trends(days: int = 30):
 
         total_assets = today_snap.total_assets
         total_pers = today_snap.total_personnel
+
+        # Delete any existing historical snapshots for this unit prior to today
+        UnitReadinessSnapshot.objects.filter(
+            unit=unit, snapshot_date__lt=today
+        ).delete()
 
         for offset in range(1, days):
             snap_date = today - timedelta(days=offset)
@@ -681,18 +821,23 @@ def _backfill_unit_readiness_trends(days: int = 30):
                 ),
             )
 
-            UnitReadinessSnapshot.objects.update_or_create(
-                unit=unit,
-                snapshot_date=snap_date,
-                defaults={
-                    "total_personnel": total_pers,
-                    "deployable_personnel": deployable_pers,
-                    "total_assets": total_assets,
-                    "fmc_assets": fmc,
-                    "pmc_assets": pmc,
-                    "nmc_assets": nmc,
-                },
+            snapshots_to_create.append(
+                UnitReadinessSnapshot(
+                    unit=unit,
+                    snapshot_date=snap_date,
+                    total_personnel=total_pers,
+                    deployable_personnel=deployable_pers,
+                    total_assets=total_assets,
+                    fmc_assets=fmc,
+                    pmc_assets=pmc,
+                    nmc_assets=nmc,
+                )
             )
+
+    if snapshots_to_create:
+        UnitReadinessSnapshot.objects.bulk_create(
+            snapshots_to_create, batch_size=500, ignore_conflicts=True
+        )
 
 
 def export_components_and_logistics(

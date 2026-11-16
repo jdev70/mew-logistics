@@ -107,10 +107,17 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
 }
 
-# --- CORS Configuration (Allow Angular Frontend) ---
+# --- CORS Configuration (Allow Angular Frontend & RBAC Persona Header) ---
+from corsheaders.defaults import default_headers
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
 ]
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-mew-persona-id",
+)
 
 # ==========================================
 # CELERY CONFIGURATION

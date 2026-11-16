@@ -15,7 +15,7 @@ def evaluate_asset_readiness(asset):
     # 1. Check for grounding faults (deadlining issues)
     active_grounding_faults = asset.work_orders.filter(
         is_grounding_fault=True
-    ).exclude(status='Closed')
+    ).exclude(status__in=['Closed', 'CLOSED'])
 
     if active_grounding_faults.exists():
         # 2. Check if we are waiting on parts for this deadlined asset
@@ -30,7 +30,7 @@ def evaluate_asset_readiness(asset):
         # 3. No grounding faults. Check for minor, non-grounding faults.
         active_minor_faults = asset.work_orders.filter(
             is_grounding_fault=False
-        ).exclude(status='Closed')
+        ).exclude(status__in=['Closed', 'CLOSED'])
         
         if active_minor_faults.exists():
             new_status = ReadinessLevel.PARTIALLY_MISSION_CAPABLE  # PMC
@@ -130,12 +130,13 @@ def cache_work_order_status(sender, instance, **kwargs):
 def deduct_inventory_on_close(sender, instance, created, **kwargs):
     """
     Executes an immutable deduction ledger entry for every part used 
-    when a Work Order is officially closed.
+    when a Work Order (MAF) is officially closed.
     """
     old_status = getattr(instance, '_old_status', None)
+    closed_states = ('Closed', 'CLOSED')
 
-    # Trigger only if the status just changed to 'Closed'
-    if instance.status == 'Closed' and old_status != 'Closed':
+    # Trigger only if the status just changed to CLOSED
+    if instance.status in closed_states and old_status not in closed_states:
         
         # Ensure the entire deduction process is atomic. 
         # If one part fails (e.g., negative stock), the whole Work Order closure rolls back.
@@ -154,15 +155,25 @@ def deduct_inventory_on_close(sender, instance, created, **kwargs):
                         f"in the {instance.asset.current_location.name} warehouse."
                     )
 
+                ref_label = instance.jcn or f"WO-{str(instance.id)[:8].upper()}"
+
                 # Execute the safe ledger deduction
                 InventoryTransaction.execute(
                     balance_id=balance.id,
                     transaction_type=TransactionType.DEDUCTION,
                     quantity=part.quantity,
                     performed_by=instance.technician,
-                    ref_doc=f"WO-{instance.id}",
+                    ref_doc=f"MAF-{ref_label}",
                     wo=instance
                 )
+
+                if part.requires_dlr_turn_in and part.dlr_turn_in_status == "Pending_Turn_In":
+                    part.dlr_turn_in_status = (
+                        "Shipped_To_NSWC_Crane"
+                        if instance.mdf_zeroization_verified or not instance.requires_mdf_zeroization
+                        else "Zeroized_Awaiting_Shipment"
+                    )
+                    part.save(update_fields=["dlr_turn_in_status"])
 
 
 @receiver(pre_save, sender=Requisition)
@@ -216,3 +227,8 @@ def process_inventory_receipt(sender, instance, created, **kwargs):
             ref_doc=f"REQ-{instance.document_number}",
             req=instance
         )
+
+        # 3. If a linked WorkOrder was AWAITING_PARTS, automatically advance it to IN_WORK
+        if instance.work_order and instance.work_order.status in ('AWAITING_PARTS', 'Awaiting Parts'):
+            instance.work_order.status = WorkOrder.MAFStatus.IN_WORK
+            instance.work_order.save(update_fields=['status'])

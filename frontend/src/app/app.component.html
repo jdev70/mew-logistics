@@ -43,6 +43,22 @@
 
           <button
             type="button"
+            (click)="setViewpoint('analytics')"
+            [class]="activeViewpoint() === 'analytics'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
+          >
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-chart-bar text-xs"></i>
+              <span>Predictive Analytics &amp; Viz</span>
+            </span>
+            <span class="text-[10px] mono-data px-1.5 py-0.5 rounded-sm bg-indigo-500/25 text-indigo-300 border border-indigo-500/40">
+              ORSA
+            </span>
+          </button>
+
+          <button
+            type="button"
             (click)="setViewpoint('readiness')"
             [class]="activeViewpoint() === 'readiness'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
@@ -126,29 +142,39 @@
         </div>
       </div>
 
-      <!-- Compact Telemetry & Scanner Trigger Box -->
+      <!-- Compact RBAC/ABAC Policy & Telemetry Box -->
       <div class="p-3 m-2.5 rounded-sm bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
         <div class="flex items-center justify-between">
-          <span class="mono-data text-[10px] uppercase text-slate-400">SvcV-1 Status</span>
+          <span class="mono-data text-[10px] uppercase text-sky-400 font-bold">Active RBAC / ABAC Policy</span>
           <span
             class="px-1.5 py-0.5 rounded-sm text-[10px] mono-data font-bold"
-            [ngClass]="api.connectionMode() === 'LIVE_API'
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-              : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'"
+            [ngClass]="api.activeRbacContext().security_clearance === 'TS/SCI'
+              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+              : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'"
           >
-            {{ api.connectionMode() === 'LIVE_API' ? 'LIVE DRF API' : 'SIMULATED C2' }}
+            {{ api.activeRbacContext().security_clearance }}
           </span>
         </div>
-        <div class="grid grid-cols-2 gap-1.5 text-[10px] mono-data">
-          <div class="bg-slate-950/70 p-1.5 rounded-sm border border-slate-800">
-            <div class="text-slate-400">MTBF / MTTR</div>
-            <div class="text-sky-300 font-bold">{{ api.fleetMetrics().avgMtbf }}h / {{ api.fleetMetrics().avgMttr }}h</div>
+
+        <div class="bg-slate-950/80 p-2 rounded-sm border border-slate-800 space-y-1 mono-data text-[10px]">
+          <div class="text-white font-bold truncate">{{ api.activeRbacContext().actor_name }}</div>
+          <div class="text-sky-400 truncate">{{ api.activeRbacContext().functional_role }}</div>
+          <div class="text-slate-400">
+            Scope: <span class="text-emerald-400">{{ api.activeRbacContext().assigned_uic }}</span>
+            <span *ngIf="api.activeRbacContext().authorized_cage_codes.length" class="text-amber-400">
+              | CAGE {{ api.activeRbacContext().authorized_cage_codes.join(',') }}
+            </span>
           </div>
-          <div class="bg-slate-950/70 p-1.5 rounded-sm border border-slate-800">
-            <div class="text-slate-400">TS/SCI BILLETS</div>
-            <div class="text-indigo-300 font-bold">{{ api.fleetMetrics().tsSciCount }} / {{ api.fleetMetrics().totalPersonnel }}</div>
+          <div class="pt-1 flex flex-wrap gap-1">
+            <span
+              *ngFor="let rule of api.activeRbacContext().active_redaction_policies"
+              class="px-1.5 py-0.5 rounded-sm bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[9px]"
+            >
+              {{ rule }}
+            </span>
           </div>
         </div>
+
         <button
           type="button"
           (click)="openScannerModal()"
@@ -210,8 +236,25 @@
           </div>
         </div>
 
-        <!-- Right: Action Buttons & Dual Theme Toggle -->
-        <div class="flex items-center gap-2">
+        <!-- Right: Live RBAC/ABAC Persona Switcher, Action Buttons & Dual Theme Toggle -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Interactive RBAC + ABAC Persona Switcher -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] mono-data uppercase text-sky-400 font-bold hidden sm:inline">
+              RBAC Persona:
+            </span>
+            <select
+              class="mew-input text-xs mono-data rounded-sm px-2.5 py-1 border-sky-500/50 font-semibold max-w-[290px]"
+              [ngModel]="api.activePersonaId()"
+              (ngModelChange)="api.switchPersona($event)"
+              title="Switch active RBAC Role, Hierarchical UIC Scope, CAGE Vendor Scope, and Clearance"
+            >
+              <option *ngFor="let p of api.rbacPersonas()" [value]="p.personnel_id">
+                {{ p.name }} &mdash; {{ p.badge_label }}
+              </option>
+            </select>
+          </div>
+
           <button
             type="button"
             (click)="openScannerModal()"
@@ -254,6 +297,572 @@
           </button>
         </div>
       </header>
+
+      <!-- ==================================================================
+           VIEWPOINT 0: INTERACTIVE MEW ANALYTICS & VISUALIZATIONS (MEW_ANALYTICS.md)
+           ================================================================== -->
+      <main *ngIf="activeViewpoint() === 'analytics'" class="flex-1 min-h-0 p-3 flex flex-col gap-3 overflow-hidden">
+
+        <!-- Sub-View Lens Selector & Formula Ribbon -->
+        <div class="mew-surface rounded-sm px-3.5 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              (click)="analyticsSubTab.set('ao')"
+              [class]="analyticsSubTab() === 'ao'
+                ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+            >
+              1. Ao = MTBM / (MTBM + MDT) &amp; Bottleneck Funnel
+            </button>
+            <button
+              type="button"
+              (click)="analyticsSubTab.set('depletion')"
+              [class]="analyticsSubTab() === 'depletion'
+                ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+            >
+              2. Predictive LRU Depletion, CASREP Impact &amp; BOM Tree
+            </button>
+            <button
+              type="button"
+              (click)="analyticsSubTab.set('staffing')"
+              [class]="analyticsSubTab() === 'staffing'
+                ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+            >
+              3. NEC Staffing SPOF &amp; Proximity Depot Routing Map
+            </button>
+          </div>
+
+          <div class="text-[11px] mono-data mew-text-secondary hidden md:block">
+            Active Analyst: <strong class="text-sky-400">{{ api.activeRbacContext().actor_name }}</strong>
+          </div>
+        </div>
+
+        <!-- LENS 1: Ao DECOMPOSITION (MTBM / MTTR / LDT) & SUPPLY BOTTLENECK FUNNEL -->
+        <div
+          *ngIf="analyticsSubTab() === 'ao' && api.analytics() as an"
+          class="flex-1 min-h-0 grid grid-cols-12 gap-3 overflow-hidden"
+        >
+          <!-- Left (8 cols): Interactive System Ao & MDT Bar Chart + Funnel -->
+          <section class="col-span-12 lg:col-span-8 h-full min-h-0 flex flex-col gap-3 overflow-hidden">
+            <!-- Ao & Downtime Decomposition Chart -->
+            <div class="mew-surface rounded-sm p-3.5 flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div class="flex items-center justify-between border-b mew-border pb-2 mb-2.5 shrink-0">
+                <div>
+                  <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">
+                    MEW_ANALYTICS // Operational Availability &amp; SWaP-C Telemetry
+                  </div>
+                  <h2 class="text-sm font-bold mew-text-primary">
+                    System Ao = MTBM / (MTBM + MTTR + LDT) Breakdown (Click any bar to inspect)
+                  </h2>
+                </div>
+                <div class="flex items-center gap-1.5 text-[10px] mono-data">
+                  <button
+                    *ngFor="let dom of ['ALL', 'Surface', 'Subsurface', 'Airborne']"
+                    type="button"
+                    (click)="analyticsDomainFilter.set($any(dom))"
+                    [class]="analyticsDomainFilter() === dom
+                      ? 'px-2 py-0.5 rounded-sm bg-sky-500/20 text-sky-400 border border-sky-500/50 font-bold'
+                      : 'px-2 py-0.5 rounded-sm mew-elevated mew-text-secondary'"
+                  >
+                    {{ dom }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+                <div
+                  *ngFor="let sys of filteredAoSystems()"
+                  (click)="selectedAnalyticsSystem.set(sys)"
+                  class="mew-elevated p-2.5 rounded-sm cursor-pointer transition border"
+                  [ngClass]="selectedAnalyticsSystem()?.system_id === sys.system_id
+                    ? 'border-sky-400 bg-sky-500/10'
+                    : 'border-transparent hover:border-sky-500/40'"
+                >
+                  <div class="flex items-center justify-between text-xs mono-data mb-1.5">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-sky-400">{{ sys.system_id }}</span>
+                      <span class="font-bold mew-text-primary">{{ sys.nomenclature }}</span>
+                      <span class="mew-text-muted">({{ sys.common_name }})</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-[11px] mew-text-secondary">
+                        MTBM: <strong class="mew-text-primary">{{ sys.mtbm_hours }}h</strong> |
+                        MDT: <strong class="text-rose-400">{{ sys.mdt_hours }}h</strong>
+                      </span>
+                      <span
+                        class="dod-tag"
+                        [ngClass]="sys.computed_ao_pct >= 95
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
+                          : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
+                      >
+                        Ao {{ sys.computed_ao_pct }}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Dual Stacked Visualization Bar: Ao % + MDT Breakdown -->
+                  <div class="grid grid-cols-12 gap-2 items-center">
+                    <div class="col-span-7 h-3 rounded-sm bg-slate-800/70 overflow-hidden flex">
+                      <div
+                        class="h-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all"
+                        [style.width.%]="sys.computed_ao_pct"
+                      ></div>
+                    </div>
+                    <div class="col-span-5 h-3 rounded-sm bg-slate-800/70 overflow-hidden flex" title="MTTR vs Logistics Delay Time (LDT)">
+                      <div
+                        class="h-full bg-amber-400"
+                        [style.width.%]="sys.mdt_hours > 0 ? (sys.mttr_hours / sys.mdt_hours) * 100 : 50"
+                      ></div>
+                      <div
+                        class="h-full bg-rose-500"
+                        [style.width.%]="sys.mdt_hours > 0 ? (sys.ldt_hours / sys.mdt_hours) * 100 : 50"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Supply Chain Bottleneck Funnel -->
+            <div class="mew-surface rounded-sm p-3.5 shrink-0">
+              <div class="text-[10px] mono-data uppercase tracking-wider text-amber-400 font-bold mb-2">
+                Supply Chain &amp; CASREP Bottleneck Funnel
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                <div
+                  *ngFor="let st of an.supply_bottleneck_funnel"
+                  class="mew-elevated p-2.5 rounded-sm border-t-2 text-center mono-data"
+                  [ngClass]="st.severity === 'CRIT'
+                    ? 'border-t-rose-500'
+                    : (st.severity === 'WARN' ? 'border-t-amber-400' : 'border-t-sky-400')"
+                >
+                  <div class="text-xl font-bold" [ngClass]="st.severity === 'CRIT' ? 'text-rose-400' : 'mew-text-primary'">
+                    {{ st.count }}
+                  </div>
+                  <div class="text-[10px] mew-text-secondary mt-0.5 leading-tight">{{ st.stage }}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right (4 cols): Selected System Ao Formula & Readiness Inspector -->
+          <section class="col-span-12 lg:col-span-4 h-full min-h-0 mew-surface rounded-sm p-4 flex flex-col gap-3.5 overflow-y-auto">
+            <ng-container *ngIf="selectedAnalyticsSystem() as sys">
+              <div class="border-b mew-border pb-3">
+                <div class="flex items-center justify-between">
+                  <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">{{ sys.system_id }}</span>
+                  <span class="dod-tag" [ngClass]="domainBadgeClass(sys.domain)">{{ sys.domain }}</span>
+                </div>
+                <h3 class="text-base font-bold mew-text-primary mt-2">{{ sys.nomenclature }}</h3>
+                <div class="text-xs mono-data text-sky-400">{{ sys.common_name }} &bull; {{ sys.ew_category }}</div>
+              </div>
+
+              <div class="mew-elevated p-3 rounded-sm text-center mono-data space-y-1.5">
+                <div class="text-[10px] uppercase mew-text-muted">Computed Operational Availability</div>
+                <div class="text-3xl font-bold text-emerald-400">{{ sys.computed_ao_pct }}%</div>
+                <div class="text-[11px] mew-text-secondary">
+                  Ao = {{ sys.mtbm_hours }} / ({{ sys.mtbm_hours }} + {{ sys.mdt_hours }})
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 text-center mono-data text-xs">
+                <div class="mew-elevated p-2.5 rounded-sm">
+                  <div class="text-[9px] mew-text-muted">FMC</div>
+                  <div class="text-lg font-bold text-emerald-400">{{ sys.fmc_count }}</div>
+                </div>
+                <div class="mew-elevated p-2.5 rounded-sm">
+                  <div class="text-[9px] mew-text-muted">PMC</div>
+                  <div class="text-lg font-bold text-amber-400">{{ sys.pmc_count }}</div>
+                </div>
+                <div class="mew-elevated p-2.5 rounded-sm">
+                  <div class="text-[9px] mew-text-muted">NMC</div>
+                  <div class="text-lg font-bold text-rose-400">{{ sys.nmc_count }}</div>
+                </div>
+              </div>
+
+              <div class="mew-elevated p-3 rounded-sm space-y-2 text-xs mono-data">
+                <div class="text-[10px] uppercase text-sky-400 font-bold">Mean Downtime (MDT) Decomposition</div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">Active Repair Time (MTTR):</span>
+                  <span class="font-bold text-amber-400">{{ sys.mttr_hours }} hrs</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">Logistics Delay Time (LDT):</span>
+                  <span class="font-bold text-rose-400">{{ sys.ldt_hours }} hrs</span>
+                </div>
+                <div class="flex justify-between pt-1.5 border-t mew-border">
+                  <span class="mew-text-primary font-bold">Total Mean Downtime (MDT):</span>
+                  <span class="font-bold text-rose-400">{{ sys.mdt_hours }} hrs</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">Fleet Operating Hours:</span>
+                  <span class="font-bold mew-text-primary">{{ sys.total_operating_hours | number:'1.0-0' }} hrs</span>
+                </div>
+              </div>
+
+              <!-- SWaP-C Budget & High-Frequency RF Sensor Health -->
+              <div class="mew-elevated p-3 rounded-sm space-y-2 text-xs mono-data">
+                <div class="text-[10px] uppercase text-indigo-400 font-bold">SWaP-C Budget &amp; RF Sensor Telemetry</div>
+                <div class="grid grid-cols-3 gap-1.5 text-center">
+                  <div class="bg-slate-950/50 p-1.5 rounded-sm border border-slate-800">
+                    <div class="text-[9px] mew-text-muted">POWER</div>
+                    <div class="font-bold text-sky-400">{{ sys.swap_c_power_kw || 35 }} kW</div>
+                  </div>
+                  <div class="bg-slate-950/50 p-1.5 rounded-sm border border-slate-800">
+                    <div class="text-[9px] mew-text-muted">COOLING</div>
+                    <div class="font-bold text-cyan-300">{{ sys.swap_c_cooling_gpm || 14 }} GPM</div>
+                  </div>
+                  <div class="bg-slate-950/50 p-1.5 rounded-sm border border-slate-800">
+                    <div class="text-[9px] mew-text-muted">WEIGHT</div>
+                    <div class="font-bold mew-text-primary">{{ sys.swap_c_weight_lbs || 4200 }} lb</div>
+                  </div>
+                </div>
+                <div class="flex justify-between pt-1">
+                  <span class="mew-text-secondary">Antenna VSWR Ratio:</span>
+                  <span class="font-bold" [ngClass]="(sys.vswr_ratio || 1.2) > 1.45 ? 'text-rose-400' : 'text-emerald-400'">
+                    {{ sys.vswr_ratio || 1.24 }} : 1
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">PA Thermal Load:</span>
+                  <span class="font-bold" [ngClass]="(sys.thermal_load_pct || 60) > 80 ? 'text-amber-400' : 'text-emerald-400'">
+                    {{ sys.thermal_load_pct || 62 }}%
+                  </span>
+                </div>
+              </div>
+            </ng-container>
+          </section>
+        </div>
+
+        <!-- LENS 2: PREDICTIVE DEPLETION, CASREP IMPACT SCORING & HIERARCHICAL BOM -->
+        <div
+          *ngIf="analyticsSubTab() === 'depletion' && api.analytics() as an"
+          class="flex-1 min-h-0 grid grid-cols-12 gap-3 overflow-hidden"
+        >
+          <!-- Left (8 cols): CASREP Impact & Predictive Depletion Data Grid -->
+          <section class="col-span-12 lg:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
+            <div class="px-3.5 py-2.5 border-b mew-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div>
+                <div class="text-[10px] mono-data uppercase tracking-wider text-rose-400 font-bold">
+                  CASREP Impact Scoring &amp; Predictive Lead-Time Exhaustion
+                </div>
+                <h2 class="text-sm font-bold mew-text-primary">
+                  MEW LRUs Ranked by Mission Impact (Click Row for BOM Tree)
+                </h2>
+              </div>
+              <div class="flex items-center gap-2.5 text-xs mono-data">
+                <span class="mew-text-secondary">OPTEMPO Surge:</span>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2.5"
+                  step="0.25"
+                  class="w-28 accent-sky-400 cursor-pointer"
+                  [ngModel]="optempoMultiplier()"
+                  (ngModelChange)="optempoMultiplier.set($event)"
+                />
+                <span class="dod-tag bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                  {{ optempoMultiplier() | number:'1.2-2' }}x
+                </span>
+              </div>
+            </div>
+
+            <div class="flex-1 min-h-0 overflow-hidden">
+              <p-table
+                [value]="simulatedComponentAnalytics()"
+                [scrollable]="true"
+                scrollHeight="flex"
+                [rowHover]="true"
+                styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="casrep_impact_score" style="width: 90px">Impact <p-sortIcon field="casrep_impact_score"></p-sortIcon></th>
+                    <th pSortableColumn="component_id" style="width: 90px">LRU ID <p-sortIcon field="component_id"></p-sortIcon></th>
+                    <th pSortableColumn="nomenclature">LRU Nomenclature &amp; Parent BOM <p-sortIcon field="nomenclature"></p-sortIcon></th>
+                    <th pSortableColumn="total_fleet_stock" style="width: 85px">Stock <p-sortIcon field="total_fleet_stock"></p-sortIcon></th>
+                    <th pSortableColumn="lead_time_days" style="width: 85px">Lead <p-sortIcon field="lead_time_days"></p-sortIcon></th>
+                    <th pSortableColumn="days_to_depletion" style="width: 95px">Runway <p-sortIcon field="days_to_depletion"></p-sortIcon></th>
+                    <th pSortableColumn="depletion_status" style="width: 155px">Forecast Risk <p-sortIcon field="depletion_status"></p-sortIcon></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-cmp>
+                  <tr
+                    (click)="selectedAnalyticsComponent.set(cmp)"
+                    class="cursor-pointer"
+                    [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedAnalyticsComponent()?.component_id === cmp.component_id}"
+                  >
+                    <td>
+                      <span
+                        class="dod-tag"
+                        [ngClass]="cmp.casrep_impact_score >= 80
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
+                          : (cmp.casrep_impact_score >= 60
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40'
+                            : 'bg-sky-500/15 text-sky-400 border border-sky-500/40')"
+                      >
+                        {{ cmp.casrep_impact_score }}/100
+                      </span>
+                    </td>
+                    <td class="mono-data text-xs font-bold text-sky-400">{{ cmp.component_id }}</td>
+                    <td>
+                      <div class="font-semibold mew-text-primary text-xs">{{ cmp.nomenclature }}</div>
+                      <div class="text-[10px] mono-data mew-text-muted">
+                        BOM Parent: {{ cmp.parent_lru_id || 'TOP-LEVEL' }} &bull; NSN {{ cmp.nsn }}
+                      </div>
+                    </td>
+                    <td class="mono-data text-xs font-bold">{{ cmp.total_fleet_stock }}</td>
+                    <td class="mono-data text-xs mew-text-secondary">{{ cmp.lead_time_days }}d</td>
+                    <td
+                      class="mono-data text-xs font-bold"
+                      [ngClass]="cmp.days_to_depletion <= cmp.lead_time_days ? 'text-rose-400' : 'text-emerald-400'"
+                    >
+                      {{ cmp.days_to_depletion }}d
+                    </td>
+                    <td>
+                      <span
+                        class="dod-tag"
+                        [ngClass]="cmp.depletion_status === 'CRITICAL_STOCKOUT_RISK'
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
+                          : (cmp.depletion_status === 'REORDER_WARNING'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40'
+                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40')"
+                      >
+                        {{ cmp.depletion_status }}
+                      </span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </section>
+
+          <!-- Right (4 cols): Hierarchical BOM & Depletion Runway Inspector -->
+          <section class="col-span-12 lg:col-span-4 h-full min-h-0 mew-surface rounded-sm p-4 flex flex-col gap-3.5 overflow-y-auto">
+            <ng-container *ngIf="selectedAnalyticsComponent() as cmp">
+              <div class="border-b mew-border pb-3">
+                <div class="flex items-center justify-between">
+                  <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">{{ cmp.component_id }}</span>
+                  <span class="dod-tag bg-rose-500/15 text-rose-400 border border-rose-500/40">
+                    Impact {{ cmp.casrep_impact_score }}/100
+                  </span>
+                </div>
+                <h3 class="text-sm font-bold mew-text-primary mt-2">{{ cmp.nomenclature }}</h3>
+                <div class="text-xs mono-data mew-text-secondary">
+                  NSN: {{ cmp.nsn }} &bull; CAGE {{ cmp.cage_code }} ({{ cmp.manufacturer }})
+                </div>
+              </div>
+
+              <!-- Hierarchical BOM Tree Card -->
+              <div class="mew-elevated p-3 rounded-sm space-y-2 text-xs mono-data">
+                <div class="text-[10px] uppercase text-sky-400 font-bold">Hierarchical Bill of Materials (BOM)</div>
+                <div class="p-2 rounded-sm bg-slate-950/50 border border-slate-800">
+                  <div class="text-[10px] mew-text-muted">Compatible Parent Systems:</div>
+                  <div class="font-bold text-emerald-400">{{ cmp.compatible_system_ids.join(', ') }}</div>
+                </div>
+                <div class="pl-3 border-l-2 border-sky-500/50 space-y-1">
+                  <div class="text-[10px] mew-text-muted">&rdsh; Parent LRU Assembly:</div>
+                  <div class="font-bold text-sky-300">{{ cmp.parent_lru_name }}</div>
+                  <div class="pl-3 border-l-2 border-amber-400/60 pt-1">
+                    <div class="text-[10px] text-amber-400">&rdsh; Selected Sub-Assembly:</div>
+                    <div class="font-bold mew-text-primary">{{ cmp.nomenclature }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Runway vs Lead-Time Gauge -->
+              <div class="mew-elevated p-3 rounded-sm space-y-2 text-xs mono-data">
+                <div class="text-[10px] uppercase text-amber-400 font-bold">Predictive Depletion vs. Vendor Lead Time</div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">Monthly OPTEMPO Burn:</span>
+                  <span class="font-bold mew-text-primary">{{ cmp.monthly_demand_rate }} units/mo</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">Vendor Lead Time:</span>
+                  <span class="font-bold text-amber-400">{{ cmp.lead_time_days }} days</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="mew-text-secondary">Days Until Stockout:</span>
+                  <span class="font-bold" [ngClass]="cmp.days_to_depletion <= cmp.lead_time_days ? 'text-rose-400' : 'text-emerald-400'">
+                    {{ cmp.days_to_depletion }} days
+                  </span>
+                </div>
+                <div class="flex justify-between pt-1.5 border-t mew-border">
+                  <span class="mew-text-secondary">Unit Replacement Cost:</span>
+                  <span class="font-bold text-sky-400">${{ cmp.unit_price | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            </ng-container>
+          </section>
+        </div>
+
+        <!-- LENS 3: NEC STAFFING SPOF MATRIX & GEOSPATIAL PROXIMITY DEPOT ROUTING -->
+        <div
+          *ngIf="analyticsSubTab() === 'staffing' && api.analytics() as an"
+          class="flex-1 min-h-0 grid grid-cols-12 gap-3 overflow-hidden"
+        >
+          <!-- Left (5 cols): NEC Personnel-to-Equipment Cross-Reference (SPOF Gaps) -->
+          <section class="col-span-12 lg:col-span-5 h-full min-h-0 mew-surface rounded-sm p-3.5 flex flex-col overflow-hidden">
+            <div class="border-b mew-border pb-2 mb-2.5 shrink-0">
+              <div class="text-[10px] mono-data uppercase tracking-wider text-indigo-400 font-bold">
+                Personnel-to-Equipment Cross-Reference
+              </div>
+              <h2 class="text-sm font-bold mew-text-primary">NEC / Billet Single-Point-of-Failure (SPOF) Matrix</h2>
+            </div>
+
+            <div class="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
+              <div *ngFor="let nec of an.nec_staffing_matrix" class="mew-elevated p-3 rounded-sm space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <div class="mono-data text-xs font-bold text-sky-400">{{ nec.nec_code }} &rarr; {{ nec.system_id }}</div>
+                    <div class="text-xs font-semibold mew-text-primary">{{ nec.system_name }}</div>
+                  </div>
+                  <span
+                    class="dod-tag shrink-0"
+                    [ngClass]="nec.spof_risk === 'CRITICAL_SPOF_GAP'
+                      ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
+                      : (nec.spof_risk === 'MARGINAL_COVERAGE'
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40'
+                        : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40')"
+                  >
+                    {{ nec.spof_risk }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-3 mono-data text-xs">
+                  <div class="flex-1 h-2 rounded-sm bg-slate-800 overflow-hidden">
+                    <div
+                      class="h-full"
+                      [ngClass]="nec.coverage_pct < 65 ? 'bg-rose-500' : (nec.coverage_pct < 85 ? 'bg-amber-400' : 'bg-emerald-400')"
+                      [style.width.%]="nec.coverage_pct"
+                    ></div>
+                  </div>
+                  <span class="font-bold">{{ nec.deployable_count }} / {{ nec.required_billets }} ({{ nec.coverage_pct }}%)</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right (7 cols): Interactive CONUS/INDOPACOM Geospatial Network & Proximity Depot Routes -->
+          <section class="col-span-12 lg:col-span-7 h-full min-h-0 flex flex-col gap-3 overflow-hidden">
+            <!-- Interactive SVG Geospatial Fleet & Depot Proximity Map -->
+            <div class="mew-surface rounded-sm p-3 shrink-0 relative">
+              <div class="flex items-center justify-between border-b mew-border pb-2 mb-2">
+                <div>
+                  <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">
+                    Geospatial Proximity-Based Logistics Routing (INDOPACOM &harr; CONUS)
+                  </div>
+                  <h3 class="text-xs font-bold mew-text-primary">
+                    Shore Depots &amp; Nearest-Stocked LRU Supply Arcs (Click Route Below to Highlight)
+                  </h3>
+                </div>
+                <span class="text-[10px] mono-data mew-text-secondary">
+                  {{ an.geospatial_nodes.length }} Shore Nodes | {{ an.proximity_depot_routes.length }} Active Routes
+                </span>
+              </div>
+
+              <div class="relative">
+                <svg viewBox="0 0 560 215" class="w-full h-44 bg-slate-950/60 rounded-sm border mew-border">
+                  <!-- Lat/Lon Tactical Grid -->
+                  <line x1="0" y1="55" x2="560" y2="55" stroke="#1e293b" stroke-dasharray="3 3" />
+                  <line x1="0" y1="110" x2="560" y2="110" stroke="#1e293b" stroke-dasharray="3 3" />
+                  <line x1="0" y1="165" x2="560" y2="165" stroke="#1e293b" stroke-dasharray="3 3" />
+                  <line x1="140" y1="0" x2="140" y2="215" stroke="#1e293b" stroke-dasharray="3 3" />
+                  <line x1="280" y1="0" x2="280" y2="215" stroke="#1e293b" stroke-dasharray="3 3" />
+                  <line x1="420" y1="0" x2="420" y2="215" stroke="#1e293b" stroke-dasharray="3 3" />
+
+                  <!-- Proximity Depot Routing Arcs -->
+                  <line
+                    *ngFor="let rt of an.proximity_depot_routes"
+                    [attr.x1]="getNodeCoords(rt.nearest_depot_code).x"
+                    [attr.y1]="getNodeCoords(rt.nearest_depot_code).y"
+                    [attr.x2]="projectLonToX(rt.origin_lon)"
+                    [attr.y2]="projectLatToY(rt.origin_lat)"
+                    [attr.stroke]="selectedDepotRoute()?.hull_number === rt.hull_number ? '#ef4444' : '#f59e0b'"
+                    [attr.stroke-width]="selectedDepotRoute()?.hull_number === rt.hull_number ? 3 : 1.75"
+                    stroke-dasharray="5 3"
+                  />
+
+                  <!-- Shore Installation & Warfare Center Nodes with Readiness Status Rings -->
+                  <g *ngFor="let node of an.geospatial_nodes">
+                    <circle
+                      [attr.cx]="projectLonToX(node.lon)"
+                      [attr.cy]="projectLatToY(node.lat)"
+                      r="9"
+                      fill="none"
+                      [attr.stroke]="node.readiness_rating.startsWith('C1') ? '#10b981' : '#f59e0b'"
+                      stroke-opacity="0.45"
+                      stroke-width="1.25"
+                    />
+                    <circle
+                      [attr.cx]="projectLonToX(node.lon)"
+                      [attr.cy]="projectLatToY(node.lat)"
+                      [attr.r]="node.mission_category === 'R&D_Warfare_Center' ? 5.5 : 4.5"
+                      [attr.fill]="node.mission_category === 'R&D_Warfare_Center' ? '#38bdf8' : '#10b981'"
+                      stroke="#0b0f19"
+                      stroke-width="1.5"
+                    />
+                    <text
+                      [attr.x]="projectLonToX(node.lon) + 8"
+                      [attr.y]="projectLatToY(node.lat) + 3"
+                      fill="#cbd5e1"
+                      font-size="8.5"
+                      font-family="JetBrains Mono, monospace"
+                    >
+                      {{ node.code }}
+                    </text>
+                  </g>
+                </svg>
+
+                <!-- Floating Glass HUD Overlay for Selected Dispatch Route -->
+                <div
+                  *ngIf="selectedDepotRoute() as rt"
+                  class="dod-hud-overlay absolute bottom-2 left-2 px-2.5 py-1.5 rounded-sm text-[10px] mono-data max-w-xs"
+                >
+                  <div class="font-bold text-sky-400">
+                    DISPATCH: {{ rt.nearest_depot_code }} &rarr; {{ rt.origin_homeport }} ({{ rt.hull_number }})
+                  </div>
+                  <div class="mew-text-primary truncate">{{ rt.needed_component_name }}</div>
+                  <div class="text-emerald-400">{{ rt.distance_nm }} NM &bull; ETA ~{{ rt.estimated_transit_hours }}h</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Proximity Depot Routing Table -->
+            <div class="mew-surface rounded-sm flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div class="px-3 py-2 border-b mew-border text-xs font-bold mew-text-primary shrink-0">
+                Recommended Nearest-Depot LRU Dispatch Routes ({{ an.proximity_depot_routes.length }})
+              </div>
+              <div class="flex-1 min-h-0 overflow-y-auto p-2 space-y-1.5">
+                <div
+                  *ngFor="let rt of an.proximity_depot_routes"
+                  (click)="selectedDepotRoute.set(rt)"
+                  class="mew-elevated p-2.5 rounded-sm text-xs mono-data flex items-center justify-between gap-2 cursor-pointer"
+                >
+                  <div class="min-w-0">
+                    <div class="font-bold mew-text-primary">
+                      <span class="text-rose-400">[{{ rt.readiness_status }}]</span>
+                      {{ rt.vessel_name }} ({{ rt.hull_number }}) &mdash; {{ rt.system_nomenclature }}
+                    </div>
+                    <div class="text-[11px] mew-text-secondary truncate">
+                      Needs: <strong class="text-amber-400">{{ rt.needed_component_name }}</strong>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="text-sky-400 font-bold">{{ rt.nearest_depot_code }} &rarr; {{ rt.origin_homeport }}</div>
+                    <div class="text-[10px] text-emerald-400">
+                      {{ rt.distance_nm }} NM (~{{ rt.estimated_transit_hours }}h) &bull; {{ rt.depot_qty_available }} in stock
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
 
       <!-- ==================================================================
            VIEWPOINT 1: FLEET READINESS & UNIT COMMAND SPLIT WORKSPACE
@@ -896,7 +1505,7 @@
             </p-table>
           </div>
 
-          <!-- SUB-TAB 3: Maintenance Work Orders Table -->
+          <!-- SUB-TAB 3: CSMP / MAF Maintenance Work Orders Table -->
           <div *ngIf="supplySubTab() === 'workorders'" class="flex-1 min-h-0 overflow-hidden">
             <p-table
               [value]="api.workOrders()"
@@ -907,18 +1516,39 @@
             >
               <ng-template pTemplate="header">
                 <tr>
-                  <th pSortableColumn="date_opened" style="width: 130px">Opened <p-sortIcon field="date_opened"></p-sortIcon></th>
-                  <th pSortableColumn="description_of_fault">Fault Description &amp; LRU Diagnostic <p-sortIcon field="description_of_fault"></p-sortIcon></th>
-                  <th pSortableColumn="technician_name" style="width: 135px">Technician <p-sortIcon field="technician_name"></p-sortIcon></th>
-                  <th pSortableColumn="is_grounding_fault" style="width: 115px">Severity <p-sortIcon field="is_grounding_fault"></p-sortIcon></th>
-                  <th pSortableColumn="status" style="width: 105px">Status <p-sortIcon field="status"></p-sortIcon></th>
+                  <th pSortableColumn="jcn" style="width: 135px">JCN <p-sortIcon field="jcn"></p-sortIcon></th>
+                  <th pSortableColumn="hull_number" style="width: 110px">Hull / EIC <p-sortIcon field="hull_number"></p-sortIcon></th>
+                  <th pSortableColumn="malfunction_code" style="width: 90px">3-M Code <p-sortIcon field="malfunction_code"></p-sortIcon></th>
+                  <th pSortableColumn="description_of_fault">Discrepancy &amp; BIT Narrative <p-sortIcon field="description_of_fault"></p-sortIcon></th>
+                  <th pSortableColumn="work_center" style="width: 125px">Shop / Tech <p-sortIcon field="work_center"></p-sortIcon></th>
+                  <th pSortableColumn="is_grounding_fault" style="width: 105px">CASREP <p-sortIcon field="is_grounding_fault"></p-sortIcon></th>
+                  <th pSortableColumn="status" style="width: 120px">MAF Status <p-sortIcon field="status"></p-sortIcon></th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-wo>
-                <tr>
-                  <td class="mono-data text-xs mew-text-secondary">{{ wo.date_opened | date:'yyyy-MM-dd HH:mm' }}</td>
-                  <td class="text-xs mew-text-primary">{{ wo.description_of_fault }}</td>
-                  <td class="mono-data text-xs text-sky-400">{{ wo.technician_name }}</td>
+                <tr
+                  (click)="selectWorkOrderRecord(wo)"
+                  class="cursor-pointer"
+                  [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedWorkOrder()?.id === wo.id}"
+                >
+                  <td>
+                    <div class="mono-data text-xs font-bold text-sky-400">{{ wo.jcn || ('WO-' + (wo.id | slice:0:6)) }}</div>
+                    <div class="text-[10px] mono-data mew-text-muted">{{ wo.date_opened | date:'yyyy-MM-dd' }}</div>
+                  </td>
+                  <td>
+                    <div class="mono-data text-xs font-semibold mew-text-primary">{{ wo.hull_number || 'SHORE' }}</div>
+                    <div class="text-[10px] mono-data mew-text-muted">EIC: {{ wo.eic || 'D720100' }}</div>
+                  </td>
+                  <td>
+                    <span class="dod-tag bg-slate-500/15 text-sky-300 border border-slate-500/40">
+                      {{ wo.when_discovered_code || 'D' }}-{{ wo.equipment_status_code || '3' }}-{{ wo.malfunction_code || '160' }}
+                    </span>
+                  </td>
+                  <td class="text-xs mew-text-primary truncate">{{ wo.description_of_fault }}</td>
+                  <td>
+                    <div class="mono-data text-xs text-sky-400 font-semibold">{{ wo.work_center || 'CE02' }}</div>
+                    <div class="text-[10px] mono-data mew-text-secondary truncate">{{ wo.technician_name }}</div>
+                  </td>
                   <td>
                     <span
                       class="dod-tag"
@@ -926,21 +1556,152 @@
                         ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
                         : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
                     >
-                      {{ wo.is_grounding_fault ? 'CASREP' : 'MINOR' }}
+                      {{ wo.casrep_number || (wo.is_grounding_fault ? 'PRI-1 CASREP' : 'PRI-2 MAINT') }}
                     </span>
                   </td>
-                  <td class="mono-data text-xs text-sky-300">{{ wo.status }}</td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="wo.status === 'CLOSED' || wo.status === 'Closed'
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-sky-500/15 text-sky-300 border border-sky-500/40'"
+                    >
+                      {{ wo.status }}
+                    </span>
+                  </td>
                 </tr>
               </ng-template>
             </p-table>
           </div>
         </section>
 
-        <!-- RIGHT PANE (4 cols): Selected LRU Dossier + Docked Barcode Shipment Receiver -->
+        <!-- RIGHT PANE (4 cols): Context-Aware CSMP MAF Dossier OR LRU + Docked Barcode Receiver -->
         <section class="col-span-12 lg:col-span-5 xl:col-span-4 h-full min-h-0 flex flex-col gap-3 overflow-y-auto">
 
-          <!-- Selected LRU Component & Warehouse Stock Detail Card -->
-          <div *ngIf="selectedBalance() as bal" class="mew-surface rounded-sm p-3.5 shrink-0">
+          <!-- MODE A: 5-Domain CSMP / OPNAV 4790/2K Work Order Dossier (when Work Orders sub-tab is active) -->
+          <div
+            *ngIf="supplySubTab() === 'workorders' && selectedWorkOrder() as wo"
+            class="mew-surface rounded-sm p-4 flex-1 flex flex-col justify-between space-y-3 overflow-y-auto border-l-4"
+            [ngClass]="wo.is_grounding_fault ? 'border-l-rose-500' : 'border-l-sky-400'"
+          >
+            <div class="space-y-3">
+              <!-- Domain 1: CSMP / MAF Tracking Identifiers -->
+              <div class="border-b mew-border pb-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">
+                    JCN: {{ wo.jcn || ('WO-' + (wo.id | slice:0:8)) }}
+                  </span>
+                  <span
+                    class="dod-tag"
+                    [ngClass]="wo.is_grounding_fault
+                      ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40'
+                      : 'bg-amber-500/15 text-amber-400 border border-amber-500/40'"
+                  >
+                    {{ wo.casrep_number || wo.priority_display || 'PRI-1 CASREP' }}
+                  </span>
+                </div>
+                <h3 class="text-sm font-bold mew-text-primary mt-1.5">
+                  {{ wo.system_nomenclature || 'MEW System' }} &mdash; {{ wo.vessel_name || wo.hull_number || 'Fleet Unit' }}
+                </h3>
+                <div class="text-[11px] mono-data mew-text-secondary">
+                  MAF Status: <strong class="text-sky-400">{{ wo.status_display || wo.status }}</strong>
+                </div>
+              </div>
+
+              <!-- Domain 2: Configuration & Component Catalog Keys -->
+              <div class="grid grid-cols-3 gap-1.5 text-center mono-data text-xs">
+                <div class="mew-elevated p-2 rounded-sm">
+                  <div class="text-[9px] mew-text-muted">EIC CODE</div>
+                  <div class="font-bold text-sky-400">{{ wo.eic || 'D720100' }}</div>
+                </div>
+                <div class="mew-elevated p-2 rounded-sm">
+                  <div class="text-[9px] mew-text-muted">APL / AEL</div>
+                  <div class="font-bold mew-text-primary">{{ wo.apl_ael || '881040291A' }}</div>
+                </div>
+                <div class="mew-elevated p-2 rounded-sm">
+                  <div class="text-[9px] mew-text-muted">WORK CENTER</div>
+                  <div class="font-bold text-emerald-400">{{ wo.work_center || 'CE02' }}</div>
+                </div>
+              </div>
+
+              <!-- Domain 3: 3-M Failure & Diagnostic Codes -->
+              <div class="mew-elevated p-2.5 rounded-sm space-y-1 text-xs mono-data">
+                <div class="text-[10px] uppercase text-sky-400 font-bold">OPNAV 4790 / 3-M Failure &amp; BIT Diagnostics</div>
+                <div class="grid grid-cols-1 gap-0.5 text-[11px]">
+                  <div><span class="mew-text-muted">When Discovered:</span> {{ wo.when_discovered_display || wo.when_discovered_code || 'D - Normal Operation' }}</div>
+                  <div><span class="mew-text-muted">Equip Status:</span> {{ wo.equipment_status_display || wo.equipment_status_code || '3 - Non-Operational' }}</div>
+                  <div><span class="mew-text-muted">Malfunction:</span> <strong class="text-amber-400">{{ wo.malfunction_display || wo.malfunction_code || '160 - Low RF Gain' }}</strong></div>
+                </div>
+                <p class="text-[11px] mew-text-primary pt-1 border-t mew-border">{{ wo.description_of_fault }}</p>
+              </div>
+
+              <!-- Domain 2 & 4: Defective vs. Replacement LRU Serial Numbers & DLR Carcass Turn-In -->
+              <div *ngIf="wo.parts_used_details?.length">
+                <div class="text-[10px] mono-data uppercase tracking-wider text-amber-400 mb-1 font-bold">
+                  LRU Serial Swap &amp; DLR Carcass Turn-In
+                </div>
+                <div *ngFor="let pt of wo.parts_used_details" class="mew-elevated p-2.5 rounded-sm text-[11px] mono-data space-y-1">
+                  <div class="font-bold mew-text-primary">{{ pt.quantity }}x {{ pt.nomenclature }} (NSN {{ pt.nsn }})</div>
+                  <div class="flex items-center justify-between text-rose-400">
+                    <span>REMOVED (OLD):</span>
+                    <span class="font-bold">{{ pt.defective_serial_number }}</span>
+                  </div>
+                  <div class="flex items-center justify-between text-emerald-400">
+                    <span>INSTALLED (NEW):</span>
+                    <span class="font-bold">{{ pt.replacement_serial_number }}</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t mew-border">
+                    <span class="mew-text-muted">DLR Carcass Turn-In:</span>
+                    <span class="text-sky-300 font-bold">{{ pt.dlr_turn_in_status }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Domain 5: Labor, QA, Safety & COMSEC / MDF Zeroization -->
+              <div class="mew-elevated p-2.5 rounded-sm space-y-1.5 text-[11px] mono-data">
+                <div class="text-[10px] uppercase text-indigo-400 font-bold">Labor, QA &amp; Security Sign-Off</div>
+                <div class="grid grid-cols-2 gap-1">
+                  <div><span class="mew-text-muted">Lead Tech:</span> {{ wo.technician_name }} ({{ wo.technician_clearance || 'TS/SCI' }})</div>
+                  <div><span class="mew-text-muted">QA Inspector:</span> {{ wo.qa_inspector_name || 'Pending QA' }}</div>
+                  <div><span class="mew-text-muted">O-Level Hrs:</span> {{ wo.org_man_hours || 0 }}h</div>
+                  <div><span class="mew-text-muted">Depot Hrs:</span> {{ wo.depot_man_hours || 0 }}h</div>
+                </div>
+                <div class="pt-1 flex flex-wrap items-center gap-1.5">
+                  <span class="dod-tag bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    TAG-OUT: {{ wo.tag_out_verified !== false ? 'VERIFIED' : 'REQ' }}
+                  </span>
+                  <span class="dod-tag bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    ESD: {{ wo.esd_precautions_verified !== false ? 'VERIFIED' : 'REQ' }}
+                  </span>
+                  <span
+                    *ngIf="wo.requires_mdf_zeroization"
+                    class="dod-tag"
+                    [ngClass]="wo.mdf_zeroization_verified
+                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'"
+                  >
+                    MDF ZEROIZED: {{ wo.mdf_zeroization_verified ? 'YES' : 'PENDING' }}
+                  </span>
+                </div>
+              </div>
+
+              <div *ngIf="mafActionFeedback() as msg" class="p-2 rounded-sm text-xs mono-data bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
+                {{ msg }}
+              </div>
+            </div>
+
+            <button
+              *ngIf="wo.status !== 'CLOSED' && wo.status !== 'Closed'"
+              type="button"
+              (click)="advanceMafStatus(wo)"
+              class="mt-2 w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition"
+            >
+              Advance MAF Lifecycle / QA Sign-Off &rarr;
+            </button>
+          </div>
+
+          <!-- MODE B: Selected LRU Component & Warehouse Stock Detail Card (when Inventory/Requisitions active) -->
+          <div *ngIf="supplySubTab() !== 'workorders' && selectedBalance() as bal" class="mew-surface rounded-sm p-3.5 shrink-0">
             <div class="flex items-center justify-between border-b mew-border pb-2">
               <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">{{ bal.component_id }}</span>
               <span class="mono-data text-xs mew-text-secondary">NSN: {{ bal.nsn }}</span>
@@ -981,7 +1742,7 @@
           </div>
 
           <!-- Docked MILSTRIP Barcode Shipment Receiver Panel -->
-          <div class="mew-surface rounded-sm p-3.5 flex-1 flex flex-col justify-between border-t-2 border-t-emerald-500">
+          <div *ngIf="supplySubTab() !== 'workorders'" class="mew-surface rounded-sm p-3.5 flex-1 flex flex-col justify-between border-t-2 border-t-emerald-500">
             <div class="space-y-3">
               <div class="border-b mew-border pb-2">
                 <div class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">
@@ -1437,20 +2198,35 @@
       </main>
 
       <!-- ==================================================================
-           VIEWPOINT 5: IMMUTABLE INVENTORY AUDIT LEDGER SPLIT WORKSPACE
-           (Left: Ledger Grid | Right: Cryptographic Transaction Verification Dossier)
+           VIEWPOINT 5: IMMUTABLE INVENTORY & RBAC/OPSEC SECURITY AUDIT LEDGER
            ================================================================== -->
       <main *ngIf="activeViewpoint() === 'ledger'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
 
-        <!-- LEFT PANE (8 cols): Immutable Ledger Table -->
+        <!-- LEFT PANE (8 cols): Tabbed Inventory Ledger & Security Audit Log -->
         <section class="col-span-12 lg:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
           <div class="px-3.5 py-2.5 border-b mew-border flex flex-wrap items-center justify-between gap-2 shrink-0">
-            <div>
-              <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400">DIV-2 Immutable Audit Trail</div>
-              <h2 class="text-sm font-bold mew-text-primary">Warehouse Receipt &amp; Work-Order Deduction Ledger ({{ filteredTransactions().length }})</h2>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="ledgerSubTab.set('inventory')"
+                [class]="ledgerSubTab() === 'inventory'
+                  ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                  : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+              >
+                1. Warehouse Inventory Ledger ({{ filteredTransactions().length }})
+              </button>
+              <button
+                type="button"
+                (click)="ledgerSubTab.set('security')"
+                [class]="ledgerSubTab() === 'security'
+                  ? 'px-3 py-1 rounded-sm text-xs mono-data font-bold bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                  : 'px-3 py-1 rounded-sm text-xs mono-data mew-elevated mew-text-secondary'"
+              >
+                2. RBAC / OPSEC Security Audit Log ({{ api.securityAuditLogs().length }})
+              </button>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div *ngIf="ledgerSubTab() === 'inventory'" class="flex items-center gap-2">
               <input
                 type="text"
                 placeholder="Search ref doc, NSN, base, tech..."
@@ -1470,7 +2246,8 @@
             </div>
           </div>
 
-          <div class="flex-1 min-h-0 overflow-hidden">
+          <!-- SUB-TAB 1: Warehouse Inventory Ledger Table -->
+          <div *ngIf="ledgerSubTab() === 'inventory'" class="flex-1 min-h-0 overflow-hidden">
             <p-table
               [value]="filteredTransactions()"
               [scrollable]="true"
@@ -1518,6 +2295,54 @@
                     {{ tx.previous_balance }} &rarr; <strong class="mew-text-primary">{{ tx.new_balance }}</strong>
                   </td>
                   <td class="mono-data text-xs text-sky-300">{{ tx.performed_by_name }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- SUB-TAB 2: RBAC / ABAC & OPSEC Security Audit Log Table -->
+          <div *ngIf="ledgerSubTab() === 'security'" class="flex-1 min-h-0 overflow-hidden">
+            <p-table
+              [value]="api.securityAuditLogs()"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [rowHover]="true"
+              styleClass="dod-grid p-datatable-sm p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="created_at" style="width: 135px">Timestamp <p-sortIcon field="created_at"></p-sortIcon></th>
+                  <th pSortableColumn="decision" style="width: 95px">Decision <p-sortIcon field="decision"></p-sortIcon></th>
+                  <th pSortableColumn="event_type" style="width: 175px">Event Type <p-sortIcon field="event_type"></p-sortIcon></th>
+                  <th pSortableColumn="actor_name" style="width: 155px">Actor &amp; Role <p-sortIcon field="actor_name"></p-sortIcon></th>
+                  <th pSortableColumn="actor_uic" style="width: 105px">UIC / CAGE <p-sortIcon field="actor_uic"></p-sortIcon></th>
+                  <th pSortableColumn="reason">OPSEC / Policy Justification <p-sortIcon field="reason"></p-sortIcon></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-log>
+                <tr>
+                  <td class="mono-data text-xs mew-text-secondary">{{ log.created_at | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td>
+                    <span
+                      class="dod-tag"
+                      [ngClass]="log.decision === 'ALLOW'
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40'
+                        : (log.decision === 'MASKED'
+                          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40'
+                          : 'bg-rose-500/15 text-rose-400 border border-rose-500/40')"
+                    >
+                      {{ log.decision }}
+                    </span>
+                  </td>
+                  <td class="mono-data text-xs font-bold text-sky-400">{{ log.event_type }}</td>
+                  <td>
+                    <div class="font-semibold mew-text-primary text-xs">{{ log.actor_name }}</div>
+                    <div class="text-[10px] mono-data mew-text-muted">{{ log.actor_role }} ({{ log.actor_clearance }})</div>
+                  </td>
+                  <td class="mono-data text-xs text-sky-300">
+                    {{ log.actor_uic }} {{ log.actor_cage_scope ? '[CAGE ' + log.actor_cage_scope + ']' : '' }}
+                  </td>
+                  <td class="text-xs mew-text-primary">{{ log.reason }}</td>
                 </tr>
               </ng-template>
             </p-table>

@@ -1,5 +1,6 @@
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .base import BaseModel, ReadinessLevel, TransactionType
 from .organization import MilitaryUnit
 from .assets import Asset
@@ -9,7 +10,7 @@ from .logistics import Requisition, WorkOrder, InventoryBalance
 class UnitReadinessSnapshot(models.Model):
     id = models.BigAutoField(primary_key=True)
     unit = models.ForeignKey(MilitaryUnit, on_delete=models.CASCADE)
-    snapshot_date = models.DateField(auto_now_add=True)
+    snapshot_date = models.DateField(default=timezone.localdate)
     
     total_personnel = models.IntegerField()
     deployable_personnel = models.IntegerField()
@@ -104,3 +105,62 @@ class InventoryTransaction(BaseModel):
                 related_work_order=wo,
                 performed_by=performed_by
             )
+
+
+class SecurityAuditLog(BaseModel):
+    """
+    Immutable OPSEC & RBAC/ABAC compliance audit log tracking cross-unit queries,
+    CASREP inspections, bulk readiness CSV exports, dynamic field masking events,
+    and authorization denials (aligned with RBAC_MULTITENANCY_DESIGN_CONSIDERATIONS.md).
+    """
+
+    class EventType(models.TextChoices):
+        CROSS_UNIT_QUERY = "CROSS_UNIT_QUERY", "Cross-Unit / Echelon Telemetry Query"
+        CASREP_VIEW = "CASREP_VIEW", "CASREP & Degraded Readiness Inspection"
+        BULK_CSV_EXPORT = "BULK_CSV_EXPORT", "Bulk Fleet Readiness CSV Export"
+        MAF_SIGN_OFF = "MAF_SIGN_OFF", "CSMP / MAF Lifecycle Sign-Off"
+        REQUISITION_RECEIPT = "REQUISITION_RECEIPT", "MILSTRIP Requisition Receipt"
+        OPSEC_MASK_APPLIED = "OPSEC_MASK_APPLIED", "Dynamic OPSEC / EMCON Field Redaction"
+        ACCESS_DENIED = "ACCESS_DENIED", "RBAC / ABAC Policy Access Denied"
+
+    class PolicyDecision(models.TextChoices):
+        ALLOW = "ALLOW", "ALLOW - Authorized by Policy"
+        MASKED = "MASKED", "MASKED - Allowed with Dynamic OPSEC Redaction"
+        DENY = "DENY", "DENY - Blocked by RBAC/ABAC Policy"
+
+    actor = models.ForeignKey(
+        Personnel,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="security_audit_logs",
+    )
+    actor_name = models.CharField(max_length=150, blank=True, default="System / Anonymous")
+    actor_role = models.CharField(max_length=50, blank=True, default="")
+    actor_uic = models.CharField(max_length=20, blank=True, default="")
+    actor_clearance = models.CharField(max_length=20, blank=True, default="")
+    actor_cage_scope = models.CharField(max_length=50, blank=True, default="")
+
+    event_type = models.CharField(max_length=40, choices=EventType.choices)
+    decision = models.CharField(
+        max_length=20,
+        choices=PolicyDecision.choices,
+        default=PolicyDecision.ALLOW,
+    )
+    resource_target = models.CharField(max_length=150, blank=True, default="")
+    reason = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["event_type", "decision"]),
+            models.Index(fields=["actor_role", "-created_at"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("Security audit logs are immutable and cannot be modified.")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"[{self.decision}] {self.event_type} by {self.actor_name} ({self.actor_role})"

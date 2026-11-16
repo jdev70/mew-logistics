@@ -86,6 +86,13 @@ class AssetModel(BaseModel):
         default="",
         help_text="Prime defense contractor / OEM (e.g., Lockheed Martin, Northrop Grumman)",
     )
+    cage_code = models.CharField(
+        max_length=10,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text="5-character Commercial and Government Entity (CAGE) Code for OEM program isolation",
+    )
     national_stock_number = models.CharField(
         max_length=16,
         unique=True,
@@ -112,6 +119,18 @@ class AssetModel(BaseModel):
             self.asset_class = self.ew_category
         elif self.asset_class and not self.ew_category:
             self.ew_category = self.asset_class
+
+        if not self.cage_code and self.manufacturer:
+            oem_cage_map = {
+                "Lockheed Martin": "03538",
+                "Northrop Grumman": "76823",
+                "BAE Systems": "89954",
+                "Raytheon": "07933",
+                "L3Harris": "55820",
+                "NSWC Dahlgren": "00178",
+                "Naval Research Lab": "81995",
+            }
+            self.cage_code = oem_cage_map.get(self.manufacturer, "00164")
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -185,6 +204,14 @@ class MaterialCatalog(BaseModel):
     expected_mtbf_hours = models.FloatField(
         default=2500.0,
         help_text="Component engineering MTBF estimate in hours",
+    )
+    parent_lru = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sub_assemblies',
+        help_text="Parent LRU in the Hierarchical Bill of Materials (BOM)",
     )
     compatible_systems = models.ManyToManyField(
         AssetModel,

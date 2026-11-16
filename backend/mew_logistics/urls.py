@@ -7,10 +7,13 @@ from .views import (
     InventoryBalanceViewSet,
     InventoryTransactionViewSet,
     MaterialCatalogViewSet,
+    MewAnalyticsOverviewViewSet,
     MilitaryUnitDashboardViewSet,
     NavalHullViewSet,
     PersonnelViewSet,
+    RbacPersonaViewSet,
     RequisitionViewSet,
+    SecurityAuditLogViewSet,
     WorkOrderViewSet,
 )
 
@@ -29,6 +32,9 @@ router.register(r'inventory-balances', InventoryBalanceViewSet, basename='invent
 router.register(r'requisitions', RequisitionViewSet, basename='requisition')
 router.register(r'work-orders', WorkOrderViewSet, basename='work-order')
 router.register(r'inventory-transactions', InventoryTransactionViewSet, basename='inventory-transaction')
+router.register(r'security-audit-logs', SecurityAuditLogViewSet, basename='security-audit-log')
+router.register(r'rbac/personas', RbacPersonaViewSet, basename='rbac-persona')
+router.register(r'analytics/overview', MewAnalyticsOverviewViewSet, basename='analytics-overview')
 
 urlpatterns = [
     # Primary SvcV-1 namespace (/api/v1/...)

@@ -25,6 +25,29 @@ class OperationalStatus(models.TextChoices):
     LEAVE = "Leave", _("Leave")
 
 
+class FunctionalRole(models.TextChoices):
+    SHIPBOARD_TECHNICIAN = (
+        "SHIPBOARD_TECHNICIAN",
+        _("Shipboard / Squadron EW Technician (CTT/ET/AT)"),
+    )
+    UNIT_SUPPO = (
+        "UNIT_SUPPO",
+        _("Unit Supply / Logistics Officer (SUPPO)"),
+    )
+    SHORE_DEPOT_MANAGER = (
+        "SHORE_DEPOT_MANAGER",
+        _("Shore-Based Depot / Inventory Manager"),
+    )
+    WARFARE_CENTER_ENGINEER = (
+        "WARFARE_CENTER_ENGINEER",
+        _("Warfare Center / OEM Systems Engineer"),
+    )
+    FLEET_READINESS_ANALYST = (
+        "FLEET_READINESS_ANALYST",
+        _("Fleet Readiness Analyst / Command Staff (TYCOM)"),
+    )
+
+
 class Personnel(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -72,6 +95,26 @@ class Personnel(BaseModel):
     )
     title = models.CharField(max_length=150, blank=True, default="")
     role = models.CharField(max_length=255, blank=True, default="")
+
+    # Hybrid RBAC + ABAC Access Control Attributes
+    functional_role = models.CharField(
+        max_length=40,
+        choices=FunctionalRole.choices,
+        default=FunctionalRole.SHIPBOARD_TECHNICIAN,
+        help_text="Core RBAC functional duty role governing permitted actions and views",
+    )
+    assigned_uic = models.CharField(
+        max_length=10,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text="ABAC Unit Identification Code dynamically binding tenant data scope",
+    )
+    authorized_cage_codes = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="ABAC CAGE Code scope restricting external OEM contractors to supported hardware (e.g., ['03538'])",
+    )
 
     # Assignment & Installation Correlation
     unit = models.ForeignKey(
@@ -129,9 +172,12 @@ class Personnel(BaseModel):
         ]
 
     def save(self, *args, **kwargs):
-        # Auto-populate installation from unit if not explicitly provided
-        if not self.installation and self.unit_id and self.unit and self.unit.installation_id:
-            self.installation = self.unit.installation
+        # Auto-populate installation and assigned_uic from unit if not explicitly provided
+        if self.unit_id and self.unit:
+            if not self.installation and self.unit.installation_id:
+                self.installation = self.unit.installation
+            if not self.assigned_uic and self.unit.uic:
+                self.assigned_uic = self.unit.uic
 
         # Sync denormalized installation attributes from Installation FK when available
         if self.installation:
@@ -143,6 +189,26 @@ class Personnel(BaseModel):
                 self.installation_location = self.installation.location_display
             if not self.installation_mission_category and self.installation.mission_category:
                 self.installation_mission_category = self.installation.mission_category
+            if not self.assigned_uic and self.installation.dodaac:
+                self.assigned_uic = self.installation.dodaac
+
+        # Auto-infer RBAC functional_role and ABAC CAGE scope if using default
+        if self.functional_role == FunctionalRole.SHIPBOARD_TECHNICIAN:
+            if self.personnel_category == PersonnelCategory.DEFENSE_CONTRACTOR:
+                self.functional_role = FunctionalRole.WARFARE_CENTER_ENGINEER
+                if not self.authorized_cage_codes:
+                    self.authorized_cage_codes = ["03538"]
+            elif "Logistics" in self.title or "Supply" in self.role or "0346" in self.specialty_code:
+                self.functional_role = FunctionalRole.SHORE_DEPOT_MANAGER
+            elif self.personnel_category == PersonnelCategory.DOD_CIVILIAN or "1440" in self.specialty_code:
+                self.functional_role = FunctionalRole.WARFARE_CENTER_ENGINEER
+            elif self.rank in ("CDR", "LCDR", "CTTC") and self.installation_mission_category in (
+                "Operational_Command",
+                "Cryptologic_Operations",
+            ):
+                self.functional_role = FunctionalRole.FLEET_READINESS_ANALYST
+            elif self.personnel_category == PersonnelCategory.ACTIVE_DUTY_OFFICER and self.rank == "LT":
+                self.functional_role = FunctionalRole.UNIT_SUPPO
 
         # Keep specialty_code and legacy mos field aligned
         if self.specialty_code and not self.mos:

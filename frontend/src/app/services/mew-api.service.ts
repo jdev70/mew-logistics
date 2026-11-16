@@ -6,14 +6,19 @@ import {
   InstallationDashboard,
   InventoryBalance,
   InventoryTransactionRecord,
+  MewAnalyticsPayload,
   MewAsset,
   MewComponent,
   MilitaryUnitDashboard,
   PaginatedResponse,
   PersonnelRecord,
+  RbacActiveContext,
+  RbacPersona,
+  RbacPersonasPayload,
   ReceiveShipmentPayload,
   ReceiveShipmentResponse,
   RequisitionSummary,
+  SecurityAuditLogRecord,
   WorkOrderSummary,
 } from '../models/mew.models';
 
@@ -38,6 +43,128 @@ export class MewApiService {
   readonly requisitions = signal<RequisitionSummary[]>([]);
   readonly workOrders = signal<WorkOrderSummary[]>([]);
   readonly transactions = signal<InventoryTransactionRecord[]>([]);
+  readonly securityAuditLogs = signal<SecurityAuditLogRecord[]>([]);
+  readonly analytics = signal<MewAnalyticsPayload | null>(null);
+
+  // Hybrid RBAC + ABAC Active Persona & Policy Context
+  readonly activePersonaId = signal<string>('MEW-PER-0000');
+  readonly rbacPersonas = signal<RbacPersona[]>([
+    {
+      personnel_id: 'MEW-PER-0000',
+      name: 'CIV (GS-15) Evelyn Thorne',
+      rank: 'CIV (GS-15)',
+      title: 'PEO IWS 2.0 / NSWC Crane Enterprise MEW Product Support Manager (PSM)',
+      functional_role: 'FLEET_READINESS_ANALYST',
+      personnel_category: 'DoD_Civilian',
+      security_clearance: 'TS/SCI',
+      assigned_uic: 'N00060',
+      installation_code: 'NSWC-CRANE',
+      target_hull_number: null,
+      authorized_cage_codes: [],
+      badge_label: 'Enterprise PSM / ORSA Lead (Cross-Fleet Analytics & BOM | TS/SCI)',
+    },
+    {
+      personnel_id: 'MEW-PER-0001',
+      name: 'CDR Marcus Vance',
+      rank: 'CDR',
+      title: 'TYCOM Director of Maritime Electromagnetic Maneuver Warfare',
+      functional_role: 'FLEET_READINESS_ANALYST',
+      personnel_category: 'Active_Duty_Officer',
+      security_clearance: 'TS/SCI',
+      assigned_uic: 'N00060',
+      installation_code: 'NAVIFOR-SUF',
+      target_hull_number: null,
+      authorized_cage_codes: [],
+      badge_label: 'TYCOM Command Staff (Full Echelon Tree | TS/SCI)',
+    },
+    {
+      personnel_id: 'MEW-PER-0002',
+      name: 'CTT1 Devon Mercer',
+      rank: 'CTT1',
+      title: 'Shipboard EW Work Center Supervisor (CE02)',
+      functional_role: 'SHIPBOARD_TECHNICIAN',
+      personnel_category: 'Active_Duty_Enlisted',
+      security_clearance: 'TS/SCI',
+      assigned_uic: 'N20001',
+      installation_code: 'NAVSTA-NORVA',
+      target_hull_number: 'DDG-51',
+      authorized_cage_codes: [],
+      badge_label: 'Shipboard Tech (Isolated to DDG-51 UIC | TS/SCI)',
+    },
+    {
+      personnel_id: 'MEW-PER-0003',
+      name: 'LT Hannah Sterling',
+      rank: 'LT',
+      title: 'Squadron Supply & AVCAL Spares Officer (VAQ-132)',
+      functional_role: 'UNIT_SUPPO',
+      personnel_category: 'Active_Duty_Officer',
+      security_clearance: 'Secret',
+      assigned_uic: 'N20009',
+      installation_code: 'NAS-WHIDBEY',
+      target_hull_number: 'VAQ-132',
+      authorized_cage_codes: [],
+      badge_label: 'Unit SUPPO (Isolated to VAQ-132 UIC | Secret)',
+    },
+    {
+      personnel_id: 'MEW-PER-0004',
+      name: 'CIV (GS-12) Arthur Keller',
+      rank: 'CIV (GS-12)',
+      title: 'NSWC Crane Depot Provisioning & DLR Turn-In Manager',
+      functional_role: 'SHORE_DEPOT_MANAGER',
+      personnel_category: 'DoD_Civilian',
+      security_clearance: 'Secret',
+      assigned_uic: 'N00164',
+      installation_code: 'NSWC-CRANE',
+      target_hull_number: null,
+      authorized_cage_codes: [],
+      badge_label: 'Shore Depot Manager (Warehouse Scope | Coords Redacted)',
+    },
+    {
+      personnel_id: 'MEW-PER-0005',
+      name: 'CIV (GS-13) Elena Rostova',
+      rank: 'CIV (GS-13)',
+      title: 'Lead SEWIP / GaN AESA Reliability Engineer (NSWC Crane)',
+      functional_role: 'WARFARE_CENTER_ENGINEER',
+      personnel_category: 'DoD_Civilian',
+      security_clearance: 'TS/SCI',
+      assigned_uic: 'N00164',
+      installation_code: 'NSWC-CRANE',
+      target_hull_number: null,
+      authorized_cage_codes: [],
+      badge_label: 'Warfare Center Engineer (Cross-Fleet MTBF | EMCON Masked)',
+    },
+    {
+      personnel_id: 'MEW-PER-0006',
+      name: 'CTR Nolan Mercer-OEM',
+      rank: 'CTR',
+      title: 'Senior SEWIP Block 2 / BLQ-10 Field Service Representative',
+      functional_role: 'WARFARE_CENTER_ENGINEER',
+      personnel_category: 'Defense_Contractor',
+      security_clearance: 'Secret',
+      assigned_uic: 'NSWC-CRANE',
+      installation_code: 'NSWC-CRANE',
+      target_hull_number: null,
+      authorized_cage_codes: ['03538'],
+      badge_label: 'OEM Contractor (CAGE 03538 Scope Only | Platforms Redacted)',
+    },
+  ]);
+
+  readonly activeRbacContext = signal<RbacActiveContext>({
+    persona_id: 'MEW-PER-0001',
+    actor_name: 'CDR Marcus Vance',
+    functional_role: 'FLEET_READINESS_ANALYST',
+    personnel_category: 'Active_Duty_Officer',
+    security_clearance: 'TS/SCI',
+    assigned_uic: 'N00060',
+    installation_code: 'NAVIFOR-SUF',
+    subordinate_uics: [],
+    authorized_cage_codes: [],
+    active_redaction_policies: [
+      'HIERARCHICAL ECHELON TREE ACCESS',
+      'BULK CSV EXPORT AUTHORIZED',
+    ],
+    can_export_csv: true,
+  });
 
   // Derived Fleet-Wide KPI Signals
   readonly fleetMetrics = computed(() => {
@@ -110,61 +237,98 @@ export class MewApiService {
     return [];
   }
 
+  private getHeaders(): { headers: { [header: string]: string } } {
+    return {
+      headers: {
+        'X-MEW-Persona-ID': this.activePersonaId(),
+      },
+    };
+  }
+
+  switchPersona(personaId: string): void {
+    this.activePersonaId.set(personaId);
+    this.loadAllTelemetry();
+  }
+
   loadAllTelemetry(): void {
     this.loading.set(true);
+    const opts = this.getHeaders();
 
     forkJoin({
+      rbac: this.http
+        .get<RbacPersonasPayload>(`${this.apiBaseUrl}/rbac/personas/`, opts)
+        .pipe(catchError(() => of(null))),
       units: this.http
         .get<PaginatedResponse<MilitaryUnitDashboard> | MilitaryUnitDashboard[]>(
-          `${this.apiBaseUrl}/dashboard/units/`
+          `${this.apiBaseUrl}/dashboard/units/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       assets: this.http
-        .get<PaginatedResponse<MewAsset> | MewAsset[]>(`${this.apiBaseUrl}/assets/`)
+        .get<PaginatedResponse<MewAsset> | MewAsset[]>(`${this.apiBaseUrl}/assets/`, opts)
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       installations: this.http
         .get<PaginatedResponse<InstallationDashboard> | InstallationDashboard[]>(
-          `${this.apiBaseUrl}/installations/`
+          `${this.apiBaseUrl}/installations/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       personnel: this.http
         .get<PaginatedResponse<PersonnelRecord> | PersonnelRecord[]>(
-          `${this.apiBaseUrl}/personnel/`
+          `${this.apiBaseUrl}/personnel/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       components: this.http
         .get<PaginatedResponse<MewComponent> | MewComponent[]>(
-          `${this.apiBaseUrl}/components/`
+          `${this.apiBaseUrl}/components/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       balances: this.http
         .get<PaginatedResponse<InventoryBalance> | InventoryBalance[]>(
-          `${this.apiBaseUrl}/inventory-balances/`
+          `${this.apiBaseUrl}/inventory-balances/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       requisitions: this.http
         .get<PaginatedResponse<RequisitionSummary> | RequisitionSummary[]>(
-          `${this.apiBaseUrl}/requisitions/`
+          `${this.apiBaseUrl}/requisitions/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       workOrders: this.http
         .get<PaginatedResponse<WorkOrderSummary> | WorkOrderSummary[]>(
-          `${this.apiBaseUrl}/work-orders/`
+          `${this.apiBaseUrl}/work-orders/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       transactions: this.http
         .get<PaginatedResponse<InventoryTransactionRecord> | InventoryTransactionRecord[]>(
-          `${this.apiBaseUrl}/inventory-transactions/`
+          `${this.apiBaseUrl}/inventory-transactions/`,
+          opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      auditLogs: this.http
+        .get<PaginatedResponse<SecurityAuditLogRecord> | SecurityAuditLogRecord[]>(
+          `${this.apiBaseUrl}/security-audit-logs/`,
+          opts
+        )
+        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      analytics: this.http
+        .get<MewAnalyticsPayload>(`${this.apiBaseUrl}/analytics/overview/`, opts)
+        .pipe(catchError(() => of(null))),
     }).subscribe((payload) => {
-      const hasLiveApi =
-        payload.assets !== null &&
-        payload.units !== null &&
-        (payload.assets.length > 0 || payload.installations?.length);
+      const hasLiveApi = payload.assets !== null && payload.units !== null;
 
       if (hasLiveApi) {
         this.connectionMode.set('LIVE_API');
+        if (payload.rbac) {
+          this.activeRbacContext.set(payload.rbac.active_context);
+          if (payload.rbac.personas?.length) {
+            this.rbacPersonas.set(payload.rbac.personas);
+          }
+        }
         this.units.set(payload.units || []);
         this.assets.set(payload.assets || []);
         this.installations.set(payload.installations || []);
@@ -174,6 +338,8 @@ export class MewApiService {
         this.requisitions.set(payload.requisitions || []);
         this.workOrders.set(payload.workOrders || []);
         this.transactions.set(payload.transactions || []);
+        this.securityAuditLogs.set(payload.auditLogs || []);
+        this.analytics.set(payload.analytics || null);
       } else {
         this.connectionMode.set('SIMULATION_FALLBACK');
         this.loadFallbackSyntheticDataset();
@@ -271,7 +437,8 @@ export class MewApiService {
     this.http
       .post<ReceiveShipmentResponse>(
         `${this.apiBaseUrl}/requisitions/receive-shipment/`,
-        payload
+        payload,
+        this.getHeaders()
       )
       .subscribe({
         next: (res) => {
@@ -289,8 +456,60 @@ export class MewApiService {
   }
 
   exportFleetCsv(assetClass?: string): void {
-    const query = assetClass ? `?asset_class=${encodeURIComponent(assetClass)}` : '';
-    window.open(`${this.apiBaseUrl}/dashboard/units/export_csv/${query}`, '_blank');
+    const pid = encodeURIComponent(this.activePersonaId());
+    const cls = assetClass ? `&asset_class=${encodeURIComponent(assetClass)}` : '';
+    window.open(
+      `${this.apiBaseUrl}/dashboard/units/export_csv/?persona_id=${pid}${cls}`,
+      '_blank'
+    );
+  }
+
+  advanceWorkOrderStatus(
+    woId: string,
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      const lifecycle = ['OPEN', 'AWAITING_PARTS', 'IN_WORK', 'QA_PENDING', 'CLOSED'];
+      const list = [...this.workOrders()];
+      const idx = list.findIndex((w) => w.id === woId);
+      if (idx === -1) {
+        onError('Work Order not found.');
+        return;
+      }
+      const current = { ...list[idx] };
+      const curIdx = lifecycle.indexOf(current.status);
+      const nextStatus =
+        curIdx >= 0 && curIdx < lifecycle.length - 1
+          ? lifecycle[curIdx + 1]
+          : 'CLOSED';
+      current.status = nextStatus;
+      current.tag_out_verified = true;
+      current.esd_precautions_verified = true;
+      if (current.requires_mdf_zeroization) {
+        current.mdf_zeroization_verified = true;
+      }
+      list[idx] = current;
+      this.workOrders.set(list);
+      onSuccess(`MAF ${current.jcn || current.id} transitioned to ${nextStatus}.`);
+      return;
+    }
+
+    this.http
+      .post<{ message: string; work_order: WorkOrderSummary }>(
+        `${this.apiBaseUrl}/work-orders/${woId}/advance-status/`,
+        {},
+        this.getHeaders()
+      )
+      .subscribe({
+        next: (res) => {
+          this.loadAllTelemetry();
+          onSuccess(res.message);
+        },
+        error: (err) => {
+          onError(err?.error?.error || 'Failed to advance MAF status.');
+        },
+      });
   }
 
   private loadFallbackSyntheticDataset(): void {
@@ -1154,30 +1373,147 @@ export class MewApiService {
     this.workOrders.set([
       {
         id: 'wo-101',
+        jcn: 'N2001-CE-0001',
+        casrep_number: 'CASREP-26-001',
+        priority_code: 1,
+        priority_display: '1 - Mandatory / CASREP',
+        hull_number: 'DDG-51',
+        vessel_name: 'USS Arleigh Burke',
+        system_nomenclature: 'AN/SLQ-32(V)6',
+        eic: 'D710100',
+        apl_ael: '8810101201A',
+        work_center: 'CE02',
+        when_discovered_code: 'D',
+        when_discovered_display: 'D - During Normal Tactical Operation',
+        equipment_status_code: '3',
+        equipment_status_display: '3 - Non-Operational (NMCM / NMCS)',
+        malfunction_code: '127',
+        malfunction_display: '127 - Calibration / Phase Drift',
         description_of_fault:
           '[CASREP / NMCS] Low-Band RF Receiver/Digitizer LRU phase noise & local oscillator unlock fault',
         technician_name: 'CTT1 Vance',
+        technician_clearance: 'TS/SCI',
+        qa_inspector_name: 'CTTC Mercer',
+        org_man_hours: 4.5,
+        depot_man_hours: 0.0,
+        tag_out_verified: true,
+        esd_precautions_verified: true,
+        cwp_controlled_work_package: false,
+        requires_mdf_zeroization: true,
+        mdf_zeroization_verified: false,
         date_opened: new Date(Date.now() - 86400000 * 2).toISOString(),
         is_grounding_fault: true,
-        status: 'Awaiting Parts',
+        status: 'AWAITING_PARTS',
+        parts_used_details: [
+          {
+            id: 'wop-1',
+            nsn: '5865-01-684-1101',
+            cage_code: '03538',
+            nomenclature: 'Low-Band RF Receiver/Digitizer LRU',
+            quantity: 1,
+            unit_price: 48500,
+            defective_serial_number: 'SN-OLD-CMP-201-4412',
+            replacement_serial_number: 'SN-NEW-CMP-201-8890',
+            requires_dlr_turn_in: true,
+            dlr_turn_in_status: 'Pending_Turn_In',
+          },
+        ],
       },
       {
         id: 'wo-105',
+        jcn: 'N2009-AT-0002',
+        casrep_number: 'CASREP-26-002',
+        priority_code: 1,
+        priority_display: '1 - Mandatory / CASREP',
+        hull_number: 'VAQ-132',
+        vessel_name: 'Scorpions (EA-18G Squadron)',
+        system_nomenclature: 'AN/ALQ-249',
+        eic: 'D710800',
+        apl_ael: '8810108212A',
+        work_center: 'AT01',
+        when_discovered_code: 'F',
+        when_discovered_display: 'F - Built-In-Test (BIT) Automated Fault',
+        equipment_status_code: '3',
+        equipment_status_display: '3 - Non-Operational (NMCM / NMCS)',
+        malfunction_code: '020',
+        malfunction_display: '020 - Burned Out / Thermal Trip',
         description_of_fault:
           '[TECH ASSIST / NMCM] ALQ-249 Pod Ram Air Turbine (RAT) variable-frequency generator voltage regulation fault',
         technician_name: 'AT2 Callahan',
+        technician_clearance: 'Secret',
+        qa_inspector_name: 'LCDR Sterling',
+        org_man_hours: 8.0,
+        depot_man_hours: 12.5,
+        tag_out_verified: true,
+        esd_precautions_verified: true,
+        cwp_controlled_work_package: true,
+        requires_mdf_zeroization: false,
+        mdf_zeroization_verified: false,
         date_opened: new Date(Date.now() - 3600000 * 14).toISOString(),
         is_grounding_fault: true,
-        status: 'In Progress',
+        status: 'IN_WORK',
+        parts_used_details: [
+          {
+            id: 'wop-2',
+            nsn: '6115-01-698-7701',
+            cage_code: '07933',
+            nomenclature: 'ALQ-249 Ram Air Turbine (RAT) High-Capacity Power Generator',
+            quantity: 1,
+            unit_price: 96000,
+            defective_serial_number: 'SN-OLD-CMP-212-1904',
+            replacement_serial_number: 'SN-NEW-CMP-212-7315',
+            requires_dlr_turn_in: true,
+            dlr_turn_in_status: 'Pending_Turn_In',
+          },
+        ],
       },
       {
         id: 'wo-102',
+        jcn: 'N2003-CE-0003',
+        casrep_number: '',
+        priority_code: 2,
+        priority_display: '2 - Essential',
+        hull_number: 'DDG-125',
+        vessel_name: 'USS Jack H. Lucas',
+        system_nomenclature: 'AN/SLQ-32(V)7',
+        eic: 'D710200',
+        apl_ael: '8810102203A',
+        work_center: 'CE02',
+        when_discovered_code: 'B',
+        when_discovered_display: 'B - During Preventive Maintenance (PMS)',
+        equipment_status_code: '2',
+        equipment_status_display: '2 - Reduced Capability (PMC)',
+        malfunction_code: '374',
+        malfunction_display: '374 - Waveguide Arcing / High VSWR',
         description_of_fault:
           '[DEGRADED / PMC] GaN AESA T/R Sub-Array Module VSWR fault on port array channel 4',
         technician_name: 'CTTC Mercer',
+        technician_clearance: 'TS/SCI',
+        qa_inspector_name: 'CIV (GS-13) Rostova',
+        org_man_hours: 3.0,
+        depot_man_hours: 0.0,
+        tag_out_verified: true,
+        esd_precautions_verified: true,
+        cwp_controlled_work_package: false,
+        requires_mdf_zeroization: true,
+        mdf_zeroization_verified: false,
         date_opened: new Date(Date.now() - 86400000).toISOString(),
         is_grounding_fault: false,
-        status: 'Open',
+        status: 'OPEN',
+        parts_used_details: [
+          {
+            id: 'wop-3',
+            nsn: '5865-01-691-2201',
+            cage_code: '76823',
+            nomenclature: 'GaN Solid-State AESA Transmit/Receive (T/R) Module',
+            quantity: 1,
+            unit_price: 112000,
+            defective_serial_number: 'SN-OLD-CMP-203-6610',
+            replacement_serial_number: 'SN-NEW-CMP-203-9902',
+            requires_dlr_turn_in: true,
+            dlr_turn_in_status: 'Pending_Turn_In',
+          },
+        ],
       },
     ]);
 
@@ -1211,5 +1547,295 @@ export class MewApiService {
         performed_by_name: 'CIV (GS-12) Logistics Lead',
       },
     ]);
+
+    this.analytics.set({
+      ao_system_breakdown: [
+        {
+          system_id: 'SYS-101',
+          nomenclature: 'AN/SLQ-32(V)6',
+          common_name: 'SEWIP Block 2',
+          ew_category: 'Electronic Support (ES)',
+          domain: 'Surface',
+          installed_count: 5,
+          fmc_count: 4,
+          pmc_count: 0,
+          nmc_count: 1,
+          mtbm_hours: 1380.4,
+          mttr_hours: 22.5,
+          ldt_hours: 94.5,
+          mdt_hours: 117.0,
+          computed_ao_pct: 92.2,
+          total_operating_hours: 8420,
+          swap_c_power_kw: 42.0,
+          swap_c_cooling_gpm: 18.5,
+          swap_c_weight_lbs: 6400,
+          vswr_ratio: 1.56,
+          thermal_load_pct: 75,
+        },
+        {
+          system_id: 'SYS-102',
+          nomenclature: 'AN/SLQ-32(V)7',
+          common_name: 'SEWIP Block 3',
+          ew_category: 'Electronic Attack (EA) / ES',
+          domain: 'Surface',
+          installed_count: 4,
+          fmc_count: 3,
+          pmc_count: 1,
+          nmc_count: 0,
+          mtbm_hours: 1610.0,
+          mttr_hours: 14.2,
+          ldt_hours: 48.0,
+          mdt_hours: 62.2,
+          computed_ao_pct: 96.3,
+          total_operating_hours: 5190,
+          swap_c_power_kw: 118.5,
+          swap_c_cooling_gpm: 44.0,
+          swap_c_weight_lbs: 11200,
+          vswr_ratio: 1.42,
+          thermal_load_pct: 78,
+        },
+        {
+          system_id: 'SYS-104',
+          nomenclature: 'Mk 53 Mod 9',
+          common_name: 'Nulka Active Decoy System',
+          ew_category: 'Off-Board Electronic Decoy',
+          domain: 'Surface',
+          installed_count: 4,
+          fmc_count: 4,
+          pmc_count: 0,
+          nmc_count: 0,
+          mtbm_hours: 2140.0,
+          mttr_hours: 9.5,
+          ldt_hours: 4.0,
+          mdt_hours: 13.5,
+          computed_ao_pct: 99.4,
+          total_operating_hours: 6840,
+        },
+        {
+          system_id: 'SYS-106',
+          nomenclature: 'AN/BLQ-10(V)',
+          common_name: 'Submarine EW Support Suite',
+          ew_category: 'SIGINT / Electronic Support',
+          domain: 'Subsurface',
+          installed_count: 2,
+          fmc_count: 2,
+          pmc_count: 0,
+          nmc_count: 0,
+          mtbm_hours: 1890.2,
+          mttr_hours: 12.0,
+          ldt_hours: 4.0,
+          mdt_hours: 16.0,
+          computed_ao_pct: 99.2,
+          total_operating_hours: 4920,
+        },
+        {
+          system_id: 'SYS-108',
+          nomenclature: 'AN/ALQ-249',
+          common_name: 'Next Generation Jammer Mid-Band',
+          ew_category: 'Airborne Electronic Attack',
+          domain: 'Airborne',
+          installed_count: 2,
+          fmc_count: 1,
+          pmc_count: 0,
+          nmc_count: 1,
+          mtbm_hours: 1240.0,
+          mttr_hours: 19.6,
+          ldt_hours: 18.0,
+          mdt_hours: 37.6,
+          computed_ao_pct: 97.1,
+          total_operating_hours: 2810,
+          swap_c_power_kw: 36.0,
+          swap_c_cooling_gpm: 14.5,
+          swap_c_weight_lbs: 1420,
+          vswr_ratio: 1.67,
+          thermal_load_pct: 92,
+        },
+      ],
+      component_analytics: [
+        {
+          component_id: 'CMP-201',
+          nsn: '5865-01-684-1101',
+          nomenclature: 'Low-Band RF Receiver/Digitizer LRU',
+          component_category: 'RF Receiver / Exciter LRU',
+          manufacturer: 'Lockheed Martin',
+          cage_code: '03538',
+          unit_price: 48500,
+          critical_item: true,
+          parent_lru_id: 'CMP-202',
+          parent_lru_name: 'High-Band Digital Receiver/Exciter (DREX) Assembly',
+          compatible_system_ids: ['SYS-101', 'SYS-102'],
+          total_fleet_stock: 25,
+          total_reorder_point: 12,
+          active_faults: 2,
+          casrep_grounding_faults: 1,
+          lead_time_days: 21,
+          expected_mtbf_hours: 3200,
+          monthly_demand_rate: 14.5,
+          days_to_depletion: 19,
+          depletion_status: 'CRITICAL_STOCKOUT_RISK',
+          casrep_impact_score: 92,
+        },
+        {
+          component_id: 'CMP-203',
+          nsn: '5865-01-691-2201',
+          nomenclature: 'GaN Solid-State AESA Transmit/Receive (T/R) Module',
+          component_category: 'Solid-State EA Amplifier Module',
+          manufacturer: 'Northrop Grumman',
+          cage_code: '76823',
+          unit_price: 112000,
+          critical_item: true,
+          parent_lru_id: null,
+          parent_lru_name: 'Top-Level System LRU',
+          compatible_system_ids: ['SYS-102', 'SYS-108'],
+          total_fleet_stock: 18,
+          total_reorder_point: 12,
+          active_faults: 1,
+          casrep_grounding_faults: 0,
+          lead_time_days: 45,
+          expected_mtbf_hours: 2400,
+          monthly_demand_rate: 11.2,
+          days_to_depletion: 38,
+          depletion_status: 'CRITICAL_STOCKOUT_RISK',
+          casrep_impact_score: 85,
+        },
+        {
+          component_id: 'CMP-212',
+          nsn: '6115-01-698-7701',
+          nomenclature: 'ALQ-249 Ram Air Turbine (RAT) High-Capacity Power Generator',
+          component_category: 'Airborne EA Pod Power & Cooling',
+          manufacturer: 'Raytheon',
+          cage_code: '07933',
+          unit_price: 96000,
+          critical_item: true,
+          parent_lru_id: null,
+          parent_lru_name: 'Top-Level System LRU',
+          compatible_system_ids: ['SYS-108'],
+          total_fleet_stock: 16,
+          total_reorder_point: 10,
+          active_faults: 1,
+          casrep_grounding_faults: 1,
+          lead_time_days: 30,
+          expected_mtbf_hours: 2100,
+          monthly_demand_rate: 8.6,
+          days_to_depletion: 44,
+          depletion_status: 'REORDER_WARNING',
+          casrep_impact_score: 78,
+        },
+        {
+          component_id: 'CMP-206',
+          nsn: '5865-01-540-4401',
+          nomenclature: 'Mk 234 Mod 2 Nulka Active Electronic Decoy Canister',
+          component_category: 'Off-Board Electronic Decoy Round',
+          manufacturer: 'BAE Systems',
+          cage_code: '89954',
+          unit_price: 145000,
+          critical_item: true,
+          parent_lru_id: 'CMP-207',
+          parent_lru_name: 'Mk 53 Decoy Launcher Fire Control Interface Unit (FCIU)',
+          compatible_system_ids: ['SYS-104'],
+          total_fleet_stock: 42,
+          total_reorder_point: 16,
+          active_faults: 0,
+          casrep_grounding_faults: 0,
+          lead_time_days: 60,
+          expected_mtbf_hours: 5000,
+          monthly_demand_rate: 4.1,
+          days_to_depletion: 140,
+          depletion_status: 'SUSTAINABLE',
+          casrep_impact_score: 55,
+        },
+      ],
+      supply_bottleneck_funnel: [
+        { stage: '1. Installed Fleet MEW Loadouts', count: 23, severity: 'NOMINAL' },
+        { stage: '2. Active Maintenance Actions (MAFs)', count: 8, severity: 'INFO' },
+        { stage: '3. Open MILSTRIP Requisitions', count: 6, severity: 'WARN' },
+        { stage: '4. DLR Carcass Turn-Ins Pending Zeroization', count: 5, severity: 'WARN' },
+        { stage: '5. IPD-01 CASREP Grounding Bottlenecks', count: 2, severity: 'CRIT' },
+      ],
+      nec_staffing_matrix: [
+        {
+          nec_code: 'NEC C16A',
+          system_id: 'SYS-101 / SYS-103',
+          system_name: 'AN/SLQ-32(V)6 SEWIP Block 2',
+          total_qualified: 18,
+          deployable_count: 17,
+          required_billets: 16,
+          coverage_pct: 100.0,
+          spof_risk: 'RESILIENT',
+        },
+        {
+          nec_code: 'NEC C17A',
+          system_id: 'SYS-102',
+          system_name: 'AN/SLQ-32(V)7 SEWIP Block 3 (AESA EA)',
+          total_qualified: 12,
+          deployable_count: 10,
+          required_billets: 14,
+          coverage_pct: 71.4,
+          spof_risk: 'MARGINAL_COVERAGE',
+        },
+        {
+          nec_code: 'NEC C19A',
+          system_id: 'SYS-106 / SYS-107',
+          system_name: 'AN/BLQ-10 Submarine EW & Senior Emitter Analysis',
+          total_qualified: 6,
+          deployable_count: 5,
+          required_billets: 10,
+          coverage_pct: 50.0,
+          spof_risk: 'CRITICAL_SPOF_GAP',
+        },
+        {
+          nec_code: 'NEC 8341',
+          system_id: 'SYS-108',
+          system_name: 'AN/ALQ-249 Next Gen Jammer Pod Calibration',
+          total_qualified: 11,
+          deployable_count: 10,
+          required_billets: 12,
+          coverage_pct: 83.3,
+          spof_risk: 'MARGINAL_COVERAGE',
+        },
+      ],
+      geospatial_nodes: [
+        { code: 'NSWC-CRANE', name: 'NSWC Crane Division', mission_category: 'R&D_Warfare_Center', lat: 38.8912, lon: -86.8378, readiness_rating: 'C1', personnel_count: 24 },
+        { code: 'NAVSTA-NORVA', name: 'Naval Station Norfolk', mission_category: 'Fleet_Homeport', lat: 36.9461, lon: -76.3133, readiness_rating: 'C1', personnel_count: 38 },
+        { code: 'NBSD-CA', name: 'Naval Base San Diego', mission_category: 'Fleet_Homeport', lat: 32.6836, lon: -117.1292, readiness_rating: 'C1', personnel_count: 34 },
+        { code: 'NAS-WHIDBEY', name: 'NAS Whidbey Island', mission_category: 'Fleet_Homeport', lat: 48.3517, lon: -122.6558, readiness_rating: 'C2', personnel_count: 27 },
+        { code: 'PMRF-HI', name: 'PMRF Barking Sands', mission_category: 'Test_Evaluation_Range', lat: 22.0228, lon: -159.785, readiness_rating: 'C1', personnel_count: 12 },
+        { code: 'CFAY-YOKO', name: 'CFA Yokosuka', mission_category: 'Fleet_Homeport', lat: 35.2814, lon: 139.6722, readiness_rating: 'C1', personnel_count: 29 },
+      ],
+      proximity_depot_routes: [
+        {
+          hull_number: 'DDG-51',
+          vessel_name: 'USS Arleigh Burke',
+          readiness_status: 'NMCS',
+          system_nomenclature: 'AN/SLQ-32(V)6',
+          origin_homeport: 'NAVSTA-NORVA',
+          origin_lat: 36.9461,
+          origin_lon: -76.3133,
+          needed_component_id: 'CMP-201',
+          needed_component_name: 'Low-Band RF Receiver/Digitizer LRU',
+          nearest_depot_code: 'NSWC-CRANE',
+          nearest_depot_name: 'Naval Surface Warfare Center Crane Division',
+          depot_qty_available: 22,
+          distance_nm: 512.4,
+          estimated_transit_hours: 6.3,
+        },
+        {
+          hull_number: 'VAQ-132',
+          vessel_name: 'Scorpions (EA-18G Squadron)',
+          readiness_status: 'NMCM',
+          system_nomenclature: 'AN/ALQ-249',
+          origin_homeport: 'NAS-WHIDBEY',
+          origin_lat: 48.3517,
+          origin_lon: -122.6558,
+          needed_component_id: 'CMP-212',
+          needed_component_name: 'ALQ-249 Ram Air Turbine (RAT) Power Generator',
+          nearest_depot_code: 'NBSD-CA',
+          nearest_depot_name: 'Naval Base San Diego',
+          depot_qty_available: 9,
+          distance_nm: 974.2,
+          estimated_transit_hours: 8.9,
+        },
+      ],
+    });
   }
 }

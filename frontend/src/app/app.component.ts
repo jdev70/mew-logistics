@@ -5,6 +5,8 @@ import { TableModule } from 'primeng/table';
 import { MewApiService } from './services/mew-api.service';
 import { ThemeService } from './services/theme.service';
 import {
+  AoSystemBreakdown,
+  ComponentAnalyticsItem,
   InstallationDashboard,
   InventoryBalance,
   InventoryTransactionRecord,
@@ -13,7 +15,9 @@ import {
   MilitaryUnitDashboard,
   OperationalDomainFilter,
   PersonnelRecord,
+  ProximityDepotRoute,
   RequisitionSummary,
+  WorkOrderSummary,
 } from './models/mew.models';
 
 @Component({
@@ -27,8 +31,52 @@ export class AppComponent implements OnInit {
   readonly api = inject(MewApiService);
   readonly themeService = inject(ThemeService);
 
-  // Active Navigation Viewpoint
-  readonly activeViewpoint = signal<MewViewpoint>('readiness');
+  // Active Navigation Viewpoint (Default to Predictive Analytics & Visualizations)
+  readonly activeViewpoint = signal<MewViewpoint>('analytics');
+
+  // =========================================================================
+  // 0. INTERACTIVE ANALYTICS & VISUALIZATIONS STATE (MEW_ANALYTICS.md)
+  // =========================================================================
+  readonly analyticsSubTab = signal<'ao' | 'depletion' | 'staffing'>('ao');
+  readonly selectedAnalyticsSystem = signal<AoSystemBreakdown | null>(null);
+  readonly selectedAnalyticsComponent = signal<ComponentAnalyticsItem | null>(null);
+  readonly selectedDepotRoute = signal<ProximityDepotRoute | null>(null);
+  readonly optempoMultiplier = signal<number>(1.0);
+  readonly analyticsDomainFilter = signal<'ALL' | 'Surface' | 'Subsurface' | 'Airborne'>('ALL');
+
+  readonly filteredAoSystems = computed(() => {
+    const an = this.api.analytics();
+    if (!an) return [];
+    const dom = this.analyticsDomainFilter();
+    return dom === 'ALL'
+      ? an.ao_system_breakdown
+      : an.ao_system_breakdown.filter((s) => s.domain === dom);
+  });
+
+  readonly simulatedComponentAnalytics = computed(() => {
+    const an = this.api.analytics();
+    if (!an) return [];
+    const mult = this.optempoMultiplier();
+    return an.component_analytics.map((cmp) => {
+      const adjDemand = Number((cmp.monthly_demand_rate * mult).toFixed(2));
+      const adjDays = Math.max(
+        2,
+        Math.min(180, Math.round(cmp.days_to_depletion / mult))
+      );
+      let adjStatus: string = 'SUSTAINABLE';
+      if (adjDays <= cmp.lead_time_days) {
+        adjStatus = 'CRITICAL_STOCKOUT_RISK';
+      } else if (adjDays <= Math.round(cmp.lead_time_days * 1.6)) {
+        adjStatus = 'REORDER_WARNING';
+      }
+      return {
+        ...cmp,
+        monthly_demand_rate: adjDemand,
+        days_to_depletion: adjDays,
+        depletion_status: adjStatus,
+      };
+    });
+  });
 
   // Global Domain Filter
   readonly selectedDomain = signal<OperationalDomainFilter>('ALL');
@@ -55,6 +103,8 @@ export class AppComponent implements OnInit {
   readonly showOnlyLowStock = signal<boolean>(false);
   readonly selectedBalance = signal<InventoryBalance | null>(null);
   readonly selectedRequisition = signal<RequisitionSummary | null>(null);
+  readonly selectedWorkOrder = signal<WorkOrderSummary | null>(null);
+  readonly mafActionFeedback = signal<string | null>(null);
 
   // =========================================================================
   // 4. SHORE INSTALLATIONS & PERSONNEL MASTER-DETAIL STATE
@@ -71,6 +121,7 @@ export class AppComponent implements OnInit {
   // =========================================================================
   // 5. IMMUTABLE AUDIT LEDGER MASTER-DETAIL STATE
   // =========================================================================
+  readonly ledgerSubTab = signal<'inventory' | 'security'>('inventory');
   readonly ledgerTypeFilter = signal<string>('ALL');
   readonly ledgerSearchQuery = signal<string>('');
   readonly selectedTransaction = signal<InventoryTransactionRecord | null>(null);
@@ -125,10 +176,43 @@ export class AppComponent implements OnInit {
           this.selectedTransaction.set(txs[0]);
         }
 
+        const wos = this.api.workOrders();
+        if (
+          wos.length &&
+          (!this.selectedWorkOrder() || !wos.some((w) => w.id === this.selectedWorkOrder()?.id))
+        ) {
+          this.selectedWorkOrder.set(wos[0]);
+        }
+
         const pendingReqs = this.pendingRequisitionsList();
         if (pendingReqs.length && !this.scannerDocNumber()) {
           this.scannerDocNumber.set(pendingReqs[0].document_number);
           this.scannerReceivedQty.set(pendingReqs[0].quantity);
+        }
+
+        const analytics = this.api.analytics();
+        if (analytics) {
+          if (
+            analytics.ao_system_breakdown.length &&
+            (!this.selectedAnalyticsSystem() ||
+              !analytics.ao_system_breakdown.some(
+                (s) => s.system_id === this.selectedAnalyticsSystem()?.system_id
+              ))
+          ) {
+            this.selectedAnalyticsSystem.set(analytics.ao_system_breakdown[0]);
+          }
+          if (
+            analytics.component_analytics.length &&
+            (!this.selectedAnalyticsComponent() ||
+              !analytics.component_analytics.some(
+                (c) => c.component_id === this.selectedAnalyticsComponent()?.component_id
+              ))
+          ) {
+            this.selectedAnalyticsComponent.set(analytics.component_analytics[0]);
+          }
+          if (analytics.proximity_depot_routes.length && !this.selectedDepotRoute()) {
+            this.selectedDepotRoute.set(analytics.proximity_depot_routes[0]);
+          }
         }
       },
       { allowSignalWrites: true }
@@ -382,6 +466,23 @@ export class AppComponent implements OnInit {
     this.selectedBalance.set(bal);
   }
 
+  selectWorkOrderRecord(wo: WorkOrderSummary): void {
+    this.selectedWorkOrder.set(wo);
+    this.mafActionFeedback.set(null);
+  }
+
+  advanceMafStatus(wo: WorkOrderSummary): void {
+    this.api.advanceWorkOrderStatus(
+      wo.id,
+      (msg) => {
+        this.mafActionFeedback.set(msg);
+      },
+      (err) => {
+        this.mafActionFeedback.set(err);
+      }
+    );
+  }
+
   selectRequisitionForReceipt(req: RequisitionSummary): void {
     this.selectedRequisition.set(req);
     this.scannerDocNumber.set(req.document_number);
@@ -484,5 +585,33 @@ export class AppComponent implements OnInit {
       return 'bg-amber-500/15 text-amber-400 border border-amber-500/40';
     }
     return 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30';
+  }
+
+  // =========================================================================
+  // GEOSPATIAL SVG NETWORK MAP PROJECTION HELPERS (560x220 Tactical Canvas)
+  // =========================================================================
+  projectLonToX(lon: number | null): number {
+    if (lon === null || lon === undefined) return 280;
+    // Wrap Pacific FDNF (Yokosuka ~139E -> -220) so INDOPACOM sits cleanly on the left
+    const adjustedLon = lon > 0 ? lon - 360 : lon;
+    // Map range [-230 .. -65] -> [30 .. 530]
+    const clamped = Math.max(-230, Math.min(-65, adjustedLon));
+    return Math.round(30 + ((clamped + 230) / 165) * 500);
+  }
+
+  projectLatToY(lat: number | null): number {
+    if (lat === null || lat === undefined) return 110;
+    // Map latitude [18 .. 52] -> [195 .. 25]
+    const clamped = Math.max(18, Math.min(52, lat));
+    return Math.round(195 - ((clamped - 18) / 34) * 170);
+  }
+
+  getNodeCoords(code: string): { x: number; y: number } {
+    const node = this.api.analytics()?.geospatial_nodes.find((n) => n.code === code);
+    if (!node) return { x: 280, y: 110 };
+    return {
+      x: this.projectLonToX(node.lon),
+      y: this.projectLatToY(node.lat),
+    };
   }
 }

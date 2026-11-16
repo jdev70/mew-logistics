@@ -6,6 +6,7 @@ export interface PaginatedResponse<T> {
 }
 
 export type MewViewpoint =
+  | 'analytics'
   | 'readiness'
   | 'loadouts'
   | 'supply'
@@ -55,6 +56,10 @@ export interface PersonnelRecord {
   specialty_code: string;
   title: string;
   role: string;
+  functional_role?: string;
+  functional_role_display?: string;
+  assigned_uic?: string;
+  authorized_cage_codes?: string[];
   installation: string | null;
   installation_code: string;
   installation_deployed_at: string;
@@ -71,13 +76,56 @@ export interface PersonnelRecord {
   official_email: string;
 }
 
+export interface WorkOrderPartDetail {
+  id: string;
+  nsn: string;
+  cage_code: string;
+  nomenclature: string;
+  quantity: number;
+  unit_price: number | string;
+  defective_serial_number: string;
+  replacement_serial_number: string;
+  requires_dlr_turn_in: boolean;
+  dlr_turn_in_status: string;
+}
+
 export interface WorkOrderSummary {
   id: string;
-  description_of_fault: string;
-  technician_name: string;
-  date_opened: string;
-  is_grounding_fault: boolean;
+  jcn?: string;
   status: string;
+  status_display?: string;
+  priority_code?: number;
+  priority_display?: string;
+  casrep_number?: string;
+  is_grounding_fault: boolean;
+  asset_serial?: string;
+  system_nomenclature?: string;
+  hull_number?: string;
+  vessel_name?: string;
+  installation_code?: string;
+  eic?: string;
+  apl_ael?: string;
+  when_discovered_code?: string;
+  when_discovered_display?: string;
+  equipment_status_code?: string;
+  equipment_status_display?: string;
+  malfunction_code?: string;
+  malfunction_display?: string;
+  description_of_fault: string;
+  work_center?: string;
+  technician_name: string;
+  technician_clearance?: string;
+  qa_inspector_name?: string;
+  org_man_hours?: number | string;
+  depot_man_hours?: number | string;
+  tag_out_verified?: boolean;
+  esd_precautions_verified?: boolean;
+  cwp_controlled_work_package?: boolean;
+  requires_mdf_zeroization?: boolean;
+  mdf_zeroization_verified?: boolean;
+  date_opened: string;
+  date_closed?: string | null;
+  parts_used_details?: WorkOrderPartDetail[];
 }
 
 export interface RequisitionSummary {
@@ -85,8 +133,15 @@ export interface RequisitionSummary {
   document_number: string;
   material_name: string;
   nsn: string;
+  cage_code?: string;
+  unit_price?: number | string;
   quantity: number;
   priority_display: string;
+  ipd_code?: string;
+  supply_status_code?: string;
+  supply_status_display?: string;
+  requires_dlr_turn_in?: boolean;
+  work_order_jcn?: string;
   status: string;
   estimated_delivery_date: string | null;
 }
@@ -101,10 +156,12 @@ export interface MewAsset {
   ew_category: string;
   asset_class: string;
   manufacturer: string;
+  cage_code?: string;
   hull_number: string | null;
   vessel_name: string | null;
   ship_class: string | null;
   domain: 'Surface' | 'Subsurface' | 'Airborne' | string | null;
+  emcon_posture?: string | null;
   mission_role_code: string | null;
   mission_role_name: string | null;
   quantity_installed: number;
@@ -210,3 +267,155 @@ export interface ReceiveShipmentResponse {
   quantity_added: number;
   backorder_notice?: string;
 }
+
+export interface RbacPersona {
+  personnel_id: string;
+  name: string;
+  rank: string;
+  title: string;
+  functional_role: string;
+  personnel_category: string;
+  security_clearance: string;
+  assigned_uic: string;
+  installation_code: string;
+  target_hull_number: string | null;
+  authorized_cage_codes: string[];
+  badge_label: string;
+}
+
+export interface RbacActiveContext {
+  persona_id: string;
+  actor_name: string;
+  functional_role: string;
+  personnel_category: string;
+  security_clearance: string;
+  assigned_uic: string;
+  installation_code: string;
+  subordinate_uics: string[];
+  authorized_cage_codes: string[];
+  active_redaction_policies: string[];
+  can_export_csv: boolean;
+}
+
+export interface RbacPersonasPayload {
+  active_context: RbacActiveContext;
+  personas: RbacPersona[];
+}
+
+export interface SecurityAuditLogRecord {
+  id: string;
+  created_at: string;
+  actor_name: string;
+  actor_role: string;
+  actor_uic: string;
+  actor_clearance: string;
+  actor_cage_scope: string;
+  event_type: string;
+  event_type_display: string;
+  decision: 'ALLOW' | 'MASKED' | 'DENY' | string;
+  decision_display: string;
+  resource_target: string;
+  reason: string;
+}
+
+export interface AoSystemBreakdown {
+  system_id: string;
+  nomenclature: string;
+  common_name: string;
+  ew_category: string;
+  domain: string;
+  installed_count: number;
+  fmc_count: number;
+  pmc_count: number;
+  nmc_count: number;
+  mtbm_hours: number;
+  mttr_hours: number;
+  ldt_hours: number;
+  mdt_hours: number;
+  computed_ao_pct: number;
+  total_operating_hours: number;
+  swap_c_power_kw?: number;
+  swap_c_cooling_gpm?: number;
+  swap_c_weight_lbs?: number;
+  vswr_ratio?: number;
+  thermal_load_pct?: number;
+}
+
+export interface ComponentAnalyticsItem {
+  component_id: string;
+  nsn: string;
+  nomenclature: string;
+  component_category: string;
+  manufacturer: string;
+  cage_code: string;
+  unit_price: number;
+  critical_item: boolean;
+  parent_lru_id: string | null;
+  parent_lru_name: string;
+  compatible_system_ids: string[];
+  total_fleet_stock: number;
+  total_reorder_point: number;
+  active_faults: number;
+  casrep_grounding_faults: number;
+  lead_time_days: number;
+  expected_mtbf_hours: number;
+  monthly_demand_rate: number;
+  days_to_depletion: number;
+  depletion_status: 'CRITICAL_STOCKOUT_RISK' | 'REORDER_WARNING' | 'SUSTAINABLE' | string;
+  casrep_impact_score: number;
+}
+
+export interface SupplyBottleneckStage {
+  stage: string;
+  count: number;
+  severity: 'NOMINAL' | 'INFO' | 'WARN' | 'CRIT' | string;
+}
+
+export interface NecStaffingItem {
+  nec_code: string;
+  system_id: string;
+  system_name: string;
+  total_qualified: number;
+  deployable_count: number;
+  required_billets: number;
+  coverage_pct: number;
+  spof_risk: 'CRITICAL_SPOF_GAP' | 'MARGINAL_COVERAGE' | 'RESILIENT' | string;
+}
+
+export interface GeospatialNode {
+  code: string;
+  name: string;
+  mission_category: string;
+  lat: number;
+  lon: number;
+  readiness_rating: string;
+  personnel_count: number;
+}
+
+export interface ProximityDepotRoute {
+  hull_number: string;
+  vessel_name: string;
+  readiness_status: string;
+  system_nomenclature: string;
+  origin_homeport: string;
+  origin_lat: number | null;
+  origin_lon: number | null;
+  needed_component_id: string;
+  needed_component_name: string;
+  nearest_depot_code: string;
+  nearest_depot_name: string;
+  depot_qty_available: number;
+  distance_nm: number;
+  estimated_transit_hours: number;
+}
+
+export interface MewAnalyticsPayload {
+  ao_system_breakdown: AoSystemBreakdown[];
+  component_analytics: ComponentAnalyticsItem[];
+  supply_bottleneck_funnel: SupplyBottleneckStage[];
+  nec_staffing_matrix: NecStaffingItem[];
+  geospatial_nodes: GeospatialNode[];
+  proximity_depot_routes: ProximityDepotRoute[];
+}
+
+

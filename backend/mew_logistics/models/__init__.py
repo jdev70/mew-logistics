@@ -11,12 +11,15 @@ from .organization import (
     NavalHull,
     MissionCategory,
     InstallationReadinessRating,
+    CommandEchelon,
+    EmconPosture,
 )
 from .personnel import (
     Personnel,
     PersonnelCategory,
     SecurityClearance,
     OperationalStatus,
+    FunctionalRole,
 )
 from .assets import (
     MissionRole,
@@ -28,5 +31,10 @@ from .assets import (
     HullSystemAssignment,
 )
 from .logistics import WorkOrder, Requisition, InventoryBalance, WorkOrderPart
-from .analytics import UnitReadinessSnapshot, AssetStatusLog, InventoryTransaction
+from .analytics import (
+    UnitReadinessSnapshot,
+    AssetStatusLog,
+    InventoryTransaction,
+    SecurityAuditLog,
+)
 

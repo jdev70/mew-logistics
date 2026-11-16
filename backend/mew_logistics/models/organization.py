@@ -20,6 +20,21 @@ class InstallationReadinessRating(models.TextChoices):
     C4 = "C4_Not_Mission_Capable", _("C4 - Not Mission Capable")
 
 
+class CommandEchelon(models.TextChoices):
+    TYCOM_FLEET = "TYCOM_FLEET", _("Fleet / Type Commander (TYCOM)")
+    STRIKE_GROUP = "STRIKE_GROUP", _("Carrier Strike Group / DESRON / Air Wing")
+    COMBATANT_UNIT = "COMBATANT_UNIT", _("Combatant Vessel / Squadron (Hull)")
+    SHORE_DEPOT = "SHORE_DEPOT", _("Shore Logistics & Fleet Homeport")
+    WARFARE_CENTER = "WARFARE_CENTER", _("R&D Warfare Center / Test Range")
+
+
+class EmconPosture(models.TextChoices):
+    ALPHA = "ALPHA", _("EMCON ALPHA - Complete Electronic Silence (Mask Coordinates)")
+    BRAVO = "BRAVO", _("EMCON BRAVO - Restricted Emissions (Mask Coordinates)")
+    CHARLIE = "CHARLIE", _("EMCON CHARLIE - Tactical Mission Operations")
+    DELTA = "DELTA", _("EMCON DELTA - Normal In-Port / Garrison")
+
+
 class Installation(BaseModel):
     installation_id = models.CharField(
         max_length=20,
@@ -78,6 +93,12 @@ class MilitaryUnit(BaseModel):
     name = models.CharField(max_length=255)
     uic = models.CharField(max_length=6, unique=True, help_text="Unit Identification Code")
     parent_unit = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subordinate_units')
+    echelon_level = models.CharField(
+        max_length=30,
+        choices=CommandEchelon.choices,
+        default=CommandEchelon.COMBATANT_UNIT,
+        help_text="Hierarchical command echelon for tree-based multi-tenancy",
+    )
 
     objects = MilitaryUnitManager()
     installation = models.ForeignKey(Installation, on_delete=models.PROTECT, related_name='units')
@@ -85,6 +106,35 @@ class MilitaryUnit(BaseModel):
     
     personnel_readiness_pct = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
     equipment_readiness_pct = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+
+    def get_subordinate_unit_ids(self, include_self: bool = True) -> list:
+        """
+        Traverses the hierarchical command tree (Fleet -> Strike Group -> Hull)
+        and returns all subordinate MilitaryUnit UUIDs.
+        """
+        if self.echelon_level == CommandEchelon.TYCOM_FLEET:
+            return list(MilitaryUnit.objects.values_list("id", flat=True))
+
+        visited = set()
+        if include_self:
+            visited.add(self.id)
+
+        frontier = [self.id]
+        while frontier:
+            children = list(
+                MilitaryUnit.objects.filter(parent_unit_id__in=frontier)
+                .exclude(id__in=visited)
+                .values_list("id", flat=True)
+            )
+            if not children:
+                break
+            visited.update(children)
+            frontier = children
+        return list(visited)
+
+    def get_subordinate_uics(self, include_self: bool = True) -> list:
+        ids = self.get_subordinate_unit_ids(include_self=include_self)
+        return list(MilitaryUnit.objects.filter(id__in=ids).values_list("uic", flat=True))
 
     def __str__(self):
         return f"{self.name} [{self.uic}]"
@@ -138,6 +188,12 @@ class NavalHull(BaseModel):
         blank=True,
         related_name="naval_hull",
         help_text="Links the Naval Hull to its corresponding MilitaryUnit for readiness tracking",
+    )
+    emcon_posture = models.CharField(
+        max_length=20,
+        choices=EmconPosture.choices,
+        default=EmconPosture.CHARLIE,
+        help_text="Emission Control (EMCON) posture driving ABAC geospatial/telemetry masking",
     )
 
     class Meta:

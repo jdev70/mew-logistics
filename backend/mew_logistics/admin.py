@@ -16,6 +16,7 @@ from .models import (
     NavalHull,
     Personnel,
     Requisition,
+    SecurityAuditLog,
     UnitReadinessSnapshot,
     WorkOrder,
 )
@@ -228,28 +229,52 @@ class RequisitionAdmin(admin.ModelAdmin):
         'requesting_unit',
         'material',
         'quantity',
-        'priority',
+        'ipd_code',
+        'supply_status_code',
+        'requires_dlr_turn_in',
         'status',
         'tied_to_asset',
         'estimated_delivery_date',
     )
     search_fields = ('document_number', 'material__nsn', 'material__nomenclature', 'requesting_unit__name')
-    list_filter = ('status', 'priority')
+    list_filter = ('status', 'priority', 'supply_status_code', 'requires_dlr_turn_in')
 
 
 @admin.register(WorkOrder)
 class WorkOrderAdmin(admin.ModelAdmin):
     list_display = (
-        'id',
-        'asset',
-        'technician',
-        'is_grounding_fault',
+        'jcn',
         'status',
+        'priority_code',
+        'casrep_number',
+        'asset',
+        'hull',
+        'work_center',
+        'malfunction_code',
+        'technician',
+        'qa_inspector',
+        'is_grounding_fault',
+        'requires_mdf_zeroization',
         'date_opened',
-        'date_closed',
     )
-    search_fields = ('asset__serial_number', 'description_of_fault', 'technician__last_name')
-    list_filter = ('status', 'is_grounding_fault')
+    search_fields = (
+        'jcn',
+        'casrep_number',
+        'eic',
+        'apl_ael',
+        'asset__serial_number',
+        'description_of_fault',
+        'technician__last_name',
+    )
+    list_filter = (
+        'status',
+        'priority_code',
+        'work_center',
+        'malfunction_code',
+        'when_discovered_code',
+        'is_grounding_fault',
+        'requires_mdf_zeroization',
+    )
 
 
 @admin.register(InventoryTransaction)
@@ -287,6 +312,23 @@ class UnitReadinessSnapshotAdmin(admin.ModelAdmin):
         'nmc_assets',
     )
     list_filter = ('snapshot_date', 'unit')
+
+
+@admin.register(SecurityAuditLog)
+class SecurityAuditLogAdmin(admin.ModelAdmin):
+    list_display = (
+        'created_at',
+        'decision',
+        'event_type',
+        'actor_name',
+        'actor_role',
+        'actor_uic',
+        'actor_clearance',
+        'resource_target',
+    )
+    search_fields = ('actor_name', 'actor_uic', 'resource_target', 'reason')
+    list_filter = ('decision', 'event_type', 'actor_role', 'actor_clearance')
+
 
 
 
