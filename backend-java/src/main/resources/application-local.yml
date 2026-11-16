@@ -1,0 +1,5 @@
+mew:
+  security:
+    mode: demo
+    demo-subject: MEW-PER-0000
+    demo-role: FLEET_READINESS_ANALYST

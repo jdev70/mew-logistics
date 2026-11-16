@@ -4,6 +4,9 @@ import mil.navy.nswc.mew.domain.entity.Asset;
 import mil.navy.nswc.mew.domain.entity.Installation;
 import mil.navy.nswc.mew.repository.AssetRepository;
 import mil.navy.nswc.mew.repository.InstallationRepository;
+import mil.navy.nswc.mew.security.MewResourceFactory;
+import mil.navy.nswc.mew.security.model.Permission;
+import mil.navy.nswc.mew.service.RbacPolicyService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,17 +24,23 @@ public class AnalyticsController {
 
     private final AssetRepository assetRepository;
     private final InstallationRepository installationRepository;
+    private final RbacPolicyService rbacPolicyService;
 
     public AnalyticsController(AssetRepository assetRepository,
-                               InstallationRepository installationRepository) {
+                               InstallationRepository installationRepository,
+                               RbacPolicyService rbacPolicyService) {
         this.assetRepository = assetRepository;
         this.installationRepository = installationRepository;
+        this.rbacPolicyService = rbacPolicyService;
     }
 
     @GetMapping({"", "/"})
     @Transactional(readOnly = true)
     public Map<String, Object> getAnalyticsOverview() {
-        List<Asset> assets = assetRepository.findAll();
+        List<Asset> assets = assetRepository.findAll().stream()
+                .filter(asset -> rbacPolicyService.canAccess(Permission.VIEW_GLOBAL_READINESS,
+                        MewResourceFactory.forAsset(asset)))
+                .collect(Collectors.toList());
         List<Map<String, Object>> aoBreakdown = assets.stream().map(a -> {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("system_id", a.getAssetModel() != null ? a.getAssetModel().getSystemId() : "SYS-101");
@@ -51,7 +60,10 @@ public class AnalyticsController {
             return item;
         }).collect(Collectors.toList());
 
-        List<Installation> installations = installationRepository.findAll();
+        List<Installation> installations = installationRepository.findAll().stream()
+                .filter(installation -> rbacPolicyService.canAccess(Permission.VIEW_GLOBAL_READINESS,
+                        MewResourceFactory.forInstallation(installation)))
+                .collect(Collectors.toList());
         List<Map<String, Object>> nodes = installations.stream().map(inst -> {
             Map<String, Object> node = new LinkedHashMap<>();
             node.put("code", inst.getInstallationCode());

@@ -18,6 +18,10 @@ public class Personnel extends BaseEntity {
     @Column(name = "personnel_id", length = 20, unique = true)
     private String personnelId;
 
+    /** Immutable subject issued by the configured identity provider. */
+    @Column(name = "identity_subject", length = 150, unique = true)
+    private String identitySubject;
+
     @Column(name = "dod_id", length = 10, unique = true)
     private String dodId;
 
@@ -55,6 +59,19 @@ public class Personnel extends BaseEntity {
     @Column(name = "authorized_cage_codes", length = 500)
     private String authorizedCageCodes = "[]";
 
+    @Column(name = "authorized_installations", length = 500)
+    private String authorizedInstallations = "[]";
+
+    @Column(name = "service_branch", length = 10, nullable = false)
+    private String serviceBranch = "USN";
+
+    @Column(name = "command_tier", length = 30, nullable = false)
+    private String commandTier = "INSTALLATION_UNIT";
+
+    /** Comma-delimited Permission enum values. ALL is permitted for local seed data only. */
+    @Column(name = "authorization_permissions", length = 2000, nullable = false)
+    private String authorizationPermissions = "";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_id")
     private MilitaryUnit unit;
@@ -71,6 +88,8 @@ public class Personnel extends BaseEntity {
 
     public String getPersonnelId() { return personnelId; }
     public void setPersonnelId(String personnelId) { this.personnelId = personnelId; }
+    public String getIdentitySubject() { return identitySubject; }
+    public void setIdentitySubject(String identitySubject) { this.identitySubject = identitySubject; }
     public String getDodId() { return dodId; }
     public void setDodId(String dodId) { this.dodId = dodId; }
     public String getFirstName() { return firstName; }
@@ -95,6 +114,14 @@ public class Personnel extends BaseEntity {
     public void setAssignedUic(String assignedUic) { this.assignedUic = assignedUic; }
     public String getAuthorizedCageCodes() { return authorizedCageCodes; }
     public void setAuthorizedCageCodes(String authorizedCageCodes) { this.authorizedCageCodes = authorizedCageCodes; }
+    public String getAuthorizedInstallations() { return authorizedInstallations; }
+    public void setAuthorizedInstallations(String authorizedInstallations) { this.authorizedInstallations = authorizedInstallations; }
+    public String getServiceBranch() { return serviceBranch; }
+    public void setServiceBranch(String serviceBranch) { this.serviceBranch = serviceBranch; }
+    public String getCommandTier() { return commandTier; }
+    public void setCommandTier(String commandTier) { this.commandTier = commandTier; }
+    public String getAuthorizationPermissions() { return authorizationPermissions; }
+    public void setAuthorizationPermissions(String authorizationPermissions) { this.authorizationPermissions = authorizationPermissions; }
     public MilitaryUnit getUnit() { return unit; }
     public void setUnit(MilitaryUnit unit) { this.unit = unit; }
     public Installation getInstallation() { return installation; }

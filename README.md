@@ -26,7 +26,7 @@ This project is a decoupled, enterprise-ready logistics and readiness dashboard 
 
 ## System Architecture & Core Patterns
 
-* **Persona-Driven RBAC / ABAC ([RbacPolicyService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/RbacPolicyService.java)):** Incoming `POST`, `PUT`, and `DELETE` requests are authorized against the `X-MEW-Persona-ID` header (`FLEET_READINESS_ANALYST`, `SHIPBOARD_TECHNICIAN`, `UNIT_SUPPO`, `SHORE_DEPOT_MANAGER`, `WARFARE_CENTER_ENGINEER`), with all `ALLOW` and `DENY` decisions written to `SecurityAuditLog`.
+* **Authenticated RBAC / ABAC ([MewAuthorizationService.java](backend-java/src/main/java/mil/navy/nswc/mew/security/MewAuthorizationService.java)):** Production API requests require a validated bearer JWT. Its verified subject resolves to a persisted personnel authorization assignment (branch, command tier, clearance, installation/CAGE scope, and permissions); asset and work-order access is also checked at the resource scope. Legacy `X-MEW-Persona-ID` values are ignored.
 * **Immutable Inventory Ledger ([InventoryService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/InventoryService.java)):** Uses `PESSIMISTIC_WRITE` locking on `InventoryBalance` and appends immutable `InventoryTransaction` records (`@PreUpdate` blocks mutations).
 * **MILSTRIP Short-Ship Backorder Splitting ([RequisitionService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/RequisitionService.java)):** Receiving a partial shipment automatically splits the remaining quantity into a `-BO` backorder requisition (`BB` status) and credits warehouse stock (`D7` status).
 * **Automated Readiness Snapshots ([ReadinessSchedulerService.java](backend-java/src/main/java/mil/navy/nswc/mew/service/ReadinessSchedulerService.java)):** `@Scheduled` cron job computing daily `UnitReadinessSnapshot` records.
@@ -52,12 +52,14 @@ mvn -o test
 # Package deployable WAR (target/mew-logistics-api.war)
 mvn package
 
-# Run locally on http://localhost:8080 (H2 file-backed DB + DevDataInitializer)
-mvn spring-boot:run
+# Run locally on http://localhost:8080 (H2 file-backed DB + DevDataInitializer + demo identity)
+mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 
 # Run packaged WAR directly
-java -jar target\mew-logistics-api.war
+java -jar target\mew-logistics-api.war --spring.profiles.active=local
 ```
+
+The `local` profile is development-only and creates a configured demo identity. The default mode is JWT authentication; configure `spring.security.oauth2.resourceserver.jwt.issuer-uri` (or `jwk-set-uri`) and provision each JWT `sub` as a unique `identity_subject` on an authorized personnel record before deploying.
 
 ### H2 Database Console (Local Dev)
 While the backend is running, open **`http://localhost:8080/h2-console`**:

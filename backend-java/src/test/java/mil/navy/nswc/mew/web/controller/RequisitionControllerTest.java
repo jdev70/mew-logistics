@@ -1,6 +1,7 @@
 package mil.navy.nswc.mew.web.controller;
 
 import mil.navy.nswc.mew.repository.RequisitionRepository;
+import mil.navy.nswc.mew.domain.entity.Requisition;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RequisitionService;
 import mil.navy.nswc.mew.web.dto.ReceiveShipmentRequest;
@@ -8,17 +9,20 @@ import mil.navy.nswc.mew.web.dto.ReceiveShipmentResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import java.util.Optional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RequisitionController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @SuppressWarnings("null")
 class RequisitionControllerTest {
 
@@ -43,6 +47,8 @@ class RequisitionControllerTest {
         response.setQuantityAdded(4);
 
         when(requisitionService.receiveShipment(any(ReceiveShipmentRequest.class))).thenReturn(response);
+        when(requisitionRepository.findByDocumentNumber("N2000161000001"))
+                .thenReturn(Optional.of(new Requisition()));
 
         mockMvc.perform(post("/api/v1/requisitions/receive-shipment/")
                         .contentType(MediaType.APPLICATION_JSON)

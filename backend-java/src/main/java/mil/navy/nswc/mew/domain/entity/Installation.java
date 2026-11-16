@@ -18,6 +18,9 @@ public class Installation extends BaseEntity {
     @Column(name = "installation_code", length = 30, unique = true)
     private String installationCode;
 
+    @Column(name = "service_branch", length = 10, nullable = false)
+    private String serviceBranch = "JOINT";
+
     @Column(name = "name", length = 255, nullable = false)
     private String name;
 
@@ -80,6 +83,8 @@ public class Installation extends BaseEntity {
     public void setInstallationId(String installationId) { this.installationId = installationId; }
     public String getInstallationCode() { return installationCode; }
     public void setInstallationCode(String installationCode) { this.installationCode = installationCode; }
+    public String getServiceBranch() { return serviceBranch; }
+    public void setServiceBranch(String serviceBranch) { this.serviceBranch = serviceBranch; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getDodaac() { return dodaac; }

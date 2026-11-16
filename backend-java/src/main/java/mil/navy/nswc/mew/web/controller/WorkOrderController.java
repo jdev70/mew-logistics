@@ -5,6 +5,8 @@ import mil.navy.nswc.mew.repository.WorkOrderRepository;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RbacPolicyService.Action;
 import mil.navy.nswc.mew.service.RbacPolicyService.Resource;
+import mil.navy.nswc.mew.security.MewResourceFactory;
+import mil.navy.nswc.mew.security.model.Permission;
 import mil.navy.nswc.mew.service.WorkOrderService;
 import mil.navy.nswc.mew.service.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,7 +48,10 @@ public class WorkOrderController {
     @GetMapping({"", "/"})
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listWorkOrders() {
-        return workOrderRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return workOrderRepository.findAll().stream()
+                .filter(workOrder -> rbacPolicyService.canAccess(Permission.LOG_MAINTENANCE_ACTION,
+                        MewResourceFactory.forWorkOrder(workOrder)))
+                .map(this::toDto).collect(Collectors.toList());
     }
 
     private Map<String, Object> toDto(WorkOrder w) {
@@ -75,28 +79,34 @@ public class WorkOrderController {
     }
 
     @GetMapping({"/{id}", "/{id}/"})
+    @Transactional(readOnly = true)
     public WorkOrder getWorkOrder(@PathVariable @NonNull UUID id) {
-        return workOrderRepository.findById(id)
+        WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(workOrder),
+                "/api/v1/work-orders/" + id + "/");
+        return workOrder;
     }
 
     @PostMapping({"", "/"})
     public ResponseEntity<WorkOrder> createWorkOrder(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody @NonNull WorkOrder workOrder) {
-        rbacPolicyService.requirePermission(personaId, Resource.WORK_ORDER, Action.CREATE, "/api/v1/work-orders/");
+        rbacPolicyService.requirePermission(Resource.WORK_ORDER, Action.CREATE, "/api/v1/work-orders/");
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(workOrder),
+                "/api/v1/work-orders/");
         workOrder.setId(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(workOrderRepository.save(workOrder));
     }
 
     @PutMapping({"/{id}", "/{id}/"})
     public WorkOrder updateWorkOrder(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody @NonNull WorkOrder payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.WORK_ORDER, Action.UPDATE, "/api/v1/work-orders/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.WORK_ORDER, Action.UPDATE, "/api/v1/work-orders/" + id + "/");
         WorkOrder existing = workOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
+                "/api/v1/work-orders/" + id + "/");
         payload.setId(existing.getId());
         payload.setCreatedAt(existing.getCreatedAt());
         return workOrderRepository.save(payload);
@@ -104,21 +114,24 @@ public class WorkOrderController {
 
     @DeleteMapping({"/{id}", "/{id}/"})
     public ResponseEntity<Void> deleteWorkOrder(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.WORK_ORDER, Action.DELETE, "/api/v1/work-orders/" + id + "/");
-        if (!workOrderRepository.existsById(id)) {
-            throw new ResourceNotFoundException("WorkOrder not found: " + id);
-        }
-        workOrderRepository.deleteById(id);
+        rbacPolicyService.requirePermission(Resource.WORK_ORDER, Action.DELETE, "/api/v1/work-orders/" + id + "/");
+        WorkOrder existing = workOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
+                "/api/v1/work-orders/" + id + "/");
+        workOrderRepository.delete(existing);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping({"/{id}/close", "/{id}/close/"})
     public ResponseEntity<WorkOrder> closeWorkOrder(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.WORK_ORDER, Action.UPDATE, "/api/v1/work-orders/" + id + "/close/");
+        rbacPolicyService.requirePermission(Resource.WORK_ORDER, Action.UPDATE, "/api/v1/work-orders/" + id + "/close/");
+        WorkOrder existing = workOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
+                "/api/v1/work-orders/" + id + "/close/");
         return ResponseEntity.ok(workOrderService.closeWorkOrder(id));
     }
 }

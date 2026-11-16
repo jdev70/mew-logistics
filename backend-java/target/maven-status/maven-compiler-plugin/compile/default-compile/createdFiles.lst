@@ -1,0 +1,15 @@
+mil\navy\nswc\mew\security\model\CommandTier.class
+mil\navy\nswc\mew\security\MewAuthorizationService.class
+mil\navy\nswc\mew\security\MewPermissionsManager$AuthorizationResult.class
+mil\navy\nswc\mew\service\RbacPolicyService$1.class
+mil\navy\nswc\mew\security\model\Permission.class
+mil\navy\nswc\mew\security\model\MewUser.class
+mil\navy\nswc\mew\security\MewPermissionsManager$1.class
+mil\navy\nswc\mew\config\SecurityConfig.class
+mil\navy\nswc\mew\security\MewResourceFactory.class
+mil\navy\nswc\mew\config\SecurityConfig$DemoIdentityFilter.class
+mil\navy\nswc\mew\security\model\MewResource.class
+mil\navy\nswc\mew\security\AuthenticatedMewUserResolver.class
+mil\navy\nswc\mew\security\MewPermissionsManager.class
+mil\navy\nswc\mew\security\model\MilitaryBranch.class
+mil\navy\nswc\mew\security\model\ClearanceLevel.class

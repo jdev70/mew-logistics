@@ -1,7 +1,13 @@
 package mil.navy.nswc.mew.service;
 
 import mil.navy.nswc.mew.domain.entity.SecurityAuditLog;
+import mil.navy.nswc.mew.domain.entity.Personnel;
 import mil.navy.nswc.mew.repository.SecurityAuditLogRepository;
+import mil.navy.nswc.mew.security.AuthenticatedMewUserResolver;
+import mil.navy.nswc.mew.security.MewAuthorizationService;
+import mil.navy.nswc.mew.security.model.MewUser;
+import mil.navy.nswc.mew.security.model.MewResource;
+import mil.navy.nswc.mew.security.model.Permission;
 import mil.navy.nswc.mew.service.exception.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Enforces Hybrid RBAC + ABAC CRUD policies based on the active X-MEW-Persona-ID.
+ * Compatibility façade for legacy controllers. The request header is intentionally ignored;
+ * authorization is derived exclusively from the authenticated Spring Security context.
  */
 @Service
 public class RbacPolicyService {
@@ -59,10 +66,16 @@ public class RbacPolicyService {
     }
 
     private final SecurityAuditLogRepository auditLogRepository;
+    private final MewAuthorizationService authorizationService;
+    private final AuthenticatedMewUserResolver userResolver;
     private final Map<String, PersonaProfile> personas = new LinkedHashMap<>();
 
-    public RbacPolicyService(SecurityAuditLogRepository auditLogRepository) {
+    public RbacPolicyService(SecurityAuditLogRepository auditLogRepository,
+                             MewAuthorizationService authorizationService,
+                             AuthenticatedMewUserResolver userResolver) {
         this.auditLogRepository = auditLogRepository;
+        this.authorizationService = authorizationService;
+        this.userResolver = userResolver;
         registerPersonas();
     }
 
@@ -134,16 +147,76 @@ public class RbacPolicyService {
     }
 
     public void requirePermission(String personaId, Resource resource, Action action, String target) {
-        PersonaProfile persona = resolvePersona(personaId);
-        if (!isAllowed(persona, resource, action)) {
+        requirePermission(resource, action, target);
+    }
+
+    public void requirePermission(Resource resource, Action action, String target) {
+        PersonaProfile persona = currentPersona();
+        Permission permission = permissionFor(resource, action);
+        try {
+            authorizationService.requirePermission(permission);
+        } catch (AccessDeniedException exception) {
             String reason = String.format(
-                    "RBAC/ABAC denied %s %s for persona %s (%s).",
-                    action, resource, persona.personnelId, persona.functionalRole);
+                    "RBAC denied %s %s for authenticated subject %s: %s",
+                    action, resource, persona.personnelId, exception.getMessage());
             logAudit(persona, "ACCESS_DENIED", "DENY", target, reason);
-            throw new AccessDeniedException(reason);
+            throw exception;
         }
         logAudit(persona, "MAF_SIGN_OFF", "ALLOW", target,
-                String.format("Authorized %s %s for %s.", action, resource, persona.personnelId));
+                String.format("Authorized %s %s for authenticated subject %s.", action, resource, persona.personnelId));
+    }
+
+    private Permission permissionFor(Resource resource, Action action) {
+        switch (resource) {
+            case ASSET:
+                return Permission.CERTIFY_EQUIPMENT_UPTIME;
+            case WORK_ORDER:
+                return Permission.LOG_MAINTENANCE_ACTION;
+            case REQUISITION:
+                return action == Action.DELETE ? Permission.APPROVE_PARTS_REQUISITION
+                        : Permission.REQUEST_PARTS_REQUISITION;
+            case CATALOG:
+                return Permission.MANAGE_BOM_CONFIG;
+            default:
+                throw new AccessDeniedException("No permission mapping exists for " + resource + ".");
+        }
+    }
+
+    public boolean canAccess(Permission permission, MewResource resource) {
+        try {
+            authorizationService.requireAccess(permission, resource);
+            return true;
+        } catch (AccessDeniedException exception) {
+            return false;
+        }
+    }
+
+    public boolean canAccessCatalogItem(Permission permission, String cageCode) {
+        MewUser user = userResolver.currentUser();
+        return user.permissions().contains(permission)
+                && (user.authorizedCageCodes().isEmpty()
+                || (cageCode != null && user.authorizedCageCodes().contains(cageCode)));
+    }
+
+    public void requireAccess(Permission permission, MewResource resource, String target) {
+        PersonaProfile persona = currentPersona();
+        try {
+            authorizationService.requireAccess(permission, resource);
+            logAudit(persona, "RESOURCE_ACCESS", "ALLOW", target, "Resource scope check passed.");
+        } catch (AccessDeniedException exception) {
+            logAudit(persona, "ACCESS_DENIED", "DENY", target, exception.getMessage());
+            throw exception;
+        }
+    }
+
+    private PersonaProfile currentPersona() {
+        MewUser user = userResolver.currentUser();
+        Personnel personnel = userResolver.currentPersonnel();
+        String name = (personnel.getRank() + " " + personnel.getFirstName() + " " + personnel.getLastName()).trim();
+        return new PersonaProfile(personnel.getPersonnelId(), name, personnel.getRank(), personnel.getTitle(),
+                personnel.getFunctionalRole().name(), personnel.getPersonnelCategory(), user.clearance().name(),
+                personnel.getAssignedUic(), user.assignedInstallationCode(), null, List.copyOf(user.authorizedCageCodes()),
+                "Authenticated subject: " + user.subject());
     }
 
     private void logAudit(PersonaProfile persona, String eventType, String decision, String target, String reason) {
@@ -161,7 +234,7 @@ public class RbacPolicyService {
     }
 
     public Map<String, Object> buildPersonasPayload(String requestedPersonaId) {
-        PersonaProfile active = resolvePersona(requestedPersonaId);
+        PersonaProfile active = currentPersona();
 
         Map<String, Object> activeContext = new LinkedHashMap<>();
         activeContext.put("persona_id", active.personnelId);
@@ -173,7 +246,8 @@ public class RbacPolicyService {
         activeContext.put("installation_code", active.installationCode);
         activeContext.put("subordinate_uics", Collections.emptyList());
         activeContext.put("authorized_cage_codes", active.authorizedCageCodes);
-        activeContext.put("can_export_csv", "FLEET_READINESS_ANALYST".equals(active.functionalRole));
+        activeContext.put("can_export_csv", userResolver.currentUser().permissions().contains(Permission.VIEW_GLOBAL_READINESS));
+        activeContext.put("capabilities", capabilities());
         activeContext.put("active_redaction_policies", Arrays.asList(
                 "HIERARCHICAL ECHELON TREE ACCESS",
                 "PERSONA CRUD POLICY: " + active.functionalRole
@@ -181,7 +255,21 @@ public class RbacPolicyService {
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("active_context", activeContext);
-        payload.put("personas", personas.values());
+        payload.put("personas", Collections.emptyList());
         return payload;
+    }
+
+    private Map<String, Boolean> capabilities() {
+        java.util.Set<Permission> permissions = userResolver.currentUser().permissions();
+        Map<String, Boolean> capabilities = new LinkedHashMap<>();
+        capabilities.put("can_create_asset", permissions.contains(Permission.CERTIFY_EQUIPMENT_UPTIME));
+        capabilities.put("can_update_asset", permissions.contains(Permission.CERTIFY_EQUIPMENT_UPTIME));
+        capabilities.put("can_delete_asset", permissions.contains(Permission.CERTIFY_EQUIPMENT_UPTIME));
+        capabilities.put("can_create_work_order", permissions.contains(Permission.LOG_MAINTENANCE_ACTION));
+        capabilities.put("can_close_work_order", permissions.contains(Permission.LOG_MAINTENANCE_ACTION));
+        capabilities.put("can_delete_work_order", permissions.contains(Permission.LOG_MAINTENANCE_ACTION));
+        capabilities.put("can_create_requisition", permissions.contains(Permission.REQUEST_PARTS_REQUISITION));
+        capabilities.put("can_delete_requisition", permissions.contains(Permission.APPROVE_PARTS_REQUISITION));
+        return capabilities;
     }
 }

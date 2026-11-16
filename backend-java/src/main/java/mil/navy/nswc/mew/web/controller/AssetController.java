@@ -15,6 +15,8 @@ import mil.navy.nswc.mew.repository.MissionRoleRepository;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RbacPolicyService.Action;
 import mil.navy.nswc.mew.service.RbacPolicyService.Resource;
+import mil.navy.nswc.mew.security.MewResourceFactory;
+import mil.navy.nswc.mew.security.model.Permission;
 import mil.navy.nswc.mew.service.exception.BusinessValidationException;
 import mil.navy.nswc.mew.service.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -27,7 +29,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,7 +80,9 @@ public class AssetController {
         } else {
             assets = assetRepository.findAll();
         }
-        return assets.stream().map(this::toDto).collect(Collectors.toList());
+        return assets.stream()
+                .filter(asset -> rbacPolicyService.canAccess(Permission.VIEW_INVENTORY, MewResourceFactory.forAsset(asset)))
+                .map(this::toDto).collect(Collectors.toList());
     }
 
     @GetMapping({ "/{id}", "/{id}/" })
@@ -87,15 +90,16 @@ public class AssetController {
     public Map<String, Object> getAsset(@PathVariable @NonNull UUID id) {
         Asset asset = assetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + id));
+        rbacPolicyService.requireAccess(Permission.VIEW_INVENTORY, MewResourceFactory.forAsset(asset),
+                "/api/v1/assets/" + id + "/");
         return toDto(asset);
     }
 
     @PostMapping({ "", "/" })
     @Transactional
     public ResponseEntity<Map<String, Object>> createAsset(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @RequestBody @NonNull Map<String, Object> payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.ASSET, Action.CREATE, "/api/v1/assets/");
+        rbacPolicyService.requirePermission(Resource.ASSET, Action.CREATE, "/api/v1/assets/");
 
         String serialNumber = asString(payload.get("serial_number"));
         if (serialNumber == null || serialNumber.isBlank()) {
@@ -150,6 +154,9 @@ public class AssetController {
         asset.setCurrentLocation(resolveInstallation(payload));
         asset.setAssignedUnit(resolveOrCreateUnit(payload, asset.getCurrentLocation()));
 
+        rbacPolicyService.requireAccess(Permission.CERTIFY_EQUIPMENT_UPTIME, MewResourceFactory.forAsset(asset),
+                "/api/v1/assets/");
+
         Asset saved = assetRepository.save(asset);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
     }
@@ -158,12 +165,13 @@ public class AssetController {
     @Transactional
     @SuppressWarnings("null")
     public Map<String, Object> updateAsset(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @RequestBody @NonNull Map<String, Object> payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.ASSET, Action.UPDATE, "/api/v1/assets/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.ASSET, Action.UPDATE, "/api/v1/assets/" + id + "/");
         Asset existing = assetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + id));
+        rbacPolicyService.requireAccess(Permission.CERTIFY_EQUIPMENT_UPTIME, MewResourceFactory.forAsset(existing),
+                "/api/v1/assets/" + id + "/");
         if (payload.containsKey("readiness_status") && payload.get("readiness_status") != null) {
             existing.setReadinessStatus(ReadinessLevel.valueOf(String.valueOf(payload.get("readiness_status"))));
         }
@@ -178,13 +186,13 @@ public class AssetController {
 
     @DeleteMapping({ "/{id}", "/{id}/" })
     public ResponseEntity<Void> deleteAsset(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.ASSET, Action.DELETE, "/api/v1/assets/" + id + "/");
-        if (!assetRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Asset not found: " + id);
-        }
-        assetRepository.deleteById(id);
+        rbacPolicyService.requirePermission(Resource.ASSET, Action.DELETE, "/api/v1/assets/" + id + "/");
+        Asset existing = assetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + id));
+        rbacPolicyService.requireAccess(Permission.CERTIFY_EQUIPMENT_UPTIME, MewResourceFactory.forAsset(existing),
+                "/api/v1/assets/" + id + "/");
+        assetRepository.delete(existing);
         return ResponseEntity.noContent().build();
     }
 

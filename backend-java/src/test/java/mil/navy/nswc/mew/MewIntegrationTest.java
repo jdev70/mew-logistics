@@ -39,10 +39,10 @@ class MewIntegrationTest {
                 .andExpect(jsonPath("$[0].nsn").exists());
         mockMvc.perform(get("/api/v1/security-audit-logs/")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].event_type").exists());
-        mockMvc.perform(get("/api/v1/rbac/personas/").header("X-MEW-Persona-ID", "MEW-PER-0002"))
+        mockMvc.perform(get("/api/v1/rbac/personas/"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active_context.persona_id").value("MEW-PER-0002"))
-                .andExpect(jsonPath("$.personas[0].personnel_id").value("MEW-PER-0000"));
+                .andExpect(jsonPath("$.active_context.persona_id").value("MEW-PER-0000"))
+                .andExpect(jsonPath("$.personas").isEmpty());
         mockMvc.perform(get("/api/v1/analytics/overview/")).andExpect(status().isOk());
     }
 }

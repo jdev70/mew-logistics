@@ -296,6 +296,16 @@ export interface RbacActiveContext {
   authorized_cage_codes: string[];
   active_redaction_policies: string[];
   can_export_csv: boolean;
+  capabilities: {
+    can_create_asset: boolean;
+    can_update_asset: boolean;
+    can_delete_asset: boolean;
+    can_create_work_order: boolean;
+    can_close_work_order: boolean;
+    can_delete_work_order: boolean;
+    can_create_requisition: boolean;
+    can_delete_requisition: boolean;
+  };
 }
 
 export interface RbacPersonasPayload {

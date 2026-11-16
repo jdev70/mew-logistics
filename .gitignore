@@ -73,7 +73,13 @@ htmlcov/
 .ruff_cache/
 coverage/
 
-# --- 6. IDEs & Operating System ---
+# --- 6. Java / Maven / Spring Boot ---
+backend-java/target/
+*.class
+backend-java/data/
+
+# --- 7. IDEs & Operating System ---
+
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json

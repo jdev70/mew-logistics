@@ -5,6 +5,8 @@ import mil.navy.nswc.mew.repository.RequisitionRepository;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RbacPolicyService.Action;
 import mil.navy.nswc.mew.service.RbacPolicyService.Resource;
+import mil.navy.nswc.mew.security.MewResourceFactory;
+import mil.navy.nswc.mew.security.model.Permission;
 import mil.navy.nswc.mew.service.RequisitionService;
 import mil.navy.nswc.mew.service.exception.ResourceNotFoundException;
 import mil.navy.nswc.mew.web.dto.ReceiveShipmentRequest;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,7 +50,10 @@ public class RequisitionController {
     @GetMapping({ "", "/" })
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listRequisitions() {
-        return requisitionRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return requisitionRepository.findAll().stream()
+                .filter(requisition -> rbacPolicyService.canAccess(Permission.REQUEST_PARTS_REQUISITION,
+                        MewResourceFactory.forRequisition(requisition)))
+                .map(this::toDto).collect(Collectors.toList());
     }
 
     private Map<String, Object> toDto(Requisition r) {
@@ -74,28 +78,33 @@ public class RequisitionController {
     @GetMapping({ "/{id}", "/{id}/" })
     @Transactional(readOnly = true)
     public Requisition getRequisition(@PathVariable @NonNull UUID id) {
-        return requisitionRepository.findById(id)
+        Requisition requisition = requisitionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Requisition not found: " + id));
+        rbacPolicyService.requireAccess(Permission.REQUEST_PARTS_REQUISITION, MewResourceFactory.forRequisition(requisition),
+                "/api/v1/requisitions/" + id + "/");
+        return requisition;
     }
 
     @PostMapping({ "", "/" })
     public ResponseEntity<Requisition> createRequisition(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody @NonNull Requisition requisition) {
-        rbacPolicyService.requirePermission(personaId, Resource.REQUISITION, Action.CREATE, "/api/v1/requisitions/");
+        rbacPolicyService.requirePermission(Resource.REQUISITION, Action.CREATE, "/api/v1/requisitions/");
+        rbacPolicyService.requireAccess(Permission.REQUEST_PARTS_REQUISITION, MewResourceFactory.forRequisition(requisition),
+                "/api/v1/requisitions/");
         requisition.setId(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(requisitionRepository.save(requisition));
     }
 
     @PutMapping({ "/{id}", "/{id}/" })
     public Requisition updateRequisition(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody @NonNull Requisition payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.REQUISITION, Action.UPDATE,
+        rbacPolicyService.requirePermission(Resource.REQUISITION, Action.UPDATE,
                 "/api/v1/requisitions/" + id + "/");
         Requisition existing = requisitionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Requisition not found: " + id));
+        rbacPolicyService.requireAccess(Permission.REQUEST_PARTS_REQUISITION, MewResourceFactory.forRequisition(existing),
+                "/api/v1/requisitions/" + id + "/");
         payload.setId(existing.getId());
         payload.setCreatedAt(existing.getCreatedAt());
         return requisitionRepository.save(payload);
@@ -103,22 +112,25 @@ public class RequisitionController {
 
     @DeleteMapping({ "/{id}", "/{id}/" })
     public ResponseEntity<Void> deleteRequisition(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.REQUISITION, Action.DELETE,
+        rbacPolicyService.requirePermission(Resource.REQUISITION, Action.DELETE,
                 "/api/v1/requisitions/" + id + "/");
-        if (!requisitionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Requisition not found: " + id);
-        }
-        requisitionRepository.deleteById(id);
+        Requisition existing = requisitionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Requisition not found: " + id));
+        rbacPolicyService.requireAccess(Permission.APPROVE_PARTS_REQUISITION, MewResourceFactory.forRequisition(existing),
+                "/api/v1/requisitions/" + id + "/");
+        requisitionRepository.delete(existing);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping({ "/receive-shipment", "/receive-shipment/" })
     public ResponseEntity<ReceiveShipmentResponse> receiveShipment(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody ReceiveShipmentRequest request) {
-        rbacPolicyService.requirePermission(personaId, Resource.REQUISITION, Action.UPDATE,
+        rbacPolicyService.requirePermission(Resource.REQUISITION, Action.UPDATE,
+                "/api/v1/requisitions/receive-shipment/");
+        Requisition requisition = requisitionRepository.findByDocumentNumber(request.getDocumentNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Requisition not found: " + request.getDocumentNumber()));
+        rbacPolicyService.requireAccess(Permission.REQUEST_PARTS_REQUISITION, MewResourceFactory.forRequisition(requisition),
                 "/api/v1/requisitions/receive-shipment/");
         return ResponseEntity.ok(requisitionService.receiveShipment(request));
     }

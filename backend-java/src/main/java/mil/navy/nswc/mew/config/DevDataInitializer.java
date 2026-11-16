@@ -45,7 +45,7 @@ import java.time.LocalDate;
  * Seeds sample Maritime Electromagnetic Warfare (MEW) data for local H2 development.
  */
 @Component
-@Profile("default")
+@Profile({"default", "local"})
 public class DevDataInitializer implements CommandLineRunner {
 
     private final InstallationRepository installationRepository;
@@ -94,12 +94,14 @@ public class DevDataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (installationRepository.count() > 0) {
+            backfillLocalAuthorizationAssignments();
             return;
         }
 
         Installation crane = new Installation();
         crane.setInstallationId("INST-001");
         crane.setInstallationCode("NSWC-CRANE");
+        crane.setServiceBranch("JOINT");
         crane.setName("NSWC Crane Division");
         crane.setDodaac("N00164");
         crane.setCity("Crane");
@@ -113,6 +115,7 @@ public class DevDataInitializer implements CommandLineRunner {
         Installation norfolk = new Installation();
         norfolk.setInstallationId("INST-002");
         norfolk.setInstallationCode("NS-NORFOLK");
+        norfolk.setServiceBranch("USN");
         norfolk.setName("Naval Station Norfolk");
         norfolk.setDodaac("N00188");
         norfolk.setCity("Norfolk");
@@ -217,6 +220,7 @@ public class DevDataInitializer implements CommandLineRunner {
 
         Personnel psm = new Personnel();
         psm.setPersonnelId("MEW-PER-0000");
+        psm.setIdentitySubject("MEW-PER-0000");
         psm.setDodId("1000000001");
         psm.setFirstName("Evelyn");
         psm.setLastName("Thorne");
@@ -229,10 +233,14 @@ public class DevDataInitializer implements CommandLineRunner {
         psm.setUnit(tycom);
         psm.setInstallation(crane);
         psm.setSecurityClearance("TS/SCI");
+        psm.setServiceBranch("JOINT");
+        psm.setCommandTier("STRATEGIC_JOINT");
+        psm.setAuthorizationPermissions("ALL");
         psm = personnelRepository.save(psm);
 
         Personnel tech = new Personnel();
         tech.setPersonnelId("MEW-PER-0002");
+        tech.setIdentitySubject("MEW-PER-0002");
         tech.setDodId("1000000002");
         tech.setFirstName("Devon");
         tech.setLastName("Mercer");
@@ -245,6 +253,10 @@ public class DevDataInitializer implements CommandLineRunner {
         tech.setUnit(ddgUnit);
         tech.setInstallation(norfolk);
         tech.setSecurityClearance("TS/SCI");
+        tech.setServiceBranch("USN");
+        tech.setCommandTier("INSTALLATION_UNIT");
+        tech.setAuthorizedInstallations("NS-NORFOLK");
+        tech.setAuthorizationPermissions("VIEW_INVENTORY,LOG_MAINTENANCE_ACTION");
         tech = personnelRepository.save(tech);
 
         InventoryTransaction initTx = new InventoryTransaction();
@@ -330,6 +342,33 @@ public class DevDataInitializer implements CommandLineRunner {
                 2300.0, 6.0, 97.5);
     }
 
+    /** Keeps pre-existing local H2 seed data usable after authorization schema upgrades. */
+    private void backfillLocalAuthorizationAssignments() {
+        installationRepository.findByInstallationCode("NS-NORFOLK").ifPresent(installation -> {
+            installation.setServiceBranch("USN");
+            installationRepository.save(installation);
+        });
+        personnelRepository.findByPersonnelId("MEW-PER-0000").ifPresent(personnel -> {
+            if (personnel.getIdentitySubject() == null || personnel.getIdentitySubject().isBlank()) {
+                personnel.setIdentitySubject("MEW-PER-0000");
+            }
+            personnel.setServiceBranch("JOINT");
+            personnel.setCommandTier("STRATEGIC_JOINT");
+            personnel.setAuthorizationPermissions("ALL");
+            personnelRepository.save(personnel);
+        });
+        personnelRepository.findByPersonnelId("MEW-PER-0002").ifPresent(personnel -> {
+            if (personnel.getIdentitySubject() == null || personnel.getIdentitySubject().isBlank()) {
+                personnel.setIdentitySubject("MEW-PER-0002");
+            }
+            personnel.setServiceBranch("USN");
+            personnel.setCommandTier("INSTALLATION_UNIT");
+            personnel.setAuthorizedInstallations("NS-NORFOLK");
+            personnel.setAuthorizationPermissions("VIEW_INVENTORY,LOG_MAINTENANCE_ACTION");
+            personnelRepository.save(personnel);
+        });
+    }
+
     private void seedBranchSample(
             String instId, String instCode, String instName, String dodaac,
             String city, String state, String region, String missionCat, String ewFocus,
@@ -340,6 +379,7 @@ public class DevDataInitializer implements CommandLineRunner {
         Installation inst = new Installation();
         inst.setInstallationId(instId);
         inst.setInstallationCode(instCode);
+        inst.setServiceBranch(branch);
         inst.setName(instName);
         inst.setDodaac(dodaac);
         inst.setCity(city);

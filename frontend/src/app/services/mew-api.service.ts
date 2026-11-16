@@ -13,7 +13,6 @@ import {
   PaginatedResponse,
   PersonnelRecord,
   RbacActiveContext,
-  RbacPersona,
   RbacPersonasPayload,
   ReceiveShipmentPayload,
   ReceiveShipmentResponse,
@@ -47,108 +46,6 @@ export class MewApiService {
   readonly analytics = signal<MewAnalyticsPayload | null>(null);
 
   // Hybrid RBAC + ABAC Active Persona & Policy Context
-  readonly activePersonaId = signal<string>('MEW-PER-0000');
-  readonly rbacPersonas = signal<RbacPersona[]>([
-    {
-      personnel_id: 'MEW-PER-0000',
-      name: 'CIV (GS-15) Evelyn Thorne',
-      rank: 'CIV (GS-15)',
-      title: 'PEO IWS 2.0 / NSWC Crane Enterprise MEW Product Support Manager (PSM)',
-      functional_role: 'FLEET_READINESS_ANALYST',
-      personnel_category: 'DoD_Civilian',
-      security_clearance: 'TS/SCI',
-      assigned_uic: 'N00060',
-      installation_code: 'NSWC-CRANE',
-      target_hull_number: null,
-      authorized_cage_codes: [],
-      badge_label: 'Enterprise PSM / ORSA Lead (Cross-Fleet Analytics & BOM | TS/SCI)',
-    },
-    {
-      personnel_id: 'MEW-PER-0001',
-      name: 'CDR Marcus Vance',
-      rank: 'CDR',
-      title: 'TYCOM Director of Maritime Electromagnetic Maneuver Warfare',
-      functional_role: 'FLEET_READINESS_ANALYST',
-      personnel_category: 'Active_Duty_Officer',
-      security_clearance: 'TS/SCI',
-      assigned_uic: 'N00060',
-      installation_code: 'NAVIFOR-SUF',
-      target_hull_number: null,
-      authorized_cage_codes: [],
-      badge_label: 'TYCOM Command Staff (Full Echelon Tree | TS/SCI)',
-    },
-    {
-      personnel_id: 'MEW-PER-0002',
-      name: 'CTT1 Devon Mercer',
-      rank: 'CTT1',
-      title: 'Shipboard EW Work Center Supervisor (CE02)',
-      functional_role: 'SHIPBOARD_TECHNICIAN',
-      personnel_category: 'Active_Duty_Enlisted',
-      security_clearance: 'TS/SCI',
-      assigned_uic: 'N20001',
-      installation_code: 'NAVSTA-NORVA',
-      target_hull_number: 'DDG-51',
-      authorized_cage_codes: [],
-      badge_label: 'Shipboard Tech (Isolated to DDG-51 UIC | TS/SCI)',
-    },
-    {
-      personnel_id: 'MEW-PER-0003',
-      name: 'LT Hannah Sterling',
-      rank: 'LT',
-      title: 'Squadron Supply & AVCAL Spares Officer (VAQ-132)',
-      functional_role: 'UNIT_SUPPO',
-      personnel_category: 'Active_Duty_Officer',
-      security_clearance: 'Secret',
-      assigned_uic: 'N20009',
-      installation_code: 'NAS-WHIDBEY',
-      target_hull_number: 'VAQ-132',
-      authorized_cage_codes: [],
-      badge_label: 'Unit SUPPO (Isolated to VAQ-132 UIC | Secret)',
-    },
-    {
-      personnel_id: 'MEW-PER-0004',
-      name: 'CIV (GS-12) Arthur Keller',
-      rank: 'CIV (GS-12)',
-      title: 'NSWC Crane Depot Provisioning & DLR Turn-In Manager',
-      functional_role: 'SHORE_DEPOT_MANAGER',
-      personnel_category: 'DoD_Civilian',
-      security_clearance: 'Secret',
-      assigned_uic: 'N00164',
-      installation_code: 'NSWC-CRANE',
-      target_hull_number: null,
-      authorized_cage_codes: [],
-      badge_label: 'Shore Depot Manager (Warehouse Scope | Coords Redacted)',
-    },
-    {
-      personnel_id: 'MEW-PER-0005',
-      name: 'CIV (GS-13) Elena Rostova',
-      rank: 'CIV (GS-13)',
-      title: 'Lead SEWIP / GaN AESA Reliability Engineer (NSWC Crane)',
-      functional_role: 'WARFARE_CENTER_ENGINEER',
-      personnel_category: 'DoD_Civilian',
-      security_clearance: 'TS/SCI',
-      assigned_uic: 'N00164',
-      installation_code: 'NSWC-CRANE',
-      target_hull_number: null,
-      authorized_cage_codes: [],
-      badge_label: 'Warfare Center Engineer (Cross-Fleet MTBF | EMCON Masked)',
-    },
-    {
-      personnel_id: 'MEW-PER-0006',
-      name: 'CTR Nolan Mercer-OEM',
-      rank: 'CTR',
-      title: 'Senior SEWIP Block 2 / BLQ-10 Field Service Representative',
-      functional_role: 'WARFARE_CENTER_ENGINEER',
-      personnel_category: 'Defense_Contractor',
-      security_clearance: 'Secret',
-      assigned_uic: 'NSWC-CRANE',
-      installation_code: 'NSWC-CRANE',
-      target_hull_number: null,
-      authorized_cage_codes: ['03538'],
-      badge_label: 'OEM Contractor (CAGE 03538 Scope Only | Platforms Redacted)',
-    },
-  ]);
-
   readonly activeRbacContext = signal<RbacActiveContext>({
     persona_id: 'MEW-PER-0001',
     actor_name: 'CDR Marcus Vance',
@@ -164,32 +61,32 @@ export class MewApiService {
       'BULK CSV EXPORT AUTHORIZED',
     ],
     can_export_csv: true,
+    capabilities: {
+      can_create_asset: false,
+      can_update_asset: false,
+      can_delete_asset: false,
+      can_create_work_order: false,
+      can_close_work_order: false,
+      can_delete_work_order: false,
+      can_create_requisition: false,
+      can_delete_requisition: false,
+    },
   });
 
-  // Persona-Driven CRUD Capabilities (mirrors backend RbacPolicyService)
+  // Server-provided capabilities improve UX; the API remains the enforcement point.
   readonly crudPermissions = computed(() => {
     const ctx = this.activeRbacContext();
-    const role = ctx?.functional_role || 'SHIPBOARD_TECHNICIAN';
+    const capabilities = ctx?.capabilities;
     return {
-      role,
-      canCreateAsset: role === 'FLEET_READINESS_ANALYST',
-      canUpdateAsset:
-        role === 'FLEET_READINESS_ANALYST' ||
-        role === 'SHIPBOARD_TECHNICIAN' ||
-        role === 'WARFARE_CENTER_ENGINEER',
-      canDeleteAsset: role === 'FLEET_READINESS_ANALYST',
-      canCreateWorkOrder:
-        role === 'FLEET_READINESS_ANALYST' ||
-        role === 'SHIPBOARD_TECHNICIAN' ||
-        role === 'WARFARE_CENTER_ENGINEER',
-      canCloseWorkOrder:
-        role === 'FLEET_READINESS_ANALYST' || role === 'SHIPBOARD_TECHNICIAN',
-      canDeleteWorkOrder: role === 'FLEET_READINESS_ANALYST',
-      canCreateRequisition:
-        role === 'FLEET_READINESS_ANALYST' ||
-        role === 'UNIT_SUPPO' ||
-        role === 'SHORE_DEPOT_MANAGER',
-      canDeleteRequisition: role === 'FLEET_READINESS_ANALYST',
+      role: ctx?.functional_role || 'UNKNOWN',
+      canCreateAsset: capabilities?.can_create_asset ?? false,
+      canUpdateAsset: capabilities?.can_update_asset ?? false,
+      canDeleteAsset: capabilities?.can_delete_asset ?? false,
+      canCreateWorkOrder: capabilities?.can_create_work_order ?? false,
+      canCloseWorkOrder: capabilities?.can_close_work_order ?? false,
+      canDeleteWorkOrder: capabilities?.can_delete_work_order ?? false,
+      canCreateRequisition: capabilities?.can_create_requisition ?? false,
+      canDeleteRequisition: capabilities?.can_delete_requisition ?? false,
     };
   });
 
@@ -265,32 +162,7 @@ export class MewApiService {
   }
 
   private getHeaders(): { headers: { [header: string]: string } } {
-    return {
-      headers: {
-        'X-MEW-Persona-ID': this.activePersonaId(),
-      },
-    };
-  }
-
-  switchPersona(personaId: string): void {
-    this.activePersonaId.set(personaId);
-    const matched = this.rbacPersonas().find((p) => p.personnel_id === personaId);
-    if (matched) {
-      this.activeRbacContext.set({
-        persona_id: matched.personnel_id,
-        actor_name: matched.name,
-        functional_role: matched.functional_role,
-        personnel_category: matched.personnel_category,
-        security_clearance: matched.security_clearance,
-        assigned_uic: matched.assigned_uic,
-        installation_code: matched.installation_code,
-        subordinate_uics: [],
-        authorized_cage_codes: matched.authorized_cage_codes || [],
-        active_redaction_policies: [`PERSONA CRUD POLICY: ${matched.functional_role}`],
-        can_export_csv: matched.functional_role === 'FLEET_READINESS_ANALYST',
-      });
-    }
-    this.loadAllTelemetry();
+    return { headers: {} };
   }
 
   loadAllTelemetry(): void {
@@ -368,9 +240,6 @@ export class MewApiService {
         this.connectionMode.set('LIVE_API');
         if (payload.rbac) {
           this.activeRbacContext.set(payload.rbac.active_context);
-          if (payload.rbac.personas?.length) {
-            this.rbacPersonas.set(payload.rbac.personas);
-          }
         }
         this.units.set(payload.units || []);
         this.assets.set(payload.assets || []);
@@ -499,10 +368,9 @@ export class MewApiService {
   }
 
   exportFleetCsv(assetClass?: string): void {
-    const pid = encodeURIComponent(this.activePersonaId());
-    const cls = assetClass ? `&asset_class=${encodeURIComponent(assetClass)}` : '';
+    const cls = assetClass ? `?asset_class=${encodeURIComponent(assetClass)}` : '';
     window.open(
-      `${this.apiBaseUrl}/dashboard/units/export_csv/?persona_id=${pid}${cls}`,
+      `${this.apiBaseUrl}/dashboard/units/export_csv/${cls}`,
       '_blank'
     );
   }

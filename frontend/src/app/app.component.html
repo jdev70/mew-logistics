@@ -250,23 +250,16 @@
           </div>
         </div>
 
-        <!-- Right: Live RBAC/ABAC Persona Switcher, Action Buttons & Dual Theme Toggle -->
+        <!-- Right: Authenticated access context, action buttons, and theme toggle -->
         <div class="flex flex-wrap items-center gap-2">
-          <!-- Interactive RBAC + ABAC Persona Switcher -->
           <div class="flex items-center gap-1.5">
             <span class="text-[10px] mono-data uppercase text-sky-400 font-bold hidden sm:inline">
-              RBAC Persona:
+              Authenticated user:
             </span>
-            <select
-              class="mew-input text-xs mono-data rounded-sm px-2.5 py-1 border-sky-500/50 font-semibold max-w-[290px]"
-              [ngModel]="api.activePersonaId()"
-              (ngModelChange)="api.switchPersona($event)"
-              title="Switch active RBAC Role, Hierarchical UIC Scope, CAGE Vendor Scope, and Clearance"
-            >
-              <option *ngFor="let p of api.rbacPersonas(); trackBy: trackByPersonaId" [value]="p.personnel_id">
-                {{ p.name }} &mdash; {{ p.badge_label }}
-              </option>
-            </select>
+            <span class="mew-input text-xs mono-data rounded-sm px-2.5 py-1 border-sky-500/50 font-semibold max-w-[290px] truncate"
+              title="Access is determined by the authenticated identity and its server-side authorization assignment">
+              {{ api.activeRbacContext().actor_name }}
+            </span>
           </div>
 
           <button

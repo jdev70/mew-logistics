@@ -11,6 +11,7 @@ import mil.navy.nswc.mew.service.RbacPolicyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AssetController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @SuppressWarnings("null")
 class AssetControllerTest {
 
@@ -93,11 +95,13 @@ class AssetControllerTest {
     @Test
     void deleteAssetReturnsNoContent() throws Exception {
         UUID id = UUID.randomUUID();
-        when(assetRepository.existsById(id)).thenReturn(true);
+        Asset existing = new Asset();
+        existing.setId(id);
+        when(assetRepository.findById(id)).thenReturn(Optional.of(existing));
 
         mockMvc.perform(delete("/api/v1/assets/" + id + "/"))
                 .andExpect(status().isNoContent());
 
-        verify(assetRepository).deleteById(id);
+        verify(assetRepository).delete(existing);
     }
 }

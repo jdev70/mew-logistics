@@ -15,6 +15,8 @@ import mil.navy.nswc.mew.repository.SecurityAuditLogRepository;
 import mil.navy.nswc.mew.service.RbacPolicyService;
 import mil.navy.nswc.mew.service.RbacPolicyService.Action;
 import mil.navy.nswc.mew.service.RbacPolicyService.Resource;
+import mil.navy.nswc.mew.security.MewResourceFactory;
+import mil.navy.nswc.mew.security.model.Permission;
 import mil.navy.nswc.mew.service.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +28,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -66,25 +67,27 @@ public class CatalogController {
     }
 
     @GetMapping({"/installations", "/installations/"})
+    @Transactional(readOnly = true)
     public List<Installation> listInstallations() {
-        return installationRepository.findAll();
+        return installationRepository.findAll().stream()
+                .filter(installation -> rbacPolicyService.canAccess(Permission.VIEW_INSTALLATION_READINESS,
+                        MewResourceFactory.forInstallation(installation)))
+                .collect(Collectors.toList());
     }
 
     @PostMapping({"/installations", "/installations/"})
     public ResponseEntity<Installation> createInstallation(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody @NonNull Installation installation) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.CREATE, "/api/v1/installations/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.CREATE, "/api/v1/installations/");
         installation.setId(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(installationRepository.save(installation));
     }
 
     @PutMapping({"/installations/{id}", "/installations/{id}/"})
     public Installation updateInstallation(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody @NonNull Installation payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.UPDATE, "/api/v1/installations/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.UPDATE, "/api/v1/installations/" + id + "/");
         Installation existing = installationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Installation not found: " + id));
         payload.setId(existing.getId());
@@ -94,9 +97,8 @@ public class CatalogController {
 
     @DeleteMapping({"/installations/{id}", "/installations/{id}/"})
     public ResponseEntity<Void> deleteInstallation(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.DELETE, "/api/v1/installations/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.DELETE, "/api/v1/installations/" + id + "/");
         if (!installationRepository.existsById(id)) {
             throw new ResourceNotFoundException("Installation not found: " + id);
         }
@@ -107,7 +109,11 @@ public class CatalogController {
     @GetMapping({"/personnel", "/personnel/"})
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listPersonnel() {
-        return personnelRepository.findAll().stream().map(this::toPersonnelDto).collect(Collectors.toList());
+        return personnelRepository.findAll().stream()
+                .filter(personnel -> personnel.getInstallation() != null
+                        && rbacPolicyService.canAccess(Permission.VIEW_INSTALLATION_READINESS,
+                        MewResourceFactory.forInstallation(personnel.getInstallation())))
+                .map(this::toPersonnelDto).collect(Collectors.toList());
     }
 
     private Map<String, Object> toPersonnelDto(Personnel p) {
@@ -139,19 +145,17 @@ public class CatalogController {
 
     @PostMapping({"/personnel", "/personnel/"})
     public ResponseEntity<Personnel> createPersonnel(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody @NonNull Personnel person) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.CREATE, "/api/v1/personnel/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.CREATE, "/api/v1/personnel/");
         person.setId(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(personnelRepository.save(person));
     }
 
     @PutMapping({"/personnel/{id}", "/personnel/{id}/"})
     public Personnel updatePersonnel(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody @NonNull Personnel payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.UPDATE, "/api/v1/personnel/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.UPDATE, "/api/v1/personnel/" + id + "/");
         Personnel existing = personnelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Personnel not found: " + id));
         payload.setId(existing.getId());
@@ -161,9 +165,8 @@ public class CatalogController {
 
     @DeleteMapping({"/personnel/{id}", "/personnel/{id}/"})
     public ResponseEntity<Void> deletePersonnel(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.DELETE, "/api/v1/personnel/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.DELETE, "/api/v1/personnel/" + id + "/");
         if (!personnelRepository.existsById(id)) {
             throw new ResourceNotFoundException("Personnel not found: " + id);
         }
@@ -174,24 +177,25 @@ public class CatalogController {
     @GetMapping({"/hulls", "/hulls/"})
     @Transactional(readOnly = true)
     public List<NavalHull> listHulls() {
-        return navalHullRepository.findAll();
+        return navalHullRepository.findAll().stream()
+                .filter(hull -> rbacPolicyService.canAccess(Permission.VIEW_INSTALLATION_READINESS,
+                        MewResourceFactory.forHull(hull)))
+                .collect(Collectors.toList());
     }
 
     @PostMapping({"/hulls", "/hulls/"})
     public ResponseEntity<NavalHull> createHull(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody @NonNull NavalHull hull) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.CREATE, "/api/v1/hulls/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.CREATE, "/api/v1/hulls/");
         hull.setId(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(navalHullRepository.save(hull));
     }
 
     @PutMapping({"/hulls/{id}", "/hulls/{id}/"})
     public NavalHull updateHull(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody @NonNull NavalHull payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.UPDATE, "/api/v1/hulls/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.UPDATE, "/api/v1/hulls/" + id + "/");
         NavalHull existing = navalHullRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("NavalHull not found: " + id));
         payload.setId(existing.getId());
@@ -201,9 +205,8 @@ public class CatalogController {
 
     @DeleteMapping({"/hulls/{id}", "/hulls/{id}/"})
     public ResponseEntity<Void> deleteHull(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.DELETE, "/api/v1/hulls/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.DELETE, "/api/v1/hulls/" + id + "/");
         if (!navalHullRepository.existsById(id)) {
             throw new ResourceNotFoundException("NavalHull not found: " + id);
         }
@@ -214,30 +217,34 @@ public class CatalogController {
     @GetMapping({"/loadouts", "/loadouts/"})
     @Transactional(readOnly = true)
     public List<HullSystemAssignment> listLoadouts() {
-        return loadoutRepository.findAll();
+        return loadoutRepository.findAll().stream()
+                .filter(loadout -> rbacPolicyService.canAccess(Permission.VIEW_INVENTORY,
+                        MewResourceFactory.forLoadout(loadout)))
+                .collect(Collectors.toList());
     }
 
     @GetMapping({"/components", "/components/"})
     @Transactional(readOnly = true)
     public List<MaterialCatalog> listComponents() {
-        return materialRepository.findAll();
+        return materialRepository.findAll().stream()
+                .filter(component -> rbacPolicyService.canAccessCatalogItem(Permission.VIEW_INVENTORY,
+                        component.getCageCode()))
+                .collect(Collectors.toList());
     }
 
     @PostMapping({"/components", "/components/"})
     public ResponseEntity<MaterialCatalog> createComponent(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @Valid @RequestBody @NonNull MaterialCatalog component) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.CREATE, "/api/v1/components/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.CREATE, "/api/v1/components/");
         component.setId(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(materialRepository.save(component));
     }
 
     @PutMapping({"/components/{id}", "/components/{id}/"})
     public MaterialCatalog updateComponent(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody @NonNull MaterialCatalog payload) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.UPDATE, "/api/v1/components/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.UPDATE, "/api/v1/components/" + id + "/");
         MaterialCatalog existing = materialRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("MaterialCatalog not found: " + id));
         payload.setId(existing.getId());
@@ -247,9 +254,8 @@ public class CatalogController {
 
     @DeleteMapping({"/components/{id}", "/components/{id}/"})
     public ResponseEntity<Void> deleteComponent(
-            @RequestHeader(value = "X-MEW-Persona-ID", required = false) String personaId,
             @PathVariable @NonNull UUID id) {
-        rbacPolicyService.requirePermission(personaId, Resource.CATALOG, Action.DELETE, "/api/v1/components/" + id + "/");
+        rbacPolicyService.requirePermission(Resource.CATALOG, Action.DELETE, "/api/v1/components/" + id + "/");
         if (!materialRepository.existsById(id)) {
             throw new ResourceNotFoundException("MaterialCatalog not found: " + id);
         }
@@ -260,6 +266,9 @@ public class CatalogController {
     @GetMapping({"/security-audit-logs", "/security-audit-logs/"})
     @Transactional(readOnly = true)
     public List<SecurityAuditLog> listAuditLogs() {
+        if (!rbacPolicyService.canAccessCatalogItem(Permission.VIEW_GLOBAL_READINESS, null)) {
+            return java.util.Collections.emptyList();
+        }
         return auditLogRepository.findAllByOrderByCreatedAtDesc();
     }
 }

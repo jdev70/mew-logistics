@@ -25,6 +25,11 @@ spring:
 server:
   port: 8080
 
+mew:
+  security:
+    mode: jwt
+    roles-claim: roles
+
 ---
 spring:
   config:

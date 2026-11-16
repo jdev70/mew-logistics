@@ -5,6 +5,9 @@ import mil.navy.nswc.mew.domain.entity.InventoryTransaction;
 import mil.navy.nswc.mew.domain.enums.TransactionType;
 import mil.navy.nswc.mew.repository.InventoryBalanceRepository;
 import mil.navy.nswc.mew.repository.InventoryTransactionRepository;
+import mil.navy.nswc.mew.security.MewResourceFactory;
+import mil.navy.nswc.mew.security.model.Permission;
+import mil.navy.nswc.mew.service.RbacPolicyService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,17 +26,23 @@ public class InventoryController {
 
     private final InventoryBalanceRepository balanceRepository;
     private final InventoryTransactionRepository transactionRepository;
+    private final RbacPolicyService rbacPolicyService;
 
     public InventoryController(InventoryBalanceRepository balanceRepository,
-                               InventoryTransactionRepository transactionRepository) {
+                               InventoryTransactionRepository transactionRepository,
+                               RbacPolicyService rbacPolicyService) {
         this.balanceRepository = balanceRepository;
         this.transactionRepository = transactionRepository;
+        this.rbacPolicyService = rbacPolicyService;
     }
 
     @GetMapping({"/inventory-balances", "/inventory-balances/"})
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listBalances() {
-        return balanceRepository.findAll().stream().map(this::toBalanceDto).collect(Collectors.toList());
+        return balanceRepository.findAll().stream()
+                .filter(balance -> rbacPolicyService.canAccess(Permission.VIEW_INVENTORY,
+                        MewResourceFactory.forInventoryBalance(balance)))
+                .map(this::toBalanceDto).collect(Collectors.toList());
     }
 
     @GetMapping({"/inventory-transactions", "/inventory-transactions/"})
@@ -52,7 +61,10 @@ public class InventoryController {
         } else {
             list = transactionRepository.findAllByOrderByCreatedAtDesc();
         }
-        return list.stream().map(this::toTxDto).collect(Collectors.toList());
+        return list.stream()
+                .filter(transaction -> rbacPolicyService.canAccess(Permission.VIEW_INVENTORY,
+                        MewResourceFactory.forInventoryBalance(transaction.getBalance())))
+                .map(this::toTxDto).collect(Collectors.toList());
     }
 
     private Map<String, Object> toBalanceDto(InventoryBalance b) {
