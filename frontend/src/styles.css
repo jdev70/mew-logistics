@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   DoD MEW DUAL-MODE THEME ARCHITECTURE (Aligned with UI_DESIGN_CONSIDERATIONS.md)
+   - Default: [data-theme='tactical-dark'] (C2 / CIC Watch Floor)
+   - Variant: [data-theme='daylight-tactical'] (Field Tablets / Bright Environments)
+   ========================================================================== */
+:root,
+[data-theme='tactical-dark'] {
+  --dod-bg-canvas: #0b0f19;
+  --dod-bg-rail: #080c14;
+  --dod-bg-surface: #131b2e;
+  --dod-bg-elevated: #1c2742;
+  --dod-bg-hover: #233052;
+  --dod-border-color: #283655;
+
+  --dod-text-primary: #f1f5f9;
+  --dod-text-secondary: #94a3b8;
+  --dod-text-muted: #64748b;
+  --dod-accent-primary: #38bdf8;
+  --dod-accent-contrast: #0b0f19;
+
+  --dod-status-ok: #10b981;
+  --dod-status-warn: #f59e0b;
+  --dod-status-crit: #ef4444;
+
+  /* Map & Telemetry HUD Overlays */
+  --dod-glass-bg: rgba(19, 27, 46, 0.85);
+  --shadow-card: 0 10px 30px -10px rgba(2, 6, 23, 0.75);
+}
+
+[data-theme='daylight-tactical'] {
+  --dod-bg-canvas: #e2e8f0;
+  --dod-bg-rail: #0f172a;
+  --dod-bg-surface: #ffffff;
+  --dod-bg-elevated: #f8fafc;
+  --dod-bg-hover: #f1f5f9;
+  --dod-border-color: #94a3b8;
+
+  --dod-text-primary: #0f172a;
+  --dod-text-secondary: #475569;
+  --dod-text-muted: #64748b;
+  --dod-accent-primary: #0284c7;
+  --dod-accent-contrast: #ffffff;
+
+  --dod-status-ok: #047857;
+  --dod-status-warn: #b45309;
+  --dod-status-crit: #b91c1c;
+
+  /* Map & Telemetry HUD Overlays */
+  --dod-glass-bg: rgba(255, 255, 255, 0.92);
+  --shadow-card: 0 4px 20px -4px rgba(15, 23, 42, 0.12);
+}
+
+/* Global PrimeNG & DoD High-Density Formatting */
+body {
+  background-color: var(--dod-bg-canvas);
+  color: var(--dod-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.p-component {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem; /* 14px base for dense operational UI */
+}
+
+.mono-data {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Top & Bottom DoD Classification Banners */
+.class-banner.unclass {
+  background-color: #064e3b;
+  border-top: 1px solid rgba(16, 185, 129, 0.35);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.2rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Surface & HUD Glass Utilities */
+.mew-surface {
+  background-color: var(--dod-bg-surface);
+  border: 1px solid var(--dod-border-color);
+  box-shadow: var(--shadow-card);
+}
+
+.mew-elevated {
+  background-color: var(--dod-bg-elevated);
+  border: 1px solid var(--dod-border-color);
+}
+
+.dod-hud-overlay {
+  background: var(--dod-glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--dod-border-color);
+}
+
+.mew-input {
+  background-color: var(--dod-bg-elevated);
+  border: 1px solid var(--dod-border-color);
+  color: var(--dod-text-primary);
+}
+
+.mew-input:focus {
+  outline: none;
+  border-color: var(--dod-accent-primary);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+.mew-text-primary {
+  color: var(--dod-text-primary);
+}
+
+.mew-text-secondary {
+  color: var(--dod-text-secondary);
+}
+
+.mew-text-muted {
+  color: var(--dod-text-muted);
+}
+
+.mew-border {
+  border-color: var(--dod-border-color);
+}
+
+/* Sharp 2px Tactical Status Tag Formatting */
+.dod-tag {
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Compact PrimeNG Table (.dod-grid) for NSNs, LRUs & Requisitions */
+.dod-grid .p-datatable-thead > tr > th,
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--dod-bg-elevated);
+  color: var(--dod-text-secondary);
+  border-color: var(--dod-border-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.dod-grid .p-datatable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr {
+  background-color: var(--dod-bg-surface);
+  color: var(--dod-text-primary);
+  transition: background-color 0.12s ease;
+}
+
+.dod-grid .p-datatable-tbody > tr:hover,
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: var(--dod-bg-hover) !important;
+}
+
+.dod-grid .p-datatable-tbody > tr > td,
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: var(--dod-border-color);
+  padding: 0.38rem 0.75rem; /* Strict ~34px compact row height */
+  font-size: 0.82rem;
+}
+
+.p-datatable .p-paginator {
+  background-color: var(--dod-bg-elevated);
+  color: var(--dod-text-secondary);
+  border-color: var(--dod-border-color);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+/* Tactical Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dod-bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dod-border-color);
+  border-radius: 2px;
+}

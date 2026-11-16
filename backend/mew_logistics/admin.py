@@ -49,9 +49,9 @@ def export_reliability_metrics_csv(modeladmin, request, queryset):
             unit.name,
             unit.uic,
             unit.installation.name if unit.installation else 'N/A',
-            unit.avg_mtbf or 0.0,
-            unit.avg_mttr or 0.0,
-            unit.avg_ao or 0.0
+            unit.fleet_avg_mtbf or 0.0,
+            unit.fleet_avg_mttr or 0.0,
+            unit.fleet_avg_ao or 0.0
         ])
         
     return response
