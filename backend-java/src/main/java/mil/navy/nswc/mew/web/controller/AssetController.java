@@ -222,6 +222,7 @@ public class AssetController {
         });
     }
 
+    @SuppressWarnings("null")
     private Installation resolveInstallation(Map<String, Object> payload) {
         String locId = asString(payload.get("current_location_id"));
         if (locId != null && !locId.isBlank()) {
