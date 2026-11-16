@@ -13,7 +13,7 @@ import {
   PaginatedResponse,
   PersonnelRecord,
   RbacActiveContext,
-  RbacPersonasPayload,
+  AuthorizationContextPayload,
   ReceiveShipmentPayload,
   ReceiveShipmentResponse,
   RequisitionSummary,
@@ -171,7 +171,7 @@ export class MewApiService {
 
     forkJoin({
       rbac: this.http
-        .get<RbacPersonasPayload>(`${this.apiBaseUrl}/rbac/personas/`, opts)
+        .get<AuthorizationContextPayload>(`${this.apiBaseUrl}/authorization/context/`, opts)
         .pipe(catchError(() => of(null))),
       units: this.http
         .get<PaginatedResponse<MilitaryUnitDashboard> | MilitaryUnitDashboard[]>(

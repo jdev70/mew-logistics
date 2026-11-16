@@ -255,7 +255,6 @@ public class RbacPolicyService {
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("active_context", activeContext);
-        payload.put("personas", Collections.emptyList());
         return payload;
     }
 

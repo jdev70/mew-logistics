@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/rbac/personas")
+@RequestMapping("/api/v1/authorization/context")
 public class RbacPersonaController {
 
     private final RbacPolicyService rbacPolicyService;
@@ -18,7 +18,7 @@ public class RbacPersonaController {
     }
 
     @GetMapping({"", "/"})
-    public Map<String, Object> getPersonas() {
+    public Map<String, Object> getAuthorizationContext() {
         return rbacPolicyService.buildPersonasPayload(null);
     }
 }

@@ -308,9 +308,8 @@ export interface RbacActiveContext {
   };
 }
 
-export interface RbacPersonasPayload {
+export interface AuthorizationContextPayload {
   active_context: RbacActiveContext;
-  personas: RbacPersona[];
 }
 
 export interface SecurityAuditLogRecord {
