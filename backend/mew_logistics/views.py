@@ -147,12 +147,6 @@ class RequisitionViewSet(viewsets.ModelViewSet):
         # This data only lives in memory and won't throw a database schema error
         requisition._received_by = clerk_profile
 
-        requisition.status = 'Received'
-
-        update_fields = ['status']
-        if backorder_created:
-            update_fields.append('quantity')
-        
         # 3. Validate the incoming quantity
         if received_quantity is not None:
             try:

@@ -14,11 +14,8 @@ class WorkOrder(BaseModel):
     is_grounding_fault = models.BooleanField(default=False)
     status = models.CharField(max_length=50, default='Open')
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.is_grounding_fault and self.status != 'Closed':
-            self.asset.readiness_status = ReadinessLevel.NON_MISSION_CAPABLE_MAINTENANCE
-            self.asset.save()
+    def __str__(self):
+        return f"WO-{str(self.id)[:8].upper()} ({self.asset.serial_number}) - {self.status}"
 
 class Requisition(BaseModel):
     class UrgencyPriority(models.IntegerChoices):
@@ -26,12 +23,19 @@ class Requisition(BaseModel):
         PRIORITY = 2, _('Priority (02)')
         URGENT = 1, _('Urgent (01)')
 
-    document_number = models.CharField(max_length=14, unique=True)
-    requesting_unit = models.ForeignKey(MilitaryUnit, on_delete=models.CASCADE)
-    material = models.ForeignKey(MaterialCatalog, on_delete=models.PROTECT)
+    document_number = models.CharField(max_length=25, unique=True)
+    requesting_unit = models.ForeignKey(MilitaryUnit, on_delete=models.CASCADE, related_name='requisitions')
+    material = models.ForeignKey(MaterialCatalog, on_delete=models.PROTECT, related_name='requisitions')
     quantity = models.PositiveIntegerField()
     priority = models.IntegerField(choices=UrgencyPriority.choices, default=UrgencyPriority.ROUTINE)
     tied_to_asset = models.ForeignKey(Asset, on_delete=models.SET_NULL, null=True, blank=True)
+    work_order = models.ForeignKey(
+        WorkOrder,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='requisitions',
+    )
     status = models.CharField(max_length=50, default='Submitted')
     estimated_delivery_date = models.DateField(null=True, blank=True)
 

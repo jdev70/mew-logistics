@@ -24,3 +24,15 @@ class TransactionType(models.TextChoices):
     RECEIPT = 'RCT', 'Receipt (+)'
     DEDUCTION = 'DED', 'Deduction (-)'
     ADJUSTMENT = 'ADJ', 'Adjustment (+/-)'
+
+
+class OperationalDomain(models.TextChoices):
+    SURFACE = 'Surface', _('Surface')
+    SUBSURFACE = 'Subsurface', _('Subsurface')
+    AIRBORNE = 'Airborne', _('Airborne')
+
+
+class CapabilityStatus(models.TextChoices):
+    FOC = 'FOC (Full Operational Capability)', _('FOC (Full Operational Capability)')
+    IOC = 'IOC (Initial Operational Capability)', _('IOC (Initial Operational Capability)')
+    DEPOT_UPGRADE = 'Depot Upgrade', _('Depot Upgrade')

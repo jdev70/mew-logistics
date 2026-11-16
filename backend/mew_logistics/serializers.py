@@ -24,7 +24,23 @@ class InstallationBaseSerializer(serializers.ModelSerializer):
 class MaterialCatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = MaterialCatalog
-        fields = ['id', 'nsn', 'nomenclature', 'critical_item']
+        fields = [
+            'id',
+            'component_id',
+            'nsn',
+            'nomenclature',
+            'part_number',
+            'cage_code',
+            'manufacturer',
+            'component_category',
+            'repairability_code',
+            'unit_of_issue',
+            'unit_price',
+            'critical_item',
+            'lead_time_days',
+            'expected_mtbf_hours',
+            'compatible_system_ids',
+        ]
 
 
 class AssetModelSerializer(serializers.ModelSerializer):
@@ -62,8 +78,11 @@ class WorkOrderDashboardSerializer(serializers.ModelSerializer):
         ]
 
     def get_technician_name(self, obj):
-        if obj.technician and obj.technician.user:
-            return f"{obj.technician.rank} {obj.technician.user.last_name}"
+        if obj.technician:
+            if obj.technician.last_name:
+                return f"{obj.technician.rank} {obj.technician.last_name}"
+            if obj.technician.user:
+                return f"{obj.technician.rank} {obj.technician.user.last_name}"
         return "Unassigned"
 
 # ==========================================
@@ -180,7 +199,10 @@ class InventoryTransactionDashboardSerializer(serializers.ModelSerializer):
         ]
 
     def get_performed_by_name(self, obj):
-        if obj.performed_by and obj.performed_by.user:
-            return f"{obj.performed_by.rank} {obj.performed_by.user.last_name}"
+        if obj.performed_by:
+            if obj.performed_by.last_name:
+                return f"{obj.performed_by.rank} {obj.performed_by.last_name}"
+            if obj.performed_by.user:
+                return f"{obj.performed_by.rank} {obj.performed_by.user.last_name}"
         # Fallback for automated background tasks or depot receipts
         return "Automated System"
