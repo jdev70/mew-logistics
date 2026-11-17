@@ -537,13 +537,24 @@ export class MewApiService {
       });
   }
 
-  advanceWorkOrderStatus(
+  submitWorkOrderMaintenance(
     woId: string,
+    completion: {
+      completed_work: string;
+      action_taken_code: string;
+      initial_diagnostics: string;
+      safety_tag_out: string;
+      isolation_inspection: string;
+      fault_identification: string;
+      repair_replacement: string;
+      restoration_testing: string;
+      final_equipment_status: string;
+      maintenance_hours: number;
+    },
     onSuccess: (msg: string) => void,
     onError: (errMsg: string) => void
   ): void {
     if (this.connectionMode() === 'SIMULATION_FALLBACK') {
-      const lifecycle = ['OPEN', 'AWAITING_PARTS', 'IN_WORK', 'QA_PENDING', 'CLOSED'];
       const list = [...this.workOrders()];
       const idx = list.findIndex((w) => w.id === woId);
       if (idx === -1) {
@@ -551,12 +562,10 @@ export class MewApiService {
         return;
       }
       const current = { ...list[idx] };
-      const curIdx = lifecycle.indexOf(current.status);
-      const nextStatus =
-        curIdx >= 0 && curIdx < lifecycle.length - 1
-          ? lifecycle[curIdx + 1]
-          : 'CLOSED';
-      current.status = nextStatus;
+      current.status = 'QA_PENDING';
+      current.status_display = 'QA_PENDING';
+      Object.assign(current, completion);
+      current.maintenance_submitted_at = new Date().toISOString();
       current.tag_out_verified = true;
       current.esd_precautions_verified = true;
       if (current.requires_mdf_zeroization) {
@@ -564,24 +573,46 @@ export class MewApiService {
       }
       list[idx] = current;
       this.workOrders.set(list);
-      onSuccess(`MAF ${current.jcn || current.id} transitioned to ${nextStatus}.`);
+      onSuccess(`Maintenance submitted for QA: ${current.jcn || current.id}.`);
       return;
     }
 
     this.http
-      .post<{ message: string; work_order: WorkOrderSummary }>(
-        `${this.apiBaseUrl}/work-orders/${woId}/advance-status/`,
-        {},
+      .post<WorkOrderSummary>(
+        `${this.apiBaseUrl}/work-orders/${woId}/submit-maintenance/`,
+        completion,
         this.getHeaders()
       )
       .subscribe({
-        next: (res) => {
+        next: () => {
           this.loadAllTelemetry();
-          onSuccess(res.message);
+          onSuccess('Maintenance submitted for QA review.');
         },
         error: (err) => {
-          onError(err?.error?.error || 'Failed to advance MAF status.');
+          onError(err?.error?.error || 'Failed to submit maintenance completion.');
         },
+      });
+  }
+
+  closeWorkOrder(
+    woId: string,
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      this.workOrders.update((list) => list.map((workOrder) =>
+        workOrder.id === woId ? { ...workOrder, status: 'CLOSED', status_display: 'CLOSED' } : workOrder));
+      onSuccess('QA accepted the maintenance action and closed the MAF.');
+      return;
+    }
+
+    this.http.post<WorkOrderSummary>(`${this.apiBaseUrl}/work-orders/${woId}/close/`, {}, this.getHeaders())
+      .subscribe({
+        next: () => {
+          this.loadAllTelemetry();
+          onSuccess('QA accepted the maintenance action and closed the MAF.');
+        },
+        error: (err) => onError(err?.error?.error || 'Failed to close work order.'),
       });
   }
 

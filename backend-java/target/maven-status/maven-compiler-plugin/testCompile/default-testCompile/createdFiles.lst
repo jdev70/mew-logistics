@@ -1,4 +1,12 @@
-mil\navy\nswc\mew\AuthorizationIntegrationTest$JwtDecoderConfiguration.class
-mil\navy\nswc\mew\AuthorizationIntegrationTest.class
-mil\navy\nswc\mew\security\MewPermissionsManagerTest.class
-mil\navy\nswc\mew\OracleLocalSmokeIT.class
+mil\dod\mew\AuthorizationIntegrationTest.class
+mil\dod\mew\MewIntegrationTest.class
+mil\dod\mew\service\RequisitionServiceTest.class
+mil\dod\mew\web\controller\AssetControllerTest.class
+mil\dod\mew\OracleLocalSmokeIT.class
+mil\dod\mew\security\MewPermissionsManagerTest.class
+mil\dod\mew\SyntheticDataSeederTest.class
+mil\dod\mew\web\controller\MilitaryUnitDashboardControllerTest.class
+mil\dod\mew\AuthorizationIntegrationTest$JwtDecoderConfiguration.class
+mil\dod\mew\service\InventoryServiceTest.class
+mil\dod\mew\service\WorkOrderServiceTest.class
+mil\dod\mew\web\controller\RequisitionControllerTest.class

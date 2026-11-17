@@ -1,0 +1,9 @@
+attribute,recommended_alias,,definition,example,,,
+component, Site Reporting Component,site_reporting_component, A code used to identify the Military, USMC Air National Guard ,,,
+siteName, Site Name,site_name, The official identification or name applied to a site as assigned and promulgated by the DoD, Military Services, or Washington Headquarters Services to recognize the site., Fort Stewart Langley AFB, etc. 
+jointBase, Is Joint Base,is_joint_base, The yes or no indicator of whether or not the site is part of a Joint Base, as established by the 2005 Base Closure and Realignment Commission (BRAC)., Yes/No ,,
+state, State/Territory,state_territory, The two letter abbreviation for the name of the state in which the feature is located, OH TX PR etc. ,,,
+operStatus, Site Operational Status,site_operational_status, A code used to identify the current operational status of the site, Active Closed ,,,
+isFirrma, Included in FIRRMA,included_in_firrma,The yes or no indicator of whether or not a DoD site is listed in the FIRRMA Act Parts 1 or 2., Yes/No ,,,
+isCui, Is CUI,is_cui, The yes or no indicator of whether or not the feature contains Controlled Unclassified Information (CUI), No ,,,
+country, Country,country, The code that represents the location of the country, United States ,,,

@@ -1,0 +1,23 @@
+# Deliberately isolated, disposable dataset for UI development and demonstrations.
+# Activate with: --spring.profiles.active=synthetic-data
+spring:
+  datasource:
+    url: jdbc:h2:mem:mewsynthetic;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=Oracle
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+mew:
+  security:
+    mode: demo
+    # Mirrors the seeded CDR Marcus Vance authorization assignment. A real Keycloak
+    # session must map its immutable JWT sub to this personnel row separately.
+    demo-subject: demo:marcus-vance
+    demo-role: FLEET_READINESS_ANALYST
+  synthetic:
+    seed: 20261117
+    scenario: standard
+    history-days: 180

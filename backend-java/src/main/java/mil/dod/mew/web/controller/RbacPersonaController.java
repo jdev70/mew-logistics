@@ -1,0 +1,24 @@
+package mil.dod.mew.web.controller;
+
+import mil.dod.mew.service.RbacPolicyService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/authorization/context")
+public class RbacPersonaController {
+
+    private final RbacPolicyService rbacPolicyService;
+
+    public RbacPersonaController(RbacPolicyService rbacPolicyService) {
+        this.rbacPolicyService = rbacPolicyService;
+    }
+
+    @GetMapping({"", "/"})
+    public Map<String, Object> getAuthorizationContext() {
+        return rbacPolicyService.buildPersonasPayload(null);
+    }
+}

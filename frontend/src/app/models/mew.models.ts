@@ -38,6 +38,12 @@ export interface InstallationDashboard extends InstallationBase {
   rf_anechoic_chamber: boolean;
   readiness_rating: string;
   last_inspection_date: string | null;
+  catalog_source_id?: string;
+  catalog_source_url?: string;
+  catalog_verified_on?: string | null;
+  public_association_type?: string;
+  catalog_confidence?: string;
+  synthetic_operational_data?: boolean;
   personnel_count: number;
   housed_assets_count: number;
 }
@@ -112,6 +118,17 @@ export interface WorkOrderSummary {
   malfunction_code?: string;
   malfunction_display?: string;
   description_of_fault: string;
+  completed_work?: string;
+  action_taken_code?: string;
+  initial_diagnostics?: string;
+  safety_tag_out?: string;
+  isolation_inspection?: string;
+  fault_identification?: string;
+  repair_replacement?: string;
+  restoration_testing?: string;
+  final_equipment_status?: string;
+  maintenance_hours?: number | string;
+  maintenance_submitted_at?: string | null;
   work_center?: string;
   technician_name: string;
   technician_clearance?: string;

@@ -1618,6 +1618,13 @@
 
           <!-- SUB-TAB 3: CSMP / MAF Maintenance Work Orders Table -->
           <div *ngIf="supplySubTab() === 'workorders'" class="flex-1 min-h-0 overflow-hidden">
+            <div class="grid grid-cols-5 gap-1.5 px-3 py-2 border-b mew-border bg-slate-950/30 text-center mono-data">
+              <div class="mew-elevated rounded-sm p-1.5"><div class="text-[9px] mew-text-muted">IN WORK</div><div class="text-sm font-bold text-sky-300">{{ workOrderLifecycleStats().inWork }}</div></div>
+              <div class="mew-elevated rounded-sm p-1.5"><div class="text-[9px] mew-text-muted">AWAITING PARTS</div><div class="text-sm font-bold text-amber-300">{{ workOrderLifecycleStats().awaitingParts }}</div></div>
+              <div class="mew-elevated rounded-sm p-1.5"><div class="text-[9px] mew-text-muted">QA PENDING</div><div class="text-sm font-bold text-violet-300">{{ workOrderLifecycleStats().qaPending }}</div></div>
+              <div class="mew-elevated rounded-sm p-1.5"><div class="text-[9px] mew-text-muted">CLOSED</div><div class="text-sm font-bold text-emerald-300">{{ workOrderLifecycleStats().closed }}</div></div>
+              <div class="mew-elevated rounded-sm p-1.5"><div class="text-[9px] mew-text-muted">SUBMITTED HRS</div><div class="text-sm font-bold text-slate-100">{{ workOrderLifecycleStats().submittedHours | number:'1.0-2' }}</div></div>
+            </div>
             <p-table
               [value]="api.workOrders()"
               [scrollable]="true"
@@ -1796,19 +1803,114 @@
                 </div>
               </div>
 
+              <div *ngIf="wo.completed_work" class="mew-elevated p-2.5 rounded-sm space-y-1 text-[11px]">
+                <div class="flex items-center justify-between">
+                  <div class="text-[10px] uppercase text-emerald-400 font-bold mono-data">Navy MAF Technician Resolution</div>
+                  <span class="dod-tag bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    ACTION: {{ wo.action_taken_code || 'RECORDED' }}
+                  </span>
+                </div>
+                <div *ngIf="wo.initial_diagnostics" class="grid grid-cols-1 gap-1.5 pt-1">
+                  <div><span class="mono-data text-[10px] text-sky-300">DIAGNOSTICS:</span> {{ wo.initial_diagnostics }}</div>
+                  <div><span class="mono-data text-[10px] text-sky-300">SAFETY / TAG-OUT:</span> {{ wo.safety_tag_out }}</div>
+                  <div><span class="mono-data text-[10px] text-sky-300">ISOLATION:</span> {{ wo.isolation_inspection }}</div>
+                  <div><span class="mono-data text-[10px] text-sky-300">FAULT:</span> {{ wo.fault_identification }}</div>
+                  <div><span class="mono-data text-[10px] text-sky-300">R&amp;R:</span> {{ wo.repair_replacement }}</div>
+                  <div><span class="mono-data text-[10px] text-sky-300">TEST:</span> {{ wo.restoration_testing }}</div>
+                  <div><span class="mono-data text-[10px] text-emerald-300">FINAL:</span> {{ wo.final_equipment_status }}</div>
+                </div>
+                <p *ngIf="!wo.initial_diagnostics" class="mew-text-primary leading-relaxed whitespace-pre-line">{{ wo.completed_work }}</p>
+                <div class="mono-data text-[10px] mew-text-secondary">
+                  Submitted labor: <span class="text-sky-300 font-bold">{{ wo.maintenance_hours }}h</span>
+                  <span *ngIf="wo.maintenance_submitted_at"> · {{ wo.maintenance_submitted_at | date:'yyyy-MM-dd HH:mm' }}</span>
+                </div>
+              </div>
+
               <div *ngIf="mafActionFeedback() as msg" class="p-2 rounded-sm text-xs mono-data bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
                 {{ msg }}
               </div>
             </div>
 
-            <button
-              *ngIf="wo.status !== 'CLOSED' && wo.status !== 'Closed'"
-              type="button"
-              (click)="advanceMafStatus(wo)"
-              class="mt-2 w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition"
-            >
-              Advance MAF Lifecycle / QA Sign-Off &rarr;
-            </button>
+            <div *ngIf="wo.status !== 'CLOSED' && wo.status !== 'Closed'" class="mt-2 space-y-2">
+              <ng-container *ngIf="wo.status !== 'QA_PENDING'; else qaReview">
+                <div class="border-t mew-border pt-2.5 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">Navy MAF-Style Technician Resolution</span>
+                    <span class="text-[10px] mono-data text-slate-400">Assigned: {{ wo.technician_name }}</span>
+                  </div>
+                  <p class="text-[10px] mew-text-secondary">Record the resolution in the same QA-reviewable sequence used in the supplied Navy maintenance template.</p>
+                  <div class="grid grid-cols-1 gap-2">
+                    <div class="grid grid-cols-2 gap-2">
+                      <label class="text-[10px] mono-data text-slate-400">Action Taken Code
+                        <select [ngModel]="actionTakenCode()" (ngModelChange)="actionTakenCode.set($event)" class="mt-1 w-full rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100">
+                          <option value="C - Repaired">C - Repaired</option>
+                          <option value="A - Adjusted">A - Adjusted</option>
+                          <option value="R - Replaced">R - Replaced</option>
+                          <option value="N - No Defect Found">N - No Defect Found</option>
+                        </select>
+                      </label>
+                      <label class="text-[10px] mono-data text-slate-400">Final Equipment Status
+                        <select [ngModel]="finalEquipmentStatus()" (ngModelChange)="finalEquipmentStatus.set($event)" class="mt-1 w-full rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100">
+                          <option value="1 - Fully Operational">1 - Fully Operational</option>
+                          <option value="2 - Reduced Capability">2 - Reduced Capability</option>
+                          <option value="3 - Non-Operational">3 - Non-Operational</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="text-[10px] mono-data text-slate-400">Initial Diagnostics
+                      <textarea [ngModel]="initialDiagnostics()" (ngModelChange)="initialDiagnostics.set($event)" rows="2" placeholder="BIT results, equipment status, and applicable troubleshooting reference." class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100 placeholder:text-slate-500"></textarea>
+                    </label>
+                    <label class="text-[10px] mono-data text-slate-400">Safety &amp; Tag-Out
+                      <textarea [ngModel]="safetyTagOut()" (ngModelChange)="safetyTagOut.set($event)" rows="2" placeholder="De-energization, tag-out, ESD, or controlled-work controls applied." class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100 placeholder:text-slate-500"></textarea>
+                    </label>
+                    <label class="text-[10px] mono-data text-slate-400">Isolation &amp; Inspection
+                      <textarea [ngModel]="isolationInspection()" (ngModelChange)="isolationInspection.set($event)" rows="2" placeholder="Fault-path isolation and inspection actions performed." class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100 placeholder:text-slate-500"></textarea>
+                    </label>
+                    <label class="text-[10px] mono-data text-slate-400">Fault Identification
+                      <textarea [ngModel]="faultIdentification()" (ngModelChange)="faultIdentification.set($event)" rows="2" placeholder="Identified failed component, condition, or root cause." class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100 placeholder:text-slate-500"></textarea>
+                    </label>
+                    <label class="text-[10px] mono-data text-slate-400">Repair / Replacement
+                      <textarea [ngModel]="repairReplacement()" (ngModelChange)="repairReplacement.set($event)" rows="2" placeholder="Corrective action, parts installed, and handling precautions." class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100 placeholder:text-slate-500"></textarea>
+                    </label>
+                    <label class="text-[10px] mono-data text-slate-400">Restoration &amp; Testing
+                      <textarea [ngModel]="restorationTesting()" (ngModelChange)="restorationTesting.set($event)" rows="2" placeholder="Restoration steps, operational test, and verification outcome." class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none p-2 text-xs text-slate-100 placeholder:text-slate-500"></textarea>
+                    </label>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <label class="text-[10px] mono-data text-slate-400" for="maintenance-hours">Labor hours</label>
+                    <input
+                      id="maintenance-hours"
+                      type="number"
+                      min="0.25"
+                      step="0.25"
+                      [ngModel]="maintenanceHours()"
+                      (ngModelChange)="maintenanceHours.set(+$event)"
+                      class="w-20 rounded-sm bg-slate-950 border border-slate-700 focus:border-sky-400 focus:outline-none px-2 py-1 text-xs text-slate-100"
+                    >
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  (click)="submitMaintenanceCompletion(wo)"
+                  class="w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition"
+                >
+                  Submit Completed Maintenance for QA &rarr;
+                </button>
+              </ng-container>
+              <ng-template #qaReview>
+                <div class="p-2.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-xs mono-data text-amber-200">
+                  Maintenance submission recorded. Awaiting fleet readiness QA acceptance.
+                </div>
+                <button
+                  *ngIf="isFleetReviewer()"
+                  type="button"
+                  (click)="acceptQaAndClose(wo)"
+                  class="w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition"
+                >
+                  Accept QA and Close MAF &rarr;
+                </button>
+              </ng-template>
+            </div>
           </div>
 
           <!-- MODE B: Selected LRU Component & Warehouse Stock Detail Card (when Inventory/Requisitions active) -->
@@ -2035,6 +2137,13 @@
                   <span *ngIf="inst.scif_accredited" class="px-1.5 py-0.5 rounded-sm bg-indigo-500/20 text-indigo-300">SCIF ACCREDITED</span>
                   <span *ngIf="inst.rf_anechoic_chamber" class="px-1.5 py-0.5 rounded-sm bg-sky-500/20 text-sky-300">RF ANECHOIC CHAMBER</span>
                   <span class="px-1.5 py-0.5 rounded-sm mew-elevated mew-text-secondary">{{ inst.mission_category }}</span>
+                </div>
+                <div *ngIf="inst.catalog_source_id" class="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] mono-data">
+                  <span class="px-1.5 py-0.5 rounded-sm bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">PUBLIC-SOURCE GOVERNED</span>
+                  <span class="mew-text-secondary">{{ inst.public_association_type }}</span>
+                  <a *ngIf="inst.catalog_source_url" [href]="inst.catalog_source_url" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">{{ inst.catalog_source_id }}</a>
+                  <span *ngIf="inst.catalog_verified_on" class="mew-text-muted">verified {{ inst.catalog_verified_on | date:'yyyy-MM-dd' }}</span>
+                  <span *ngIf="inst.synthetic_operational_data" class="text-amber-300">operational data synthetic</span>
                 </div>
                 <span class="mew-text-secondary">
                   Filtered: <strong class="text-sky-400">{{ filteredPersonnel().length }}</strong> Personnel &bull;

@@ -108,6 +108,29 @@ export class AppComponent implements OnInit {
   readonly selectedRequisition = signal<RequisitionSummary | null>(null);
   readonly selectedWorkOrder = signal<WorkOrderSummary | null>(null);
   readonly mafActionFeedback = signal<string | null>(null);
+  readonly actionTakenCode = signal<string>('C - Repaired');
+  readonly initialDiagnostics = signal<string>('');
+  readonly safetyTagOut = signal<string>('');
+  readonly isolationInspection = signal<string>('');
+  readonly faultIdentification = signal<string>('');
+  readonly repairReplacement = signal<string>('');
+  readonly restorationTesting = signal<string>('');
+  readonly finalEquipmentStatus = signal<string>('1 - Fully Operational');
+  readonly maintenanceHours = signal<number>(1);
+  readonly isFleetReviewer = computed(() =>
+    this.api.activeRbacContext().functional_role === 'FLEET_READINESS_ANALYST');
+  readonly workOrderLifecycleStats = computed(() => {
+    const workOrders = this.api.workOrders();
+    const count = (status: string) => workOrders.filter((workOrder) => workOrder.status === status).length;
+    const submittedHours = workOrders.reduce((total, workOrder) => total + Number(workOrder.maintenance_hours || 0), 0);
+    return {
+      inWork: count('IN_WORK'),
+      awaitingParts: count('AWAITING_PARTS'),
+      qaPending: count('QA_PENDING'),
+      closed: count('CLOSED'),
+      submittedHours,
+    };
+  });
 
   // =========================================================================
   // 4. SHORE INSTALLATIONS & PERSONNEL MASTER-DETAIL STATE
@@ -188,11 +211,9 @@ export class AppComponent implements OnInit {
         }
 
         const wos = this.api.workOrders();
-        if (
-          wos.length &&
-          (!this.selectedWorkOrder() || !wos.some((w) => w.id === this.selectedWorkOrder()?.id))
-        ) {
-          this.selectedWorkOrder.set(wos[0]);
+        if (wos.length) {
+          const refreshedSelection = wos.find((w) => w.id === this.selectedWorkOrder()?.id);
+          this.selectedWorkOrder.set(refreshedSelection || wos[0]);
         }
 
         const pendingReqs = this.pendingRequisitionsList();
@@ -488,17 +509,64 @@ export class AppComponent implements OnInit {
   selectWorkOrderRecord(wo: WorkOrderSummary): void {
     this.selectedWorkOrder.set(wo);
     this.mafActionFeedback.set(null);
+    this.actionTakenCode.set(wo.action_taken_code || 'C - Repaired');
+    this.initialDiagnostics.set(wo.initial_diagnostics || '');
+    this.safetyTagOut.set(wo.safety_tag_out || '');
+    this.isolationInspection.set(wo.isolation_inspection || '');
+    this.faultIdentification.set(wo.fault_identification || '');
+    this.repairReplacement.set(wo.repair_replacement || '');
+    this.restorationTesting.set(wo.restoration_testing || '');
+    this.finalEquipmentStatus.set(wo.final_equipment_status || '1 - Fully Operational');
+    this.maintenanceHours.set(Number(wo.maintenance_hours || 1));
   }
 
-  advanceMafStatus(wo: WorkOrderSummary): void {
-    this.api.advanceWorkOrderStatus(
+  submitMaintenanceCompletion(wo: WorkOrderSummary): void {
+    const required = [
+      this.initialDiagnostics(), this.safetyTagOut(), this.isolationInspection(),
+      this.faultIdentification(), this.repairReplacement(), this.restorationTesting(), this.finalEquipmentStatus(),
+    ];
+    if (required.some((value) => !value.trim())) {
+      this.mafActionFeedback.set('Complete every Navy MAF resolution section before submitting to QA.');
+      return;
+    }
+    const resolutionNarrative = [
+      `Action Taken Code: ${this.actionTakenCode()}`,
+      `Initial Diagnostics: ${this.initialDiagnostics().trim()}`,
+      `Safety & Tag-Out: ${this.safetyTagOut().trim()}`,
+      `Isolation & Inspection: ${this.isolationInspection().trim()}`,
+      `Fault Identification: ${this.faultIdentification().trim()}`,
+      `Repair / Replacement: ${this.repairReplacement().trim()}`,
+      `Restoration & Testing: ${this.restorationTesting().trim()}`,
+      `Final Equipment Status: ${this.finalEquipmentStatus().trim()}`,
+    ].join('\n\n');
+    this.api.submitWorkOrderMaintenance(
       wo.id,
+      {
+        completed_work: resolutionNarrative,
+        action_taken_code: this.actionTakenCode(),
+        initial_diagnostics: this.initialDiagnostics(),
+        safety_tag_out: this.safetyTagOut(),
+        isolation_inspection: this.isolationInspection(),
+        fault_identification: this.faultIdentification(),
+        repair_replacement: this.repairReplacement(),
+        restoration_testing: this.restorationTesting(),
+        final_equipment_status: this.finalEquipmentStatus(),
+        maintenance_hours: this.maintenanceHours(),
+      },
       (msg) => {
         this.mafActionFeedback.set(msg);
       },
       (err) => {
         this.mafActionFeedback.set(err);
       }
+    );
+  }
+
+  acceptQaAndClose(wo: WorkOrderSummary): void {
+    this.api.closeWorkOrder(
+      wo.id,
+      (msg) => this.mafActionFeedback.set(msg),
+      (err) => this.mafActionFeedback.set(err)
     );
   }
 

@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>mil.navy.nswc.mew</groupId>
+    <groupId>mil.dod.mew</groupId>
     <artifactId>mew-logistics-readiness-backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
