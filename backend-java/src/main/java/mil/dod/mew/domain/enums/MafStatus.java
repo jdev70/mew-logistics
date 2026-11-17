@@ -6,5 +6,6 @@ public enum MafStatus {
     AWAITING_PARTS,
     IN_WORK,
     QA_PENDING,
+    RETURNED_TO_SERVICE,
     CLOSED
 }

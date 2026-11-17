@@ -16,6 +16,7 @@ import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
 import mil.dod.mew.service.exception.BusinessValidationException;
 import mil.dod.mew.service.exception.ResourceNotFoundException;
 import mil.dod.mew.web.dto.MaintenanceCompletionRequest;
+import mil.dod.mew.web.dto.QaReviewRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,8 +97,8 @@ public class WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + workOrderId));
 
-        if (workOrder.getStatus() != MafStatus.QA_PENDING) {
-            throw new BusinessValidationException("WorkOrder must be submitted to QA before it can be closed.");
+        if (workOrder.getStatus() != MafStatus.RETURNED_TO_SERVICE) {
+            throw new BusinessValidationException("WorkOrder must be returned to service by QA before it can be closed.");
         }
 
         Installation installation = workOrder.getInstallation() != null
@@ -125,9 +126,39 @@ public class WorkOrderService {
         MafStatus previousStatus = workOrder.getStatus();
         workOrder.setStatus(MafStatus.CLOSED);
         WorkOrder saved = workOrderRepository.save(workOrder);
-        recordTransition(saved, actor, WorkOrderLifecycleEventType.QA_APPROVED_AND_CLOSED, previousStatus,
-                MafStatus.CLOSED, "Reviewer accepted the QA-pending maintenance action and closed the work order.");
+        recordTransition(saved, actor, WorkOrderLifecycleEventType.WORK_ORDER_CLOSED, previousStatus,
+                MafStatus.CLOSED, "Reviewer closed the QA-approved work order after return to service.");
         return saved;
+    }
+
+    @Transactional
+    public WorkOrder reviewQa(@NonNull UUID workOrderId, QaReviewRequest review, Personnel actor) {
+        WorkOrder workOrder = workOrderRepository.findById(workOrderId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + workOrderId));
+        if (workOrder.getStatus() != MafStatus.QA_PENDING) {
+            throw new BusinessValidationException("WorkOrder must be awaiting QA review.");
+        }
+        String decision = review.getDecision().trim().toUpperCase();
+        String rationale = review.getRationale().trim();
+        MafStatus previousStatus = workOrder.getStatus();
+        if ("APPROVE".equals(decision)) {
+            workOrder.setStatus(MafStatus.RETURNED_TO_SERVICE);
+            WorkOrder saved = workOrderRepository.save(workOrder);
+            recordTransition(saved, actor, WorkOrderLifecycleEventType.QA_APPROVED_FOR_RETURN_TO_SERVICE,
+                    previousStatus, MafStatus.RETURNED_TO_SERVICE, rationale);
+            recordTransition(saved, actor, WorkOrderLifecycleEventType.RETURNED_TO_SERVICE,
+                    MafStatus.RETURNED_TO_SERVICE, MafStatus.RETURNED_TO_SERVICE,
+                    "Equipment returned to service following QA approval.");
+            return saved;
+        }
+        if ("REWORK".equals(decision)) {
+            workOrder.setStatus(MafStatus.IN_WORK);
+            WorkOrder saved = workOrderRepository.save(workOrder);
+            recordTransition(saved, actor, WorkOrderLifecycleEventType.REWORK_REQUESTED,
+                    previousStatus, MafStatus.IN_WORK, rationale);
+            return saved;
+        }
+        throw new BusinessValidationException("QA decision must be APPROVE or REWORK.");
     }
 
     private void recordTransition(WorkOrder workOrder, Personnel actor, WorkOrderLifecycleEventType eventType,

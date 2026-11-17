@@ -617,6 +617,27 @@ export class MewApiService {
       });
   }
 
+  reviewWorkOrderQa(
+    woId: string,
+    decision: 'APPROVE' | 'REWORK',
+    rationale: string,
+    onSuccess: (msg: string) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      this.workOrders.update((list) => list.map((workOrder) => workOrder.id === woId
+        ? { ...workOrder, status: decision === 'APPROVE' ? 'RETURNED_TO_SERVICE' : 'IN_WORK', status_display: decision === 'APPROVE' ? 'RETURNED_TO_SERVICE' : 'IN_WORK' }
+        : workOrder));
+      onSuccess(decision === 'APPROVE' ? 'QA approved; equipment returned to service.' : 'QA returned the action for rework.');
+      return;
+    }
+    this.http.post<WorkOrderSummary>(`${this.apiBaseUrl}/work-orders/${woId}/qa-decision/`, { decision, rationale }, this.getHeaders())
+      .subscribe({
+        next: () => { this.loadAllTelemetry(); onSuccess(decision === 'APPROVE' ? 'QA approved; equipment returned to service.' : 'QA returned the action for rework.'); },
+        error: (err) => onError(err?.error?.error || 'Failed to record QA decision.'),
+      });
+  }
+
   getWorkOrderLifecycleHistory(
     woId: string,
     onSuccess: (events: WorkOrderLifecycleEvent[]) => void,
@@ -637,13 +658,14 @@ export class MewApiService {
           reason: 'Technician submitted completion evidence for independent QA review.',
         });
       }
-      if (workOrder.status === 'CLOSED') {
+      if (workOrder.status === 'RETURNED_TO_SERVICE' || workOrder.status === 'CLOSED') {
         events.push({
-          event_type: 'QA_APPROVED_AND_CLOSED', previous_status: 'QA_PENDING', new_status: 'CLOSED',
+          event_type: 'QA_APPROVED_FOR_RETURN_TO_SERVICE', previous_status: 'QA_PENDING', new_status: 'RETURNED_TO_SERVICE',
           actor_name: workOrder.qa_inspector_name || 'Fleet readiness reviewer', occurred_at: new Date().toISOString(),
-          reason: 'Reviewer accepted the QA-pending maintenance action and closed the work order.',
+          reason: 'Reviewer approved the maintenance action and returned the equipment to service.',
         });
       }
+      if (workOrder.status === 'CLOSED') events.push({ event_type: 'WORK_ORDER_CLOSED', previous_status: 'RETURNED_TO_SERVICE', new_status: 'CLOSED', actor_name: workOrder.qa_inspector_name || 'Fleet readiness reviewer', occurred_at: new Date().toISOString(), reason: 'Reviewer closed the QA-approved work order.' });
       onSuccess(events);
       return;
     }

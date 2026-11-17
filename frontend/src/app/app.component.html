@@ -1856,7 +1856,7 @@
             </div>
 
             <div *ngIf="wo.status !== 'CLOSED' && wo.status !== 'Closed'" class="mt-2 space-y-2">
-              <ng-container *ngIf="wo.status !== 'QA_PENDING'; else qaReview">
+              <ng-container *ngIf="wo.status !== 'QA_PENDING' && wo.status !== 'RETURNED_TO_SERVICE'; else qaReview">
                 <div class="border-t mew-border pt-2.5 space-y-2">
                   <div class="flex items-center justify-between">
                     <span class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">Navy MAF-Style Technician Resolution</span>
@@ -1922,17 +1922,22 @@
                 </button>
               </ng-container>
               <ng-template #qaReview>
-                <div class="p-2.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-xs mono-data text-amber-200">
-                  Maintenance submission recorded. Awaiting fleet readiness QA acceptance.
-                </div>
-                <button
-                  *ngIf="isFleetReviewer()"
-                  type="button"
-                  (click)="acceptQaAndClose(wo)"
-                  class="w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition"
-                >
-                  Accept QA and Close MAF &rarr;
-                </button>
+                <ng-container *ngIf="wo.status === 'QA_PENDING'; else returnedToService">
+                  <div class="p-2.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-xs mono-data text-amber-200">Maintenance submission recorded. Awaiting fleet readiness QA disposition.</div>
+                  <div *ngIf="isFleetReviewer()" class="space-y-2">
+                    <label class="block text-[10px] mono-data text-slate-400">QA rationale
+                      <textarea [ngModel]="qaRationale()" (ngModelChange)="qaRationale.set($event)" rows="2" class="mt-1 w-full resize-y rounded-sm bg-slate-950 border border-slate-700 focus:border-violet-400 focus:outline-none p-2 text-xs text-slate-100"></textarea>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button type="button" (click)="reviewQa(wo, 'REWORK')" class="py-2 px-2 rounded-sm text-xs mono-data font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition">Return for Rework</button>
+                      <button type="button" (click)="reviewQa(wo, 'APPROVE')" class="py-2 px-2 rounded-sm text-xs mono-data font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">Approve / Return to Service</button>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #returnedToService>
+                  <div class="p-2.5 rounded-sm bg-emerald-500/10 border border-emerald-500/30 text-xs mono-data text-emerald-200">QA approved. Equipment has been returned to service and is ready for administrative closure.</div>
+                  <button *ngIf="isFleetReviewer()" type="button" (click)="acceptQaAndClose(wo)" class="w-full py-2 px-3 rounded-sm text-xs mono-data font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition">Close Returned-to-Service MAF &rarr;</button>
+                </ng-template>
               </ng-template>
             </div>
           </div>

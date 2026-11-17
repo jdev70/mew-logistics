@@ -117,6 +117,13 @@ class AuthorizationIntegrationTest {
                 .andExpect(jsonPath("$.status").value("QA_PENDING"))
                 .andExpect(jsonPath("$.maintenance_submitted_at").exists());
 
+        mockMvc.perform(post("/api/v1/work-orders/{id}/qa-decision/", workOrder.getId())
+                        .with(jwt().jwt(token -> token.subject("MEW-PER-0000")))
+                        .contentType("application/json")
+                        .content("{\"decision\":\"APPROVE\",\"rationale\":\"QA evidence and restoration test accepted.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RETURNED_TO_SERVICE"));
+
         mockMvc.perform(post("/api/v1/work-orders/{id}/close/", workOrder.getId())
                         .with(jwt().jwt(token -> token.subject("MEW-PER-0000"))))
                 .andExpect(status().isOk())
@@ -127,9 +134,11 @@ class AuthorizationIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].event_type").value("TECHNICIAN_SUBMITTED_FOR_QA"))
                 .andExpect(jsonPath("$[0].previous_status").value("IN_WORK"))
-                .andExpect(jsonPath("$[1].event_type").value("QA_APPROVED_AND_CLOSED"))
-                .andExpect(jsonPath("$[1].new_status").value("CLOSED"));
-        org.junit.jupiter.api.Assertions.assertEquals(2, lifecycleEvents.findByWorkOrderIdOrderByOccurredAtAsc(workOrder.getId()).size());
+                .andExpect(jsonPath("$[1].event_type").value("QA_APPROVED_FOR_RETURN_TO_SERVICE"))
+                .andExpect(jsonPath("$[1].new_status").value("RETURNED_TO_SERVICE"))
+                .andExpect(jsonPath("$[3].event_type").value("WORK_ORDER_CLOSED"))
+                .andExpect(jsonPath("$[3].new_status").value("CLOSED"));
+        org.junit.jupiter.api.Assertions.assertEquals(4, lifecycleEvents.findByWorkOrderIdOrderByOccurredAtAsc(workOrder.getId()).size());
     }
 
     @Test

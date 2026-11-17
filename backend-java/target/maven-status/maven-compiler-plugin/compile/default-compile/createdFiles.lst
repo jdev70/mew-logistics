@@ -31,6 +31,7 @@ mil\dod\mew\security\model\MewResource.class
 mil\dod\mew\repository\WorkOrderRepository.class
 mil\dod\mew\web\dto\MaintenanceCompletionRequest.class
 mil\dod\mew\repository\AssetModelRepository.class
+mil\dod\mew\web\dto\QaReviewRequest.class
 mil\dod\mew\domain\enums\WorkOrderLifecycleEventType.class
 mil\dod\mew\repository\CatalogAttributionRepository.class
 mil\dod\mew\repository\MilitaryUnitRepository.class

@@ -130,6 +130,10 @@ Keycloak realm configuration, or authorization behavior.
 
 1. Extend work-order states to capture assignment, maintenance in progress,
    technician completion, QA review, return-to-service, closure, and rework.
+   **Implemented for controlled transitions:** technician completion submits to
+   QA; QA can approve return-to-service or request rework with rationale; only
+   return-to-service work orders can be closed. Each transition is added to the
+   lifecycle ledger and exposed in the work-order dossier timeline.
 2. Tie work-order parts consumption and requisitions to the same asset,
    installation, and loadout context.
 3. Generate audit ledger events for each meaningful lifecycle action, including

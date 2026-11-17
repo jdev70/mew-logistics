@@ -15,6 +15,7 @@ import mil.dod.mew.service.WorkOrderService;
 import mil.dod.mew.service.exception.ResourceNotFoundException;
 import mil.dod.mew.service.exception.AccessDeniedException;
 import mil.dod.mew.web.dto.MaintenanceCompletionRequest;
+import mil.dod.mew.web.dto.QaReviewRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -193,6 +194,19 @@ public class WorkOrderController {
                 "/api/v1/work-orders/" + id + "/close/");
         requireReviewer();
         return ResponseEntity.ok(toDto(workOrderService.closeWorkOrder(id, userResolver.currentPersonnel())));
+    }
+
+    @PostMapping({"/{id}/qa-decision", "/{id}/qa-decision/"})
+    @Transactional
+    public Map<String, Object> reviewQa(@PathVariable @NonNull UUID id,
+                                         @Valid @RequestBody QaReviewRequest payload) {
+        rbacPolicyService.requirePermission(Resource.WORK_ORDER, Action.UPDATE, "/api/v1/work-orders/" + id + "/qa-decision/");
+        WorkOrder existing = workOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
+                "/api/v1/work-orders/" + id + "/qa-decision/");
+        requireReviewer();
+        return toDto(workOrderService.reviewQa(id, payload, userResolver.currentPersonnel()));
     }
 
     private void requireAssignedTechnician(WorkOrder workOrder) {

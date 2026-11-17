@@ -121,6 +121,7 @@ export class AppComponent implements OnInit {
   readonly restorationTesting = signal<string>('');
   readonly finalEquipmentStatus = signal<string>('1 - Fully Operational');
   readonly maintenanceHours = signal<number>(1);
+  readonly qaRationale = signal<string>('QA review completed against the submitted maintenance evidence.');
   readonly isFleetReviewer = computed(() =>
     this.api.activeRbacContext().functional_role === 'FLEET_READINESS_ANALYST');
   readonly workOrderLifecycleStats = computed(() => {
@@ -598,6 +599,16 @@ export class AppComponent implements OnInit {
       },
       (err) => this.mafActionFeedback.set(err)
     );
+  }
+
+  reviewQa(wo: WorkOrderSummary, decision: 'APPROVE' | 'REWORK'): void {
+    if (!this.qaRationale().trim()) {
+      this.mafActionFeedback.set('Provide a QA rationale before recording the disposition.');
+      return;
+    }
+    this.api.reviewWorkOrderQa(wo.id, decision, this.qaRationale(),
+      (msg) => { this.mafActionFeedback.set(msg); this.loadWorkOrderLifecycleHistory(wo.id); },
+      (err) => this.mafActionFeedback.set(err));
   }
 
   selectRequisitionForReceipt(req: RequisitionSummary): void {
