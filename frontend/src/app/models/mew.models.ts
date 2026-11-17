@@ -145,6 +145,15 @@ export interface WorkOrderSummary {
   parts_used_details?: WorkOrderPartDetail[];
 }
 
+export interface WorkOrderLifecycleEvent {
+  event_type: string;
+  previous_status: string | null;
+  new_status: string;
+  actor_name: string;
+  occurred_at: string;
+  reason: string;
+}
+
 export interface RequisitionSummary {
   id: string;
   document_number: string;

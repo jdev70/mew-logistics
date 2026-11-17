@@ -19,6 +19,7 @@ import {
   ProximityDepotRoute,
   RequisitionSummary,
   WorkOrderSummary,
+  WorkOrderLifecycleEvent,
 } from './models/mew.models';
 
 @Component({
@@ -107,6 +108,9 @@ export class AppComponent implements OnInit {
   readonly selectedBalance = signal<InventoryBalance | null>(null);
   readonly selectedRequisition = signal<RequisitionSummary | null>(null);
   readonly selectedWorkOrder = signal<WorkOrderSummary | null>(null);
+  readonly workOrderLifecycleHistory = signal<WorkOrderLifecycleEvent[]>([]);
+  readonly lifecycleHistoryLoading = signal<boolean>(false);
+  readonly lifecycleHistoryError = signal<string | null>(null);
   readonly mafActionFeedback = signal<string | null>(null);
   readonly actionTakenCode = signal<string>('C - Repaired');
   readonly initialDiagnostics = signal<string>('');
@@ -518,6 +522,28 @@ export class AppComponent implements OnInit {
     this.restorationTesting.set(wo.restoration_testing || '');
     this.finalEquipmentStatus.set(wo.final_equipment_status || '1 - Fully Operational');
     this.maintenanceHours.set(Number(wo.maintenance_hours || 1));
+    this.loadWorkOrderLifecycleHistory(wo.id);
+  }
+
+  private loadWorkOrderLifecycleHistory(workOrderId: string): void {
+    this.lifecycleHistoryLoading.set(true);
+    this.lifecycleHistoryError.set(null);
+    this.api.getWorkOrderLifecycleHistory(
+      workOrderId,
+      (events) => {
+        if (this.selectedWorkOrder()?.id === workOrderId) {
+          this.workOrderLifecycleHistory.set(events);
+        }
+        this.lifecycleHistoryLoading.set(false);
+      },
+      (error) => {
+        if (this.selectedWorkOrder()?.id === workOrderId) {
+          this.workOrderLifecycleHistory.set([]);
+          this.lifecycleHistoryError.set(error);
+        }
+        this.lifecycleHistoryLoading.set(false);
+      }
+    );
   }
 
   submitMaintenanceCompletion(wo: WorkOrderSummary): void {
@@ -555,6 +581,7 @@ export class AppComponent implements OnInit {
       },
       (msg) => {
         this.mafActionFeedback.set(msg);
+        this.loadWorkOrderLifecycleHistory(wo.id);
       },
       (err) => {
         this.mafActionFeedback.set(err);
@@ -565,7 +592,10 @@ export class AppComponent implements OnInit {
   acceptQaAndClose(wo: WorkOrderSummary): void {
     this.api.closeWorkOrder(
       wo.id,
-      (msg) => this.mafActionFeedback.set(msg),
+      (msg) => {
+        this.mafActionFeedback.set(msg);
+        this.loadWorkOrderLifecycleHistory(wo.id);
+      },
       (err) => this.mafActionFeedback.set(err)
     );
   }

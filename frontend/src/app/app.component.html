@@ -1826,6 +1826,30 @@
                 </div>
               </div>
 
+              <section class="mew-elevated p-2.5 rounded-sm space-y-2" aria-label="Work order lifecycle history">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-[10px] uppercase text-violet-300 font-bold mono-data">Lifecycle History</div>
+                  <span class="text-[9px] mono-data mew-text-muted">IMMUTABLE LEDGER</span>
+                </div>
+                <div *ngIf="lifecycleHistoryLoading()" class="text-[11px] mono-data mew-text-muted">Loading transition ledger…</div>
+                <div *ngIf="lifecycleHistoryError() as error" class="text-[11px] mono-data text-amber-300">{{ error }}</div>
+                <div *ngIf="!lifecycleHistoryLoading() && !lifecycleHistoryError() && !workOrderLifecycleHistory().length" class="text-[11px] mono-data mew-text-muted">
+                  No controlled lifecycle transitions have been recorded yet.
+                </div>
+                <ol *ngIf="workOrderLifecycleHistory().length" class="border-l border-violet-400/40 ml-1 space-y-3">
+                  <li *ngFor="let event of workOrderLifecycleHistory()" class="relative pl-3">
+                    <span class="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-violet-400 ring-4 ring-slate-900"></span>
+                    <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 mono-data text-[10px]">
+                      <span class="font-bold text-violet-300">{{ event.event_type.replaceAll('_', ' ') }}</span>
+                      <span class="text-slate-500">{{ event.previous_status || 'START' }} →</span>
+                      <span class="font-semibold text-emerald-300">{{ event.new_status }}</span>
+                    </div>
+                    <div class="text-[10px] mew-text-secondary mt-0.5">{{ event.actor_name }} · {{ event.occurred_at | date:'yyyy-MM-dd HH:mm' }}</div>
+                    <p class="text-[10px] mew-text-primary mt-0.5 leading-relaxed">{{ event.reason }}</p>
+                  </li>
+                </ol>
+              </section>
+
               <div *ngIf="mafActionFeedback() as msg" class="p-2 rounded-sm text-xs mono-data bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
                 {{ msg }}
               </div>

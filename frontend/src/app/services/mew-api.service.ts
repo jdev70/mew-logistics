@@ -20,6 +20,7 @@ import {
   RequisitionSummary,
   SecurityAuditLogRecord,
   WorkOrderSummary,
+  WorkOrderLifecycleEvent,
 } from '../models/mew.models';
 
 @Injectable({
@@ -614,6 +615,45 @@ export class MewApiService {
         },
         error: (err) => onError(err?.error?.error || 'Failed to close work order.'),
       });
+  }
+
+  getWorkOrderLifecycleHistory(
+    woId: string,
+    onSuccess: (events: WorkOrderLifecycleEvent[]) => void,
+    onError: (errMsg: string) => void
+  ): void {
+    if (this.connectionMode() === 'SIMULATION_FALLBACK') {
+      const workOrder = this.workOrders().find((item) => item.id === woId);
+      if (!workOrder) {
+        onError('Work Order not found.');
+        return;
+      }
+      const submittedAt = workOrder.maintenance_submitted_at || workOrder.date_opened;
+      const events: WorkOrderLifecycleEvent[] = [];
+      if (workOrder.maintenance_submitted_at || workOrder.status === 'QA_PENDING' || workOrder.status === 'CLOSED') {
+        events.push({
+          event_type: 'TECHNICIAN_SUBMITTED_FOR_QA', previous_status: 'IN_WORK', new_status: 'QA_PENDING',
+          actor_name: workOrder.technician_name || 'Assigned technician', occurred_at: submittedAt,
+          reason: 'Technician submitted completion evidence for independent QA review.',
+        });
+      }
+      if (workOrder.status === 'CLOSED') {
+        events.push({
+          event_type: 'QA_APPROVED_AND_CLOSED', previous_status: 'QA_PENDING', new_status: 'CLOSED',
+          actor_name: workOrder.qa_inspector_name || 'Fleet readiness reviewer', occurred_at: new Date().toISOString(),
+          reason: 'Reviewer accepted the QA-pending maintenance action and closed the work order.',
+        });
+      }
+      onSuccess(events);
+      return;
+    }
+
+    this.http.get<WorkOrderLifecycleEvent[]>(
+      `${this.apiBaseUrl}/work-orders/${woId}/lifecycle-history/`, this.getHeaders()
+    ).subscribe({
+      next: onSuccess,
+      error: (err) => onError(err?.error?.error || 'Failed to load lifecycle history.'),
+    });
   }
 
   private loadFallbackSyntheticDataset(): void {
