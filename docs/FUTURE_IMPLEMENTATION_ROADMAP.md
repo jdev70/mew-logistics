@@ -82,10 +82,12 @@ Keycloak realm configuration, or authorization behavior.
 
 1. Establish a versioned import manifest for every public source used by the
    catalog. Record source name, URL, retrieval date, license/reuse notes,
-   source version, and reviewer.
+   source version, and reviewer. **Completed for the seeded source registry:**
+   see `backend-java/src/main/resources/catalog-sources/manifest.csv`.
 2. Introduce a dedicated `CatalogSource` entity rather than repeating source
-   values on individual records. Installations, platforms, and system-loadout
-   associations should each be able to reference one or more sources.
+   values on individual records. **Implemented for installations:** each
+   installation, platform, and system-loadout can reference one or more
+   reviewed sources.
 3. Separate facts into three categories:
    - **Publicly attributed fact:** source supports the named installation,
      mission, platform, or association.
@@ -95,6 +97,8 @@ Keycloak realm configuration, or authorization behavior.
      maintenance, inventory, financial, and audit activity used for demos.
 4. Add review status values such as `DRAFT`, `VERIFIED`, `STALE`, and
    `RETIRED`, with a last-reviewed date and reviewer.
+   **Implemented:** the manifest reconciliation service validates these values,
+   reports a dry-run result, and only performs explicit metadata upserts.
 5. Begin with a curated set of high-value MEW/EW-relevant installations and
    expand deliberately. Do not claim comprehensive coverage of all U.S.
    military installations without an authoritative, licensed source and a

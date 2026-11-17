@@ -62,12 +62,14 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\WorkOrderService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\InventoryBalance.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\UnitReadinessSnapshot.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\CatalogSourceRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\DevDataInitializer.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\WorkOrderPart.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\AssetController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\Requisition.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\SecurityConfig.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\dto\ReceiveShipmentRequest.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\CatalogSource.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\dto\MaintenanceCompletionRequest.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\RequisitionRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\security\MewResourceFactory.java

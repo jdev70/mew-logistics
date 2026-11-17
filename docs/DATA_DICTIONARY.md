@@ -12,6 +12,9 @@ synthetic demo environments are fictional demonstration data.
 | Installation catalog | `catalog_verified_on` | Date the catalog assertion was last verified. |
 | Installation catalog | `catalog_confidence` | Confidence/classification of the catalog assertion; for example, `PUBLIC_ATTRIBUTED`. |
 | Installation catalog | `public_association_type` | Nature of the source-supported relationship, such as platform homeport or EW mission support. |
+| Catalog source | `source_id`, `title`, `source_url` | Stable source manifest identifier, source title, and direct public-reference URL. |
+| Catalog source | `source_version`, `retrieved_on`, `license_notes` | Version/retrieval and reuse context retained for reproducible catalog review. |
+| Catalog source | `review_status`, `last_reviewed_on`, `reviewer` | Governance state (`DRAFT`, `VERIFIED`, `STALE`, or `RETIRED`), most recent review date, and reviewer. |
 | Installation catalog | `synthetic_operational_data` | Indicates that readiness, staffing, inventory, maintenance, and other operational values are fictional. |
 | Organization | `uic` | Unit identification code used to associate units, personnel, and maintenance records. |
 | Platform/loadout | `hull_number`, `vessel_name`, `ship_class`, `domain` | Platform identity/class and operating domain. These include maritime, airborne, subsurface, and ground examples. |
@@ -40,3 +43,8 @@ synthetic demo environments are fictional demonstration data.
   authentication or authorization.
 - Any new catalog claim must include a source, verification date, and explicit
   confidence level before it is presented in the UI.
+- Installations may reference one or more `CatalogSource` records. The legacy
+  installation source fields remain available during the API transition.
+- The versioned source-of-record for seeded catalog sources is
+  `backend-java/src/main/resources/catalog-sources/manifest.csv`. Update it in
+  the same change as any source-registry or seed-data update.

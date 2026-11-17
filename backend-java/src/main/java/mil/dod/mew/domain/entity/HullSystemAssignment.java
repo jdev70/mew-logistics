@@ -4,10 +4,14 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "mew_hull_sys_assign")
@@ -71,6 +75,13 @@ public class HullSystemAssignment extends BaseEntity {
     @Column(name = "installation_date")
     private LocalDate installationDate;
 
+    /** Reviewed public sources supporting this platform-system association. */
+    @ManyToMany
+    @JoinTable(name = "mew_loadout_catalog_source",
+            joinColumns = @JoinColumn(name = "loadout_id"),
+            inverseJoinColumns = @JoinColumn(name = "catalog_source_id"))
+    private Set<CatalogSource> catalogSources = new LinkedHashSet<>();
+
     public String getAssignmentId() { return assignmentId; }
     public void setAssignmentId(String assignmentId) { this.assignmentId = assignmentId; }
     public NavalHull getHull() { return hull; }
@@ -107,4 +118,7 @@ public class HullSystemAssignment extends BaseEntity {
     public void setOperationalStatus(String operationalStatus) { this.operationalStatus = operationalStatus; }
     public LocalDate getInstallationDate() { return installationDate; }
     public void setInstallationDate(LocalDate installationDate) { this.installationDate = installationDate; }
+    public Set<CatalogSource> getCatalogSources() { return catalogSources; }
+    public void setCatalogSources(Set<CatalogSource> catalogSources) { this.catalogSources = catalogSources; }
+    public void addCatalogSource(CatalogSource catalogSource) { this.catalogSources.add(catalogSource); }
 }

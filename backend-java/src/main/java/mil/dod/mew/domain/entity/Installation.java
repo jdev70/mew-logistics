@@ -2,11 +2,16 @@ package mil.dod.mew.domain.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "mew_installation")
@@ -85,6 +90,13 @@ public class Installation extends BaseEntity {
     @Column(name = "catalog_confidence", length = 40)
     private String catalogConfidence = "PUBLIC_ATTRIBUTED";
 
+    /** Reviewed public sources supporting this installation's catalog assertions. */
+    @ManyToMany
+    @JoinTable(name = "mew_installation_catalog_source",
+            joinColumns = @JoinColumn(name = "installation_id"),
+            inverseJoinColumns = @JoinColumn(name = "catalog_source_id"))
+    private Set<CatalogSource> catalogSources = new LinkedHashSet<>();
+
     @Column(name = "synthetic_operational_data", nullable = false)
     private boolean syntheticOperationalData = true;
 
@@ -146,6 +158,9 @@ public class Installation extends BaseEntity {
     public void setPublicAssociationType(String publicAssociationType) { this.publicAssociationType = publicAssociationType; }
     public String getCatalogConfidence() { return catalogConfidence; }
     public void setCatalogConfidence(String catalogConfidence) { this.catalogConfidence = catalogConfidence; }
+    public Set<CatalogSource> getCatalogSources() { return catalogSources; }
+    public void setCatalogSources(Set<CatalogSource> catalogSources) { this.catalogSources = catalogSources; }
+    public void addCatalogSource(CatalogSource catalogSource) { this.catalogSources.add(catalogSource); }
     public boolean isSyntheticOperationalData() { return syntheticOperationalData; }
     public void setSyntheticOperationalData(boolean syntheticOperationalData) { this.syntheticOperationalData = syntheticOperationalData; }
 }

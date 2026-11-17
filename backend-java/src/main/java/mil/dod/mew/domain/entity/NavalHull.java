@@ -8,9 +8,13 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "mew_naval_hull")
@@ -46,6 +50,13 @@ public class NavalHull extends BaseEntity {
     @Column(name = "emcon_posture", length = 20, nullable = false)
     private EmconPosture emconPosture = EmconPosture.CHARLIE;
 
+    /** Reviewed public sources supporting this platform catalog entry. */
+    @ManyToMany
+    @JoinTable(name = "mew_platform_catalog_source",
+            joinColumns = @JoinColumn(name = "platform_id"),
+            inverseJoinColumns = @JoinColumn(name = "catalog_source_id"))
+    private Set<CatalogSource> catalogSources = new LinkedHashSet<>();
+
     public String getHullId() { return hullId; }
     public void setHullId(String hullId) { this.hullId = hullId; }
     public String getHullNumber() { return hullNumber; }
@@ -64,4 +75,7 @@ public class NavalHull extends BaseEntity {
     public void setUnit(MilitaryUnit unit) { this.unit = unit; }
     public EmconPosture getEmconPosture() { return emconPosture; }
     public void setEmconPosture(EmconPosture emconPosture) { this.emconPosture = emconPosture; }
+    public Set<CatalogSource> getCatalogSources() { return catalogSources; }
+    public void setCatalogSources(Set<CatalogSource> catalogSources) { this.catalogSources = catalogSources; }
+    public void addCatalogSource(CatalogSource catalogSource) { this.catalogSources.add(catalogSource); }
 }

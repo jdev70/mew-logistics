@@ -23,6 +23,7 @@ import java.util.*;
 @Profile("synthetic-data")
 public class SyntheticDataSeeder implements CommandLineRunner {
     private final InstallationRepository installations;
+    private final CatalogSourceRepository catalogSources;
     private final MilitaryUnitRepository units;
     private final NavalHullRepository hulls;
     private final MissionRoleRepository roles;
@@ -44,14 +45,15 @@ public class SyntheticDataSeeder implements CommandLineRunner {
     @Value("${mew.synthetic.history-days:180}") private int historyDays;
     private Random random;
 
-    public SyntheticDataSeeder(InstallationRepository installations, MilitaryUnitRepository units,
+    public SyntheticDataSeeder(InstallationRepository installations, CatalogSourceRepository catalogSources,
+            MilitaryUnitRepository units,
             NavalHullRepository hulls, MissionRoleRepository roles, AssetModelRepository models,
             PersonnelRepository personnel, MaterialCatalogRepository materials, AssetRepository assets,
             HullSystemAssignmentRepository assignments, InventoryBalanceRepository balances,
             InventoryTransactionRepository transactions, WorkOrderRepository workOrders,
             WorkOrderPartRepository workOrderParts, RequisitionRepository requisitions,
             SecurityAuditLogRepository audits, UnitReadinessSnapshotRepository snapshots) {
-        this.installations = installations; this.units = units; this.hulls = hulls; this.roles = roles;
+        this.installations = installations; this.catalogSources = catalogSources; this.units = units; this.hulls = hulls; this.roles = roles;
         this.models = models; this.personnel = personnel; this.materials = materials; this.assets = assets;
         this.assignments = assignments; this.balances = balances; this.transactions = transactions;
         this.workOrders = workOrders; this.workOrderParts = workOrderParts; this.requisitions = requisitions;
@@ -103,9 +105,10 @@ public class SyntheticDataSeeder implements CommandLineRunner {
             x.setName(b[1]); x.setDodaac(String.format("D%05d", i + 100)); x.setCity(b[2]);
             x.setStateOrCountry(b[3]); x.setRegion(b[4]); x.setMissionCategory(b[5]); x.setServiceBranch(b[6]);
             x.setLatitude(new BigDecimal(b[7])); x.setLongitude(new BigDecimal(b[8]));
-            CatalogSource source = sourceForBranch(b[6]);
+            SourceDefinition source = sourceForBranch(b[6]);
             x.setPrimaryEwFocus("Maritime electromagnetic warfare equipment and systems support");
             x.setCatalogSourceId(source.id()); x.setCatalogSourceUrl(source.url());
+            x.addCatalogSource(source.entity());
             x.setCatalogVerifiedOn(LocalDate.of(2026, 11, 17));
             x.setPublicAssociationType(associationFor(b[5])); x.setCatalogConfidence("PUBLIC_ATTRIBUTED");
             x.setSyntheticOperationalData(true);
@@ -119,19 +122,30 @@ public class SyntheticDataSeeder implements CommandLineRunner {
         return result;
     }
 
-    private CatalogSource sourceForBranch(String branch) {
-        return switch (branch) {
-            case "USN" -> new CatalogSource("USN-PUBLIC-INSTALLATIONS", "Navy installation and NAVSEA public references",
+    private SourceDefinition sourceForBranch(String branch) {
+        SourceDefinition definition = switch (branch) {
+            case "USN" -> new SourceDefinition("USN-PUBLIC-INSTALLATIONS", "Navy installation and NAVSEA public references",
                     "https://cnrma.cnic.navy.mil/Installations/NAVSTA-Norfolk/About/Installation-Guide/");
-            case "USMC" -> new CatalogSource("USMC-PUBLIC-INSTALLATIONS", "Marine Corps installation and aviation public references",
+            case "USMC" -> new SourceDefinition("USMC-PUBLIC-INSTALLATIONS", "Marine Corps installation and aviation public references",
                     "https://www.marines.mil/Units/Installations/");
-            case "USAF" -> new CatalogSource("USAF-PUBLIC-EW", "Air Force installation and electromagnetic warfare public references",
+            case "USAF" -> new SourceDefinition("USAF-PUBLIC-EW", "Air Force installation and electromagnetic warfare public references",
                     "https://www.dm.af.mil/Media/News/Article/4255968/the-ea-37b-at-dm/");
-            case "USA" -> new CatalogSource("USA-PUBLIC-INSTALLATIONS", "Army installation and multidomain public references",
+            case "USA" -> new SourceDefinition("USA-PUBLIC-INSTALLATIONS", "Army installation and multidomain public references",
                     "https://home.army.mil/lewis-mcchord/index.php/about");
-            default -> new CatalogSource("DOD-MIRTA-2025", "DoD MIRTA public installation reference",
+            default -> new SourceDefinition("DOD-MIRTA-2025", "DoD MIRTA public installation reference",
                     "https://www.acq.osd.mil/eie/imr/rpid/disdi/index.html");
         };
+        CatalogSource source = catalogSources.findBySourceId(definition.id()).orElseGet(CatalogSource::new);
+        source.setSourceId(definition.id());
+        source.setTitle(definition.title());
+        source.setSourceUrl(definition.url());
+        source.setSourceVersion("2026 public reference");
+        source.setRetrievedOn(LocalDate.of(2026, 11, 17));
+        source.setReviewStatus("VERIFIED");
+        source.setLastReviewedOn(LocalDate.of(2026, 11, 17));
+        source.setReviewer("Synthetic dataset maintainer");
+        source.setLicenseNotes("Public reference used for catalog attribution; operational records remain synthetic.");
+        return new SourceDefinition(definition.id(), definition.title(), definition.url(), catalogSources.save(source));
     }
 
     private String associationFor(String missionCategory) {
@@ -144,7 +158,9 @@ public class SyntheticDataSeeder implements CommandLineRunner {
         };
     }
 
-    private record CatalogSource(String id, String title, String url) { }
+    private record SourceDefinition(String id, String title, String url, CatalogSource entity) {
+        private SourceDefinition(String id, String title, String url) { this(id, title, url, null); }
+    }
 
     private List<MilitaryUnit> createUnits(List<Installation> baseList, int scale) {
         List<MilitaryUnit> result = new ArrayList<>();
@@ -268,7 +284,7 @@ public class SyntheticDataSeeder implements CommandLineRunner {
         Map<String, Installation> baseByCode = new HashMap<>(); baseList.forEach(base -> baseByCode.put(base.getInstallationCode(), base));
         List<MilitaryUnit> combatants = unitList.stream().filter(u -> u.getEchelonLevel() == CommandEchelon.COMBATANT_UNIT).toList();
         List<NavalHull> result = new ArrayList<>();
-        for (int i = 0; i < platformCatalog.length; i++) { String[] p = platformCatalog[i]; Installation home = baseByCode.get(p[4]); MilitaryUnit unit = combatants.stream().filter(u -> u.getInstallation().getId().equals(home.getId())).findFirst().orElseThrow(); NavalHull h = new NavalHull(); h.setHullId(String.format("HULL-%03d", i + 1)); h.setHullNumber(p[0]); h.setVesselName(p[1]); h.setShipClass(p[2]); h.setDomain(p[3]); h.setHomeport(home.getLocationDisplay()); h.setHomeportInstallation(home); h.setUnit(unit); h.setEmconPosture(i % 7 == 0 ? EmconPosture.BRAVO : EmconPosture.CHARLIE); h.setRemarks("Publicly attributable platform identity and class. The generated readiness, system serial, and maintenance history are demonstration data, not live status."); result.add(hulls.save(h)); }
+        for (int i = 0; i < platformCatalog.length; i++) { String[] p = platformCatalog[i]; Installation home = baseByCode.get(p[4]); MilitaryUnit unit = combatants.stream().filter(u -> u.getInstallation().getId().equals(home.getId())).findFirst().orElseThrow(); NavalHull h = new NavalHull(); h.setHullId(String.format("HULL-%03d", i + 1)); h.setHullNumber(p[0]); h.setVesselName(p[1]); h.setShipClass(p[2]); h.setDomain(p[3]); h.setHomeport(home.getLocationDisplay()); h.setHomeportInstallation(home); h.setUnit(unit); h.setEmconPosture(i % 7 == 0 ? EmconPosture.BRAVO : EmconPosture.CHARLIE); h.addCatalogSource(sourceForBranch(p[5]).entity()); h.setRemarks("Publicly attributable platform identity and class. The generated readiness, system serial, and maintenance history are demonstration data, not live status."); result.add(hulls.save(h)); }
         return result;
     }
 
@@ -279,7 +295,7 @@ public class SyntheticDataSeeder implements CommandLineRunner {
         for (int platformIndex = 0; platformIndex < hullList.size(); platformIndex++) {
             NavalHull hull = hullList.get(platformIndex); AssetModel model = modelByNomenclature.get(systems[platformIndex]); MissionRole role = roleList.get(platformIndex % roleList.size());
             Asset a = new Asset(); a.setAssignmentId(String.format("ASGN-%04d", seq)); a.setAssetModel(model); a.setSerialNumber(String.format("SIM-%s-%04d", model.getSystemId(), seq)); a.setAssignedUnit(hull.getUnit()); a.setCurrentLocation(hull.getHomeportInstallation()); a.setHull(hull); a.setMissionRole(role); a.setQuantityInstalled(1); a.setInstallationDate(LocalDate.now().minusDays(180 + random.nextInt(900))); a.setEngineHours(decimal(1000 + random.nextInt(9000))); a.setMtbfHours(1800.0 + random.nextInt(1800)); a.setMttrHours(2.0 + random.nextDouble() * 10); ReadinessLevel status = readinessFor(seq); a.setReadinessStatus(status); a.setOperationalStatus(status == ReadinessLevel.FMC ? "FOC (Full Operational Capability)" : "Restricted operational capability"); a.setOperationalAvailabilityPct(status == ReadinessLevel.FMC ? 97.0 : status == ReadinessLevel.PMC ? 82.0 : 55.0); a.setDomain(hull.getDomain()); a.setServiceBranch(hull.getHomeportInstallation().getServiceBranch()); a.setLastStatusChange(Instant.now().minus(random.nextInt(80), ChronoUnit.DAYS)); a = assets.save(a); result.add(a);
-            HullSystemAssignment x = new HullSystemAssignment(); x.setAssignmentId(a.getAssignmentId()); x.setHull(hull); x.setSystem(model); x.setMissionRole(role); x.setAsset(a); x.setHullNumber(hull.getHullNumber()); x.setVesselName(hull.getVesselName()); x.setShipClass(hull.getShipClass()); x.setDomain(hull.getDomain()); x.setHomeport(hull.getHomeport()); x.setNomenclature(model.getNomenclature()); x.setCommonName(model.getCommonName()); x.setEwCategory(model.getEwCategory()); x.setQuantityInstalled(1); x.setRoleCode(role.getRoleCode()); x.setRoleName(role.getRoleName()); x.setOperationalStatus(a.getOperationalStatus()); x.setInstallationDate(a.getInstallationDate()); assignments.save(x); seq++;
+            HullSystemAssignment x = new HullSystemAssignment(); x.setAssignmentId(a.getAssignmentId()); x.setHull(hull); x.setSystem(model); x.setMissionRole(role); x.setAsset(a); x.setHullNumber(hull.getHullNumber()); x.setVesselName(hull.getVesselName()); x.setShipClass(hull.getShipClass()); x.setDomain(hull.getDomain()); x.setHomeport(hull.getHomeport()); x.setNomenclature(model.getNomenclature()); x.setCommonName(model.getCommonName()); x.setEwCategory(model.getEwCategory()); x.setQuantityInstalled(1); x.setRoleCode(role.getRoleCode()); x.setRoleName(role.getRoleName()); x.setOperationalStatus(a.getOperationalStatus()); x.setInstallationDate(a.getInstallationDate()); x.addCatalogSource(sourceForBranch(hull.getHomeportInstallation().getServiceBranch()).entity()); assignments.save(x); seq++;
         }
         return result;
     }

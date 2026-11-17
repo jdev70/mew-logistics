@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("synthetic-data")
 class SyntheticDataSeederTest {
     @Autowired InstallationRepository installations;
+    @Autowired CatalogSourceRepository catalogSources;
     @Autowired PersonnelRepository personnel;
     @Autowired NavalHullRepository hulls;
     @Autowired HullSystemAssignmentRepository loadouts;
@@ -37,7 +38,13 @@ class SyntheticDataSeederTest {
         assertTrue(installations.findAll().stream().anyMatch(base -> "USA".equals(base.getServiceBranch())));
         assertTrue(installations.findAll().stream().allMatch(base -> base.getCatalogSourceId() != null
                 && !base.getCatalogSourceId().isBlank() && base.getCatalogSourceUrl().startsWith("https://")
-                && base.getCatalogVerifiedOn() != null && base.isSyntheticOperationalData()));
+                && base.getCatalogVerifiedOn() != null && !base.getCatalogSources().isEmpty()
+                && base.isSyntheticOperationalData()));
+        assertTrue(hulls.findAll().stream().allMatch(hull -> !hull.getCatalogSources().isEmpty()));
+        assertTrue(loadouts.findAll().stream().allMatch(loadout -> !loadout.getCatalogSources().isEmpty()));
+        assertEquals(4, catalogSources.count());
+        assertTrue(catalogSources.findAll().stream().allMatch(source -> "VERIFIED".equals(source.getReviewStatus())
+                && source.getLastReviewedOn() != null && source.getSourceUrl().startsWith("https://")));
         assertEquals("CFA-YOKOSUKA", hulls.findByHullNumber("DDG-114").orElseThrow().getHomeportInstallation().getInstallationCode());
         assertTrue(loadouts.findAll().stream().anyMatch(loadout -> "AN/SLQ-32(V)7".equals(loadout.getNomenclature())));
         var marcus = personnel.findByIdentitySubject("demo:marcus-vance").orElseThrow();

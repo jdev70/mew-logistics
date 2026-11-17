@@ -35,6 +35,7 @@ The generator is deterministic for the configured seed. With the default seed
 | Record type | `demo` | `standard` (default) | `stress` |
 | --- | ---: | ---: | ---: |
 | Installations | 16 | 16 | 16 |
+| Reviewed catalog sources | 4 | 4 | 4 |
 | Units | 33 | 33 | 33 |
 | Personnel | 46 | 136 | 361 |
 | Platforms, assets, and loadout assignments | 13 each | 13 each | 13 each |
