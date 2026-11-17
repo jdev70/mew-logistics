@@ -95,6 +95,10 @@ Keycloak realm configuration, or authorization behavior.
      information; show a confidence level and rationale.
    - **Synthetic operational record:** fictional readiness, personnel,
      maintenance, inventory, financial, and audit activity used for demos.
+   **Implemented:** `CatalogAttribution` records a reviewed source, exactly one
+   installation/platform/loadout target, fact category, confidence, rationale,
+   reviewer, and review date. The synthetic fixture creates public-attribution
+   records for its catalog targets while preserving its synthetic operational data.
 4. Add review status values such as `DRAFT`, `VERIFIED`, `STALE`, and
    `RETIRED`, with a last-reviewed date and reviewer.
    **Implemented:** the manifest reconciliation service validates these values,

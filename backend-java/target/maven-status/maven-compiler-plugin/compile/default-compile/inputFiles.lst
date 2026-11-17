@@ -12,9 +12,11 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\Asset.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\DashboardService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\RequisitionController.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\CatalogAttribution.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\SupplyStatusCode.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\FunctionalRole.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\SyntheticDataSeeder.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\CatalogSourceController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\RbacPolicyService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\dto\ReceiveShipmentResponse.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\UnitReadinessSnapshotRepository.java
@@ -29,6 +31,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\AssetModel.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\NavalHullRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\MafStatus.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\CatalogAttributionRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\OpenApiConfig.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\WebMvcConfig.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\InventoryTransactionRepository.java
@@ -51,6 +54,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\WorkOrderController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\security\MewAuthorizationService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\RbacPersonaController.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\CatalogSourceReconciliationService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\AnalyticsController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\exception\ResourceNotFoundException.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\MaterialCatalog.java
@@ -61,6 +65,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\InventoryService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\WorkOrderService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\InventoryBalance.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\CatalogFactCategory.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\UnitReadinessSnapshot.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\CatalogSourceRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\DevDataInitializer.java

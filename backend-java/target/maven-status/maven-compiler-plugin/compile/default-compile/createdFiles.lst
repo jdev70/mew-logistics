@@ -8,6 +8,7 @@ mil\dod\mew\web\controller\AssetController.class
 mil\dod\mew\repository\UnitReadinessSnapshotRepository.class
 mil\dod\mew\repository\RequisitionRepository.class
 mil\dod\mew\security\model\MewUser.class
+mil\dod\mew\domain\entity\CatalogAttribution.class
 mil\dod\mew\web\dto\ReceiveShipmentResponse.class
 mil\dod\mew\repository\AssetRepository.class
 mil\dod\mew\security\model\CommandTier.class
@@ -28,6 +29,7 @@ mil\dod\mew\security\model\MewResource.class
 mil\dod\mew\repository\WorkOrderRepository.class
 mil\dod\mew\web\dto\MaintenanceCompletionRequest.class
 mil\dod\mew\repository\AssetModelRepository.class
+mil\dod\mew\repository\CatalogAttributionRepository.class
 mil\dod\mew\repository\MilitaryUnitRepository.class
 mil\dod\mew\web\controller\GlobalExceptionHandler.class
 mil\dod\mew\domain\entity\UnitReadinessSnapshot.class
@@ -50,6 +52,7 @@ mil\dod\mew\domain\enums\FunctionalRole.class
 mil\dod\mew\repository\MissionRoleRepository.class
 mil\dod\mew\security\MewAuthorizationService.class
 mil\dod\mew\domain\enums\EmconPosture.class
+mil\dod\mew\domain\enums\CatalogFactCategory.class
 mil\dod\mew\service\RbacPolicyService.class
 mil\dod\mew\service\RequisitionService.class
 mil\dod\mew\web\controller\WorkOrderController.class

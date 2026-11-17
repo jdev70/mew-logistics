@@ -1,6 +1,7 @@
 package mil.dod.mew;
 
 import mil.dod.mew.domain.entity.InventoryTransaction;
+import mil.dod.mew.domain.enums.CatalogFactCategory;
 import mil.dod.mew.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SyntheticDataSeederTest {
     @Autowired InstallationRepository installations;
     @Autowired CatalogSourceRepository catalogSources;
+    @Autowired CatalogAttributionRepository attributions;
     @Autowired PersonnelRepository personnel;
     @Autowired NavalHullRepository hulls;
     @Autowired HullSystemAssignmentRepository loadouts;
@@ -45,6 +47,12 @@ class SyntheticDataSeederTest {
         assertEquals(4, catalogSources.count());
         assertTrue(catalogSources.findAll().stream().allMatch(source -> "VERIFIED".equals(source.getReviewStatus())
                 && source.getLastReviewedOn() != null && source.getSourceUrl().startsWith("https://")));
+        assertEquals(installations.count() + hulls.count() + loadouts.count(), attributions.count());
+        assertTrue(attributions.findAll().stream().allMatch(attribution -> attribution.getCatalogSource() != null
+                && attribution.getFactCategory() == CatalogFactCategory.PUBLICLY_ATTRIBUTED_FACT
+                && "PUBLIC_ATTRIBUTED".equals(attribution.getConfidence())
+                && !attribution.getRationale().isBlank() && !attribution.getReviewer().isBlank()
+                && attribution.getReviewedOn() != null));
         assertEquals("CFA-YOKOSUKA", hulls.findByHullNumber("DDG-114").orElseThrow().getHomeportInstallation().getInstallationCode());
         assertTrue(loadouts.findAll().stream().anyMatch(loadout -> "AN/SLQ-32(V)7".equals(loadout.getNomenclature())));
         var marcus = personnel.findByIdentitySubject("demo:marcus-vance").orElseThrow();
