@@ -115,6 +115,10 @@ public class AnalyticsController {
                             .map(e -> e.getOccurredAt()).max(Instant::compareTo).orElse(null);
                     return submitted == null ? 0 : Duration.between(submitted, Instant.now()).toMinutes() / 60.0;
                 }).average().orElse(0));
+        long qaDecisions = events.stream().filter(e -> e.getEventType() == WorkOrderLifecycleEventType.REWORK_REQUESTED
+                || e.getEventType() == WorkOrderLifecycleEventType.QA_APPROVED_FOR_RETURN_TO_SERVICE).count();
+        long reworkEvents = ((Number) lifecycle.get("rework_events")).longValue();
+        lifecycle.put("rework_rate_pct", qaDecisions == 0 ? 0 : (reworkEvents * 100.0) / qaDecisions);
         payload.put("lifecycle_metrics", lifecycle);
         return payload;
     }

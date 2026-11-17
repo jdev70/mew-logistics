@@ -150,6 +150,7 @@ export class AppComponent implements OnInit {
       avg_qa_turnaround_hours: 0,
       avg_closure_turnaround_hours: 0,
       avg_qa_aging_hours: 0,
+      rework_rate_pct: 0,
     };
   });
 

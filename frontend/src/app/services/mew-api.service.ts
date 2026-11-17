@@ -1977,6 +1977,7 @@ export class MewApiService {
         avg_qa_turnaround_hours: 5.5,
         avg_closure_turnaround_hours: 1.2,
         avg_qa_aging_hours: 3.8,
+        rework_rate_pct: 16.7,
       },
       proximity_depot_routes: [
         {

@@ -39,6 +39,10 @@ public class LifecycleDemoEventSeeder implements CommandLineRunner {
         workOrders.findByJcn("N21944-CE02-0003").ifPresent(workOrder -> event(workOrder, tech,
                 WorkOrderLifecycleEventType.TECHNICIAN_SUBMITTED_FOR_QA, MafStatus.IN_WORK, MafStatus.QA_PENDING,
                 30, "Technician submitted fictional completion evidence for independent QA review."));
+        workOrders.findByJcn("N21944-CE02-0004").ifPresent(workOrder -> {
+            event(workOrder, tech, WorkOrderLifecycleEventType.TECHNICIAN_SUBMITTED_FOR_QA, MafStatus.IN_WORK, MafStatus.QA_PENDING, 58, "Technician submitted fictional repair evidence for QA review.");
+            event(workOrder, reviewer, WorkOrderLifecycleEventType.REWORK_REQUESTED, MafStatus.QA_PENDING, MafStatus.IN_WORK, 52, "QA requested rework: repeat restoration test with the antenna-control voltage under load.");
+        });
         workOrders.findByJcn("N21944-CE02-0005").ifPresent(workOrder -> {
             event(workOrder, tech, WorkOrderLifecycleEventType.TECHNICIAN_SUBMITTED_FOR_QA, MafStatus.IN_WORK, MafStatus.QA_PENDING, 96, "Technician submitted completed maintenance evidence.");
             event(workOrder, reviewer, WorkOrderLifecycleEventType.QA_APPROVED_FOR_RETURN_TO_SERVICE, MafStatus.QA_PENDING, MafStatus.RETURNED_TO_SERVICE, 84, "QA accepted fictional restoration-test evidence.");
