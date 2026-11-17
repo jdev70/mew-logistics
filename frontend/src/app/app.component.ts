@@ -34,6 +34,8 @@ export class AppComponent implements OnInit {
   readonly themeService = inject(ThemeService);
   readonly auth = inject(KeycloakAuthService);
 
+  drillBarWidth(value: number): number { return Math.min(100, Math.max(8, value > 100 ? 100 : value)); }
+
   // Active Navigation Viewpoint (Default to Predictive Analytics & Visualizations)
   readonly activeViewpoint = signal<MewViewpoint>('analytics');
 
@@ -46,6 +48,20 @@ export class AppComponent implements OnInit {
   readonly selectedDepotRoute = signal<ProximityDepotRoute | null>(null);
   readonly optempoMultiplier = signal<number>(1.0);
   readonly analyticsDomainFilter = signal<'ALL' | 'Surface' | 'Subsurface' | 'Airborne' | 'Ground'>('ALL');
+  readonly selectedSupplyDrill = signal<'open' | 'fill' | 'priority' | 'lead' | null>(null);
+  readonly supplyDrill = computed(() => {
+    const metrics = this.api.analytics()?.supply_metrics;
+    const key = this.selectedSupplyDrill();
+    if (!metrics || !key) return null;
+    const detail = {
+      open: { title: 'Open Requisition Demand', value: metrics.open_requisitions, unit: 'open requests', color: 'bg-amber-400', note: 'Outstanding demand by current requisition status.' },
+      fill: { title: 'Parts Fill Rate', value: metrics.fill_rate_pct, unit: '% received', color: 'bg-emerald-400', note: 'Received requisitions as a share of total demand.' },
+      priority: { title: 'Priority-1 Open Demand', value: metrics.priority_one_open, unit: 'critical requests', color: 'bg-rose-400', note: 'Open priority-one demand requiring immediate supply attention.' },
+      lead: { title: 'Estimated Lead Time', value: metrics.avg_estimated_lead_days, unit: 'days', color: 'bg-sky-400', note: 'Average days until estimated delivery for current demand.' },
+    };
+    return detail[key];
+  });
+  readonly supplyDrillRows = computed(() => this.api.analytics()?.supply_breakdown || []);
 
   readonly filteredAoSystems = computed(() => {
     const an = this.api.analytics();

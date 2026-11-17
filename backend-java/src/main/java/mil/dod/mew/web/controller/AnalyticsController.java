@@ -132,6 +132,20 @@ public class AnalyticsController {
         supply.put("priority_one_open", demand.stream().filter(r -> r.getPriority() != null && r.getPriority() == 1 && !"Received".equalsIgnoreCase(r.getStatus())).count());
         supply.put("avg_estimated_lead_days", demand.stream().filter(r -> r.getEstimatedDeliveryDate() != null).mapToLong(r -> java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), r.getEstimatedDeliveryDate())).average().orElse(0));
         payload.put("supply_metrics", supply);
+        List<Map<String, Object>> supplyBreakdown = demand.stream().collect(Collectors.groupingBy(
+                r -> r.getRequestingUnit().getInstallation().getInstallationCode())).entrySet().stream().map(entry -> {
+            List<mil.dod.mew.domain.entity.Requisition> rows = entry.getValue();
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("installation_code", entry.getKey());
+            row.put("installation_name", rows.get(0).getRequestingUnit().getInstallation().getName());
+            row.put("total", rows.size());
+            long receivedCount = rows.stream().filter(r -> "Received".equalsIgnoreCase(r.getStatus())).count();
+            row.put("received", receivedCount); row.put("open", rows.size() - receivedCount);
+            row.put("priority_one_open", rows.stream().filter(r -> r.getPriority() != null && r.getPriority() == 1 && !"Received".equalsIgnoreCase(r.getStatus())).count());
+            row.put("avg_lead_days", rows.stream().filter(r -> r.getEstimatedDeliveryDate() != null).mapToLong(r -> java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), r.getEstimatedDeliveryDate())).average().orElse(0));
+            return row;
+        }).collect(Collectors.toList());
+        payload.put("supply_breakdown", supplyBreakdown);
         return payload;
     }
 

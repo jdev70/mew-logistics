@@ -454,6 +454,7 @@ export interface MewAnalyticsPayload {
   proximity_depot_routes: ProximityDepotRoute[];
   lifecycle_metrics?: { qa_pending: number; rework_events: number; returned_to_service: number; closed: number; transition_events: number; avg_qa_turnaround_hours: number; avg_closure_turnaround_hours: number; avg_qa_aging_hours: number; rework_rate_pct: number };
   supply_metrics?: { open_requisitions: number; fill_rate_pct: number; priority_one_open: number; avg_estimated_lead_days: number };
+  supply_breakdown?: { installation_code: string; installation_name: string; total: number; received: number; open: number; priority_one_open: number; avg_lead_days: number }[];
 }
 
 
