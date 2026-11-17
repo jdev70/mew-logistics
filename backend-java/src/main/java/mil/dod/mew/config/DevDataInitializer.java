@@ -36,6 +36,7 @@ import mil.dod.mew.repository.WorkOrderRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -45,6 +46,7 @@ import java.time.LocalDate;
  * Seeds sample Maritime Electromagnetic Warfare (MEW) data for local H2 development.
  */
 @Component
+@Order(1)
 @Profile({"default", "local", "oracle-local"})
 public class DevDataInitializer implements CommandLineRunner {
 

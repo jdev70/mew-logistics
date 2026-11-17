@@ -72,6 +72,7 @@ mil\dod\mew\MewLogisticsApplication.class
 mil\dod\mew\domain\entity\MilitaryUnit.class
 mil\dod\mew\service\CatalogSourceReconciliationService$ReconciliationResult.class
 mil\dod\mew\service\WorkOrderService.class
+mil\dod\mew\config\LifecycleDemoEventSeeder.class
 mil\dod\mew\repository\WorkOrderPartRepository.class
 mil\dod\mew\repository\MaterialCatalogRepository.class
 mil\dod\mew\web\controller\CatalogSourceController.class
