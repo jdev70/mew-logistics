@@ -453,6 +453,7 @@ export interface MewAnalyticsPayload {
   geospatial_nodes: GeospatialNode[];
   proximity_depot_routes: ProximityDepotRoute[];
   lifecycle_metrics?: { qa_pending: number; rework_events: number; returned_to_service: number; closed: number; transition_events: number; avg_qa_turnaround_hours: number; avg_closure_turnaround_hours: number; avg_qa_aging_hours: number; rework_rate_pct: number };
+  supply_metrics?: { open_requisitions: number; fill_rate_pct: number; priority_one_open: number; avg_estimated_lead_days: number };
 }
 
 

@@ -393,6 +393,12 @@
               <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">REWORK RATE</div><div class="text-lg font-bold text-amber-300">{{ lifecycle.rework_rate_pct | number:'1.0-1' }}%</div></div>
               </ng-container>
             </div>
+            <div *ngIf="an.supply_metrics as supply" class="grid grid-cols-2 md:grid-cols-4 gap-2 shrink-0" aria-label="Maintenance supply analytics">
+              <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">OPEN DEMAND</div><div class="text-lg font-bold text-amber-300">{{ supply.open_requisitions }}</div></div>
+              <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">FILL RATE</div><div class="text-lg font-bold text-emerald-300">{{ supply.fill_rate_pct | number:'1.0-1' }}%</div></div>
+              <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">PRI-1 OPEN</div><div class="text-lg font-bold text-rose-300">{{ supply.priority_one_open }}</div></div>
+              <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">EST. LEAD</div><div class="text-lg font-bold text-sky-300">{{ supply.avg_estimated_lead_days | number:'1.0-1' }}d</div></div>
+            </div>
             <!-- Ao & Downtime Decomposition Chart -->
             <div class="mew-surface rounded-sm p-3.5 flex-1 min-h-0 flex flex-col overflow-hidden">
               <div class="flex items-center justify-between border-b mew-border pb-2 mb-2.5 shrink-0">

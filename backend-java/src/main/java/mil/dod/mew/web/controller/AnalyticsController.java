@@ -6,6 +6,7 @@ import mil.dod.mew.repository.AssetRepository;
 import mil.dod.mew.repository.InstallationRepository;
 import mil.dod.mew.repository.WorkOrderRepository;
 import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
+import mil.dod.mew.repository.RequisitionRepository;
 import mil.dod.mew.domain.enums.MafStatus;
 import mil.dod.mew.domain.enums.WorkOrderLifecycleEventType;
 import mil.dod.mew.security.MewResourceFactory;
@@ -34,16 +35,18 @@ public class AnalyticsController {
     private final RbacPolicyService rbacPolicyService;
     private final WorkOrderRepository workOrders;
     private final WorkOrderLifecycleEventRepository lifecycleEvents;
+    private final RequisitionRepository requisitions;
 
     public AnalyticsController(AssetRepository assetRepository,
                                InstallationRepository installationRepository,
                                RbacPolicyService rbacPolicyService, WorkOrderRepository workOrders,
-                               WorkOrderLifecycleEventRepository lifecycleEvents) {
+                               WorkOrderLifecycleEventRepository lifecycleEvents, RequisitionRepository requisitions) {
         this.assetRepository = assetRepository;
         this.installationRepository = installationRepository;
         this.rbacPolicyService = rbacPolicyService;
         this.workOrders = workOrders;
         this.lifecycleEvents = lifecycleEvents;
+        this.requisitions = requisitions;
     }
 
     @GetMapping({"", "/"})
@@ -120,6 +123,15 @@ public class AnalyticsController {
         long reworkEvents = ((Number) lifecycle.get("rework_events")).longValue();
         lifecycle.put("rework_rate_pct", qaDecisions == 0 ? 0 : (reworkEvents * 100.0) / qaDecisions);
         payload.put("lifecycle_metrics", lifecycle);
+        Map<String, Object> supply = new LinkedHashMap<>();
+        List<mil.dod.mew.domain.entity.Requisition> demand = requisitions.findAll();
+        long received = demand.stream().filter(r -> "Received".equalsIgnoreCase(r.getStatus())).count();
+        long open = demand.size() - received;
+        supply.put("open_requisitions", open);
+        supply.put("fill_rate_pct", demand.isEmpty() ? 0 : received * 100.0 / demand.size());
+        supply.put("priority_one_open", demand.stream().filter(r -> r.getPriority() != null && r.getPriority() == 1 && !"Received".equalsIgnoreCase(r.getStatus())).count());
+        supply.put("avg_estimated_lead_days", demand.stream().filter(r -> r.getEstimatedDeliveryDate() != null).mapToLong(r -> java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), r.getEstimatedDeliveryDate())).average().orElse(0));
+        payload.put("supply_metrics", supply);
         return payload;
     }
 
