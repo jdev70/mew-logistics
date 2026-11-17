@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import mil.dod.mew.domain.enums.ReadinessLevel;
 import mil.dod.mew.repository.AssetRepository;
 import mil.dod.mew.repository.WorkOrderRepository;
+import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +39,8 @@ class AuthorizationIntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private WorkOrderRepository workOrderRepository;
+    @Autowired
+    private WorkOrderLifecycleEventRepository lifecycleEvents;
     @Autowired
     private AssetRepository assetRepository;
 
@@ -118,6 +121,15 @@ class AuthorizationIntegrationTest {
                         .with(jwt().jwt(token -> token.subject("MEW-PER-0000"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
+
+        mockMvc.perform(get("/api/v1/work-orders/{id}/lifecycle-history/", workOrder.getId())
+                        .with(jwt().jwt(token -> token.subject("MEW-PER-0000"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].event_type").value("TECHNICIAN_SUBMITTED_FOR_QA"))
+                .andExpect(jsonPath("$[0].previous_status").value("IN_WORK"))
+                .andExpect(jsonPath("$[1].event_type").value("QA_APPROVED_AND_CLOSED"))
+                .andExpect(jsonPath("$[1].new_status").value("CLOSED"));
+        org.junit.jupiter.api.Assertions.assertEquals(2, lifecycleEvents.findByWorkOrderIdOrderByOccurredAtAsc(workOrder.getId()).size());
     }
 
     @Test

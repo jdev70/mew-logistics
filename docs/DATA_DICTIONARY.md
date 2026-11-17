@@ -27,6 +27,7 @@ synthetic demo environments are fictional demonstration data.
 | Work order | `status` | Lifecycle state, including `IN_WORK`, `AWAITING_PARTS`, `QA_PENDING`, and `CLOSED`. |
 | Work order | `technician`, `qa_inspector` | Personnel assigned to perform maintenance and to complete independent QA review. |
 | Work order | `maintenance_hours` | Labor time recorded for the maintenance action. |
+| Work-order lifecycle | `event_type`, `previous_status`, `new_status`, `actor_name`, `occurred_at`, `reason` | Immutable structured record of a controlled maintenance-state transition. |
 | Inventory | `quantity_on_hand` | Count of a cataloged material available at an installation. |
 | Inventory | `safety_stock`, `reorder_point` | Demonstration inventory thresholds used to identify supply risk. |
 | Inventory ledger | `transaction_type` | Immutable stock movement, such as `RCT` (receipt) or `DED` (deduction). |

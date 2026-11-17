@@ -2,13 +2,17 @@ package mil.dod.mew.service;
 
 import mil.dod.mew.domain.entity.Installation;
 import mil.dod.mew.domain.entity.InventoryBalance;
+import mil.dod.mew.domain.entity.Personnel;
 import mil.dod.mew.domain.entity.WorkOrder;
 import mil.dod.mew.domain.entity.WorkOrderPart;
+import mil.dod.mew.domain.entity.WorkOrderLifecycleEvent;
 import mil.dod.mew.domain.enums.MafStatus;
 import mil.dod.mew.domain.enums.TransactionType;
+import mil.dod.mew.domain.enums.WorkOrderLifecycleEventType;
 import mil.dod.mew.repository.InventoryBalanceRepository;
 import mil.dod.mew.repository.WorkOrderPartRepository;
 import mil.dod.mew.repository.WorkOrderRepository;
+import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
 import mil.dod.mew.service.exception.BusinessValidationException;
 import mil.dod.mew.service.exception.ResourceNotFoundException;
 import mil.dod.mew.web.dto.MaintenanceCompletionRequest;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 public class WorkOrderService {
@@ -27,20 +32,24 @@ public class WorkOrderService {
     private final WorkOrderPartRepository workOrderPartRepository;
     private final InventoryBalanceRepository balanceRepository;
     private final InventoryService inventoryService;
+    private final WorkOrderLifecycleEventRepository lifecycleEvents;
 
     public WorkOrderService(WorkOrderRepository workOrderRepository,
                             WorkOrderPartRepository workOrderPartRepository,
                             InventoryBalanceRepository balanceRepository,
-                            InventoryService inventoryService) {
+                            InventoryService inventoryService,
+                            WorkOrderLifecycleEventRepository lifecycleEvents) {
         this.workOrderRepository = workOrderRepository;
         this.workOrderPartRepository = workOrderPartRepository;
         this.balanceRepository = balanceRepository;
         this.inventoryService = inventoryService;
+        this.lifecycleEvents = lifecycleEvents;
     }
 
     /** Records completed maintenance evidence and submits the MAF for independent QA review. */
     @Transactional
-    public WorkOrder submitMaintenanceCompletion(@NonNull UUID workOrderId, MaintenanceCompletionRequest completion) {
+    public WorkOrder submitMaintenanceCompletion(@NonNull UUID workOrderId, MaintenanceCompletionRequest completion,
+                                                 Personnel actor) {
         WorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + workOrderId));
         if (workOrder.getStatus() == MafStatus.CLOSED) {
@@ -49,6 +58,7 @@ public class WorkOrderService {
         if (workOrder.getStatus() == MafStatus.QA_PENDING) {
             throw new BusinessValidationException("WorkOrder is already awaiting QA review.");
         }
+        MafStatus previousStatus = workOrder.getStatus();
         workOrder.setActionTakenCode(completion.getActionTakenCode().trim());
         workOrder.setInitialDiagnostics(completion.getInitialDiagnostics().trim());
         workOrder.setSafetyTagOut(completion.getSafetyTagOut().trim());
@@ -61,7 +71,10 @@ public class WorkOrderService {
         workOrder.setMaintenanceHours(completion.getMaintenanceHours());
         workOrder.setMaintenanceSubmittedAt(LocalDateTime.now());
         workOrder.setStatus(MafStatus.QA_PENDING);
-        return workOrderRepository.save(workOrder);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        recordTransition(saved, actor, WorkOrderLifecycleEventType.TECHNICIAN_SUBMITTED_FOR_QA, previousStatus,
+                MafStatus.QA_PENDING, "Technician submitted completion evidence for independent QA review.");
+        return saved;
     }
 
     private String formatCompletionNarrative(MaintenanceCompletionRequest completion) {
@@ -79,7 +92,7 @@ public class WorkOrderService {
      * Closes a CSMP/MAF work order and deducts all consumed parts from the installation's inventory.
      */
     @Transactional
-    public WorkOrder closeWorkOrder(@NonNull UUID workOrderId) {
+    public WorkOrder closeWorkOrder(@NonNull UUID workOrderId, Personnel actor) {
         WorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + workOrderId));
 
@@ -109,7 +122,25 @@ public class WorkOrderService {
             );
         }
 
+        MafStatus previousStatus = workOrder.getStatus();
         workOrder.setStatus(MafStatus.CLOSED);
-        return workOrderRepository.save(workOrder);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        recordTransition(saved, actor, WorkOrderLifecycleEventType.QA_APPROVED_AND_CLOSED, previousStatus,
+                MafStatus.CLOSED, "Reviewer accepted the QA-pending maintenance action and closed the work order.");
+        return saved;
+    }
+
+    private void recordTransition(WorkOrder workOrder, Personnel actor, WorkOrderLifecycleEventType eventType,
+                                  MafStatus previousStatus, MafStatus newStatus, String reason) {
+        WorkOrderLifecycleEvent event = new WorkOrderLifecycleEvent();
+        event.setWorkOrder(workOrder);
+        event.setActor(actor);
+        event.setActorName(actor == null ? "System" : (actor.getRank() + " " + actor.getFirstName() + " " + actor.getLastName()).trim());
+        event.setEventType(eventType);
+        event.setPreviousStatus(previousStatus);
+        event.setNewStatus(newStatus);
+        event.setOccurredAt(Instant.now());
+        event.setReason(reason);
+        lifecycleEvents.save(event);
     }
 }

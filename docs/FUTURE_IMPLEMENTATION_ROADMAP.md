@@ -134,6 +134,9 @@ Keycloak realm configuration, or authorization behavior.
    installation, and loadout context.
 3. Generate audit ledger events for each meaningful lifecycle action, including
    actor, timestamp, authorization decision, before/after state, and rationale.
+   **Started:** controlled technician-submission and reviewer-closure transitions
+   now create immutable `WorkOrderLifecycleEvent` records and are available at
+   `GET /api/v1/work-orders/{id}/lifecycle-history`.
 4. Add analytics for readiness, mean time to repair, maintenance backlog,
    parts fill rate, inventory turns, constrained-demand risk, labor hours, and
    synthetic cost trends.

@@ -8,6 +8,7 @@ mil\dod\mew\web\controller\AssetController.class
 mil\dod\mew\repository\UnitReadinessSnapshotRepository.class
 mil\dod\mew\repository\RequisitionRepository.class
 mil\dod\mew\security\model\MewUser.class
+mil\dod\mew\domain\entity\WorkOrderLifecycleEvent.class
 mil\dod\mew\domain\entity\CatalogAttribution.class
 mil\dod\mew\web\dto\ReceiveShipmentResponse.class
 mil\dod\mew\repository\AssetRepository.class
@@ -30,6 +31,7 @@ mil\dod\mew\security\model\MewResource.class
 mil\dod\mew\repository\WorkOrderRepository.class
 mil\dod\mew\web\dto\MaintenanceCompletionRequest.class
 mil\dod\mew\repository\AssetModelRepository.class
+mil\dod\mew\domain\enums\WorkOrderLifecycleEventType.class
 mil\dod\mew\repository\CatalogAttributionRepository.class
 mil\dod\mew\repository\MilitaryUnitRepository.class
 mil\dod\mew\web\controller\GlobalExceptionHandler.class
@@ -97,3 +99,4 @@ mil\dod\mew\repository\PersonnelRepository.class
 mil\dod\mew\service\CatalogSourceReconciliationService$ManifestEntry.class
 mil\dod\mew\web\controller\InventoryController.class
 mil\dod\mew\domain\enums\TransactionType.class
+mil\dod\mew\repository\WorkOrderLifecycleEventRepository.class

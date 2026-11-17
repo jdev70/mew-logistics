@@ -12,6 +12,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\Asset.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\DashboardService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\RequisitionController.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\WorkOrderLifecycleEventType.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\CatalogAttribution.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\SupplyStatusCode.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\FunctionalRole.java
@@ -22,6 +23,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\UnitReadinessSnapshotRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\CommandEchelon.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\ReadinessSchedulerService.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\SyntheticPersonnelDataQualityService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\TransactionType.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\EmconPosture.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\AssetModelRepository.java
@@ -57,6 +59,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\CatalogSourceReconciliationService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\AnalyticsController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\exception\ResourceNotFoundException.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\WorkOrderLifecycleEventRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\MaterialCatalog.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\MaterialCatalogRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\WorkOrderRepository.java
@@ -80,6 +83,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\security\MewResourceFactory.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\MilitaryUnitDashboardController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\InventoryController.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\WorkOrderLifecycleEvent.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\GlobalExceptionHandler.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\Installation.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\InventoryTransaction.java

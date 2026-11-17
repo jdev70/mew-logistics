@@ -1,10 +1,12 @@
 package mil.dod.mew.service;
 
 import mil.dod.mew.domain.entity.WorkOrder;
+import mil.dod.mew.domain.entity.Personnel;
 import mil.dod.mew.domain.enums.MafStatus;
 import mil.dod.mew.repository.InventoryBalanceRepository;
 import mil.dod.mew.repository.WorkOrderPartRepository;
 import mil.dod.mew.repository.WorkOrderRepository;
+import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
 import mil.dod.mew.service.exception.BusinessValidationException;
 import mil.dod.mew.web.dto.MaintenanceCompletionRequest;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,8 @@ class WorkOrderServiceTest {
     private InventoryBalanceRepository balanceRepository;
     @Mock
     private InventoryService inventoryService;
+    @Mock
+    private WorkOrderLifecycleEventRepository lifecycleEvents;
     @InjectMocks
     private WorkOrderService workOrderService;
 
@@ -48,7 +52,8 @@ class WorkOrderServiceTest {
         when(workOrderRepository.findById(workOrderId)).thenReturn(Optional.of(workOrder));
         when(workOrderRepository.save(any(WorkOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        WorkOrder updated = workOrderService.submitMaintenanceCompletion(workOrderId, completionRequest());
+        Personnel technician = actor("Taylor", "Brooks");
+        WorkOrder updated = workOrderService.submitMaintenanceCompletion(workOrderId, completionRequest(), technician);
 
         assertEquals(MafStatus.QA_PENDING, updated.getStatus());
         assertEquals("C - Repaired", updated.getActionTakenCode());
@@ -58,6 +63,15 @@ class WorkOrderServiceTest {
         assertEquals(new BigDecimal("2.50"), updated.getMaintenanceHours());
         assertNotNull(updated.getMaintenanceSubmittedAt());
         verify(workOrderRepository).save(workOrder);
+        verify(lifecycleEvents).save(any());
+    }
+
+    private Personnel actor(String firstName, String lastName) {
+        Personnel person = new Personnel();
+        person.setFirstName(firstName);
+        person.setLastName(lastName);
+        person.setRank("CTT1");
+        return person;
     }
 
     @Test
@@ -68,7 +82,7 @@ class WorkOrderServiceTest {
         workOrder.setStatus(MafStatus.IN_WORK);
         when(workOrderRepository.findById(workOrderId)).thenReturn(Optional.of(workOrder));
 
-        assertThrows(BusinessValidationException.class, () -> workOrderService.closeWorkOrder(workOrderId));
+        assertThrows(BusinessValidationException.class, () -> workOrderService.closeWorkOrder(workOrderId, actor("Morgan", "Hale")));
     }
 
     private MaintenanceCompletionRequest completionRequest() {

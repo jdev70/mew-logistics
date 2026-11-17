@@ -4,6 +4,7 @@ import mil.dod.mew.domain.entity.WorkOrder;
 import mil.dod.mew.domain.entity.Personnel;
 import mil.dod.mew.domain.enums.FunctionalRole;
 import mil.dod.mew.repository.WorkOrderRepository;
+import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
 import mil.dod.mew.service.RbacPolicyService;
 import mil.dod.mew.service.RbacPolicyService.Action;
 import mil.dod.mew.service.RbacPolicyService.Resource;
@@ -40,15 +41,18 @@ public class WorkOrderController {
 
     private final WorkOrderRepository workOrderRepository;
     private final WorkOrderService workOrderService;
+    private final WorkOrderLifecycleEventRepository lifecycleEvents;
     private final RbacPolicyService rbacPolicyService;
     private final AuthenticatedMewUserResolver userResolver;
 
     public WorkOrderController(WorkOrderRepository workOrderRepository,
                                WorkOrderService workOrderService,
+                               WorkOrderLifecycleEventRepository lifecycleEvents,
                                RbacPolicyService rbacPolicyService,
                                AuthenticatedMewUserResolver userResolver) {
         this.workOrderRepository = workOrderRepository;
         this.workOrderService = workOrderService;
+        this.lifecycleEvents = lifecycleEvents;
         this.rbacPolicyService = rbacPolicyService;
         this.userResolver = userResolver;
     }
@@ -110,7 +114,7 @@ public class WorkOrderController {
         rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
                 "/api/v1/work-orders/" + id + "/submit-maintenance/");
         requireAssignedTechnician(existing);
-        return toDto(workOrderService.submitMaintenanceCompletion(id, payload));
+        return toDto(workOrderService.submitMaintenanceCompletion(id, payload, userResolver.currentPersonnel()));
     }
 
     @GetMapping({"/{id}", "/{id}/"})
@@ -121,6 +125,25 @@ public class WorkOrderController {
         rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(workOrder),
                 "/api/v1/work-orders/" + id + "/");
         return workOrder;
+    }
+
+    @GetMapping({"/{id}/lifecycle-history", "/{id}/lifecycle-history/"})
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> lifecycleHistory(@PathVariable @NonNull UUID id) {
+        WorkOrder workOrder = workOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
+        rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(workOrder),
+                "/api/v1/work-orders/" + id + "/lifecycle-history/");
+        return lifecycleEvents.findByWorkOrderIdOrderByOccurredAtAsc(id).stream().map(event -> {
+            Map<String, Object> dto = new LinkedHashMap<>();
+            dto.put("event_type", event.getEventType().name());
+            dto.put("previous_status", event.getPreviousStatus() == null ? null : event.getPreviousStatus().name());
+            dto.put("new_status", event.getNewStatus().name());
+            dto.put("actor_name", event.getActorName());
+            dto.put("occurred_at", event.getOccurredAt());
+            dto.put("reason", event.getReason());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @PostMapping({"", "/"})
@@ -169,7 +192,7 @@ public class WorkOrderController {
         rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
                 "/api/v1/work-orders/" + id + "/close/");
         requireReviewer();
-        return ResponseEntity.ok(toDto(workOrderService.closeWorkOrder(id)));
+        return ResponseEntity.ok(toDto(workOrderService.closeWorkOrder(id, userResolver.currentPersonnel())));
     }
 
     private void requireAssignedTechnician(WorkOrder workOrder) {
