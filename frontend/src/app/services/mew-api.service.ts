@@ -1968,6 +1968,16 @@ export class MewApiService {
         { code: 'PMRF-HI', name: 'PMRF Barking Sands', mission_category: 'Test_Evaluation_Range', lat: 22.0228, lon: -159.785, readiness_rating: 'C1', personnel_count: 12 },
         { code: 'CFAY-YOKO', name: 'CFA Yokosuka', mission_category: 'Fleet_Homeport', lat: 35.2814, lon: 139.6722, readiness_rating: 'C1', personnel_count: 29 },
       ],
+      lifecycle_metrics: {
+        qa_pending: 2,
+        rework_events: 1,
+        returned_to_service: 1,
+        closed: 5,
+        transition_events: 14,
+        avg_qa_turnaround_hours: 5.5,
+        avg_closure_turnaround_hours: 1.2,
+        avg_qa_aging_hours: 3.8,
+      },
       proximity_depot_routes: [
         {
           hull_number: 'DDG-51',

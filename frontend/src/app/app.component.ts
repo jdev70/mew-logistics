@@ -136,6 +136,22 @@ export class AppComponent implements OnInit {
       submittedHours,
     };
   });
+  readonly lifecycleAnalyticsMetrics = computed(() => {
+    const metrics = this.api.analytics()?.lifecycle_metrics;
+    if (metrics) return metrics;
+    const workOrders = this.api.workOrders();
+    const count = (status: string) => workOrders.filter((workOrder) => workOrder.status === status).length;
+    return {
+      qa_pending: count('QA_PENDING'),
+      rework_events: 0,
+      returned_to_service: count('RETURNED_TO_SERVICE'),
+      closed: count('CLOSED'),
+      transition_events: 0,
+      avg_qa_turnaround_hours: 0,
+      avg_closure_turnaround_hours: 0,
+      avg_qa_aging_hours: 0,
+    };
+  });
 
   // =========================================================================
   // 4. SHORE INSTALLATIONS & PERSONNEL MASTER-DETAIL STATE

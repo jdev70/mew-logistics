@@ -452,7 +452,7 @@ export interface MewAnalyticsPayload {
   nec_staffing_matrix: NecStaffingItem[];
   geospatial_nodes: GeospatialNode[];
   proximity_depot_routes: ProximityDepotRoute[];
-  lifecycle_metrics?: { qa_pending: number; rework_events: number; returned_to_service: number; closed: number; transition_events: number };
+  lifecycle_metrics?: { qa_pending: number; rework_events: number; returned_to_service: number; closed: number; transition_events: number; avg_qa_turnaround_hours: number; avg_closure_turnaround_hours: number; avg_qa_aging_hours: number };
 }
 
 
