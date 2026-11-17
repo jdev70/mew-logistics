@@ -122,6 +122,9 @@ Keycloak realm configuration, or authorization behavior.
    authentic.
 5. Add data-quality tests for name diversity, valid service/grade combinations,
    valid unit/installations relationships, and role coverage.
+   **Implemented for synthetic data:** `SyntheticPersonnelDataQualityService`
+   validates these rules against the seeded roster; the seed uses branch-appropriate
+   enlisted rank labels for its fictional E-6 personnel.
 
 ## Priority 5 — lifecycle, logistics, audit, and analytics depth
 

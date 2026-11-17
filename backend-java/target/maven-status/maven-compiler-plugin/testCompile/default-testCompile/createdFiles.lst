@@ -6,6 +6,7 @@ mil\dod\mew\web\controller\AssetControllerTest.class
 mil\dod\mew\OracleLocalSmokeIT.class
 mil\dod\mew\security\MewPermissionsManagerTest.class
 mil\dod\mew\SyntheticDataSeederTest.class
+mil\dod\mew\SyntheticPersonnelDataQualityServiceTest.class
 mil\dod\mew\web\controller\MilitaryUnitDashboardControllerTest.class
 mil\dod\mew\AuthorizationIntegrationTest$JwtDecoderConfiguration.class
 mil\dod\mew\CatalogSourceManifestTest$ManifestEntry.class

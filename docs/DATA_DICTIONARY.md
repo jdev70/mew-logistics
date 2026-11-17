@@ -15,6 +15,8 @@ synthetic demo environments are fictional demonstration data.
 | Catalog source | `source_id`, `title`, `source_url` | Stable source manifest identifier, source title, and direct public-reference URL. |
 | Catalog source | `source_version`, `retrieved_on`, `license_notes` | Version/retrieval and reuse context retained for reproducible catalog review. |
 | Catalog source | `review_status`, `last_reviewed_on`, `reviewer` | Governance state (`DRAFT`, `VERIFIED`, `STALE`, or `RETIRED`), most recent review date, and reviewer. |
+| Catalog attribution | `fact_category`, `confidence`, `rationale`, `reviewer`, `reviewed_on` | Classification and review metadata for one source-supported installation, platform, or loadout assertion. |
+| Personnel quality | `personnel_category`, `paygrade`, `functional_role`, `assigned_uic` | Fictional roster attributes validated for grade/category consistency, role coverage, and unit/installation alignment. |
 | Installation catalog | `synthetic_operational_data` | Indicates that readiness, staffing, inventory, maintenance, and other operational values are fictional. |
 | Organization | `uic` | Unit identification code used to associate units, personnel, and maintenance records. |
 | Platform/loadout | `hull_number`, `vessel_name`, `ship_class`, `domain` | Platform identity/class and operating domain. These include maritime, airborne, subsurface, and ground examples. |

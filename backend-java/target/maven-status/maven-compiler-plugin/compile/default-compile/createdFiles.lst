@@ -16,6 +16,7 @@ mil\dod\mew\repository\NavalHullRepository.class
 mil\dod\mew\security\MewPermissionsManager$1.class
 mil\dod\mew\service\ReadinessSchedulerService.class
 mil\dod\mew\repository\HullSystemAssignmentRepository.class
+mil\dod\mew\service\SyntheticPersonnelDataQualityService.class
 mil\dod\mew\security\MewResourceFactory.class
 mil\dod\mew\service\RbacPolicyService$PersonaProfile.class
 mil\dod\mew\domain\entity\MaterialCatalog.class
@@ -58,6 +59,7 @@ mil\dod\mew\service\RequisitionService.class
 mil\dod\mew\web\controller\WorkOrderController.class
 mil\dod\mew\security\model\Permission.class
 mil\dod\mew\domain\entity\WorkOrderPart.class
+mil\dod\mew\service\SyntheticPersonnelDataQualityService$DataQualityReport.class
 mil\dod\mew\domain\enums\ReadinessLevel.class
 mil\dod\mew\domain\enums\SupplyStatusCode.class
 mil\dod\mew\web\controller\RequisitionController.class
@@ -88,6 +90,7 @@ mil\dod\mew\domain\entity\HullSystemAssignment.class
 mil\dod\mew\service\CatalogSourceReconciliationService.class
 mil\dod\mew\service\RbacPolicyService$Resource.class
 mil\dod\mew\domain\entity\BaseEntity.class
+mil\dod\mew\service\SyntheticPersonnelDataQualityService$1.class
 mil\dod\mew\config\SyntheticDataSeeder$SourceDefinition.class
 mil\dod\mew\repository\CatalogSourceRepository.class
 mil\dod\mew\repository\PersonnelRepository.class

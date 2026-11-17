@@ -257,7 +257,7 @@ public class SyntheticDataSeeder implements CommandLineRunner {
             p.setLastName(last[(i * 17 + 11) % last.length]);
             p.setMiddleInitial(String.valueOf((char) ('A' + ((i * 7) % 26))));
             p.setPersonnelCategory(role == FunctionalRole.WARFARE_CENTER_ENGINEER ? "DoD_Civilian" : "Active_Duty_Enlisted");
-            p.setPaygrade(role == FunctionalRole.WARFARE_CENTER_ENGINEER ? "GS-12" : "E-6"); p.setRank(role == FunctionalRole.WARFARE_CENTER_ENGINEER ? "CIV" : "CTT1");
+            p.setPaygrade(role == FunctionalRole.WARFARE_CENTER_ENGINEER ? "GS-12" : "E-6"); p.setRank(role == FunctionalRole.WARFARE_CENTER_ENGINEER ? "CIV" : enlistedRankFor(unit.getInstallation().getServiceBranch()));
             p.setSpecialtyCode(role == FunctionalRole.SHIPBOARD_TECHNICIAN ? "MEW-Tech" : "MEW-Support");
             p.setTitle(role.name().replace('_', ' ')); p.setFunctionalRole(role); p.setAssignedUic(unit.getUic()); p.setUnit(unit); p.setInstallation(unit.getInstallation());
             p.setSecurityClearance(i % 7 == 0 ? "TS/SCI" : "Secret"); p.setServiceBranch(unit.getInstallation().getServiceBranch());
@@ -272,6 +272,16 @@ public class SyntheticDataSeeder implements CommandLineRunner {
     private FunctionalRole roleFor(MilitaryUnit unit, int index) {
         if (unit.getEchelonLevel() == CommandEchelon.COMBATANT_UNIT) return index % 6 == 0 ? FunctionalRole.UNIT_SUPPO : FunctionalRole.SHIPBOARD_TECHNICIAN;
         return index % 3 == 0 ? FunctionalRole.WARFARE_CENTER_ENGINEER : index % 3 == 1 ? FunctionalRole.SHORE_DEPOT_MANAGER : FunctionalRole.FLEET_READINESS_ANALYST;
+    }
+
+    private String enlistedRankFor(String branch) {
+        return switch (branch) {
+            case "USN" -> "CTT1";
+            case "USMC" -> "SSgt";
+            case "USAF" -> "TSgt";
+            case "USA" -> "SSG";
+            default -> "E-6";
+        };
     }
 
     private List<MissionRole> createRoles() {
