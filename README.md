@@ -59,9 +59,80 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 java -jar target\mew-logistics-api.war --spring.profiles.active=local
 ```
 
+### Local Oracle XE (optional)
+
+Create the local `MEW_APP` account once. The command prompts locally for the Oracle administrator password and the new application password; neither is stored in the command, repository, or chat:
+
+```powershell
+& 'C:\app\dataa\product\21c\dbhomeXE\bin\sqlplus.exe' 'sys@localhost:1521/XEPDB1 as sysdba' '@..\scripts\oracle\create-mew-app.sql'
+```
+
+After that succeeds, set the `MEW_APP` password only in your current PowerShell session and start with the Oracle profile:
+
+```powershell
+$env:MEW_ORACLE_LOCAL_PASSWORD = 'your-local-MEW_APP-password'
+cd backend-java
+mvn spring-boot:run "-Dspring-boot.run.profiles=oracle-local"
+```
+
+Alternatively, from the repository root, use the provided launcher. It prompts for the password without echoing it and removes the environment variable when the application stops:
+
+```powershell
+.\scripts\oracle\run-oracle-local.ps1
+```
+
+To run the repeatable Oracle schema/API smoke test, leave the password in the current PowerShell session and run:
+
+```powershell
+cd backend-java
+mvn -Poracle-local-it verify
+```
+
+This test validates the existing Oracle schema (`ddl-auto: validate`) and performs read-only API checks. It does not recreate or drop Oracle tables.
+
+Or, from the repository root, use the password-prompting launcher:
+
+```powershell
+.\scripts\oracle\test-oracle-local.ps1
+```
+
+The password is deliberately not stored in source control. The `oracle-local` profile uses `localhost:1521/XEPDB1`, applies development schema updates, and disables the H2 console.
+
 The `local` profile is development-only and is the only profile that enables H2, automatic schema updates, its web console, and the configured demo identity. The base profile has no development datastore configuration.
 
 For production, start with `--spring.profiles.active=prod`, set `MEW_JWT_ISSUER_URI` to the trusted identity-provider issuer, and optionally set `MEW_DATASOURCE_JNDI` (default: `jdbc/MewLogisticsDS`). The production profile disables H2 and uses `ddl-auto: validate`; apply [the authorization schema migration](docs/AUTHORIZATION_SCHEMA_MIGRATION.md) and provision each JWT `sub` as a unique `identity_subject` before deployment.
+
+### Local Keycloak JWT testing (optional)
+
+Start the free, local-only Keycloak development container. It listens only on `http://localhost:8180` and does not use Oracle Cloud or a paid identity provider:
+
+```powershell
+.\scripts\keycloak\start-keycloak-local.ps1
+```
+
+Open `http://localhost:8180`, sign in to the Keycloak administration console as `local-admin` using the password entered by the launcher, then create a user in the `mew-local` realm. After creating a password for that user, map the user's Keycloak `sub` to `mew_personnel.identity_subject` in the local Oracle database. Start the backend with both profiles:
+
+For a local user named `mew-psm`, this helper enables the user, removes Keycloak required actions, and sets a non-temporary password:
+
+```powershell
+.\scripts\keycloak\provision-keycloak-local-user.ps1
+```
+
+Then follow [the local Keycloak-to-Oracle mapping guide](docs/LOCAL_KEYCLOAK_ORACLE_MAPPING.md) to map the printed JWT subject to the seeded Enterprise PSM record (`MEW-PER-0000`).
+
+Then start the backend with both profiles:
+
+```powershell
+.\scripts\keycloak\run-oracle-keycloak-local.ps1
+```
+
+With the backend running, verify a real bearer-token request without printing the token:
+
+```powershell
+.\scripts\keycloak\test-keycloak-api.ps1
+```
+
+`start-dev` is strictly for local development; it is not a production Keycloak configuration.
 
 ### H2 Database Console (Local Dev)
 While the backend is running, open **`http://localhost:8080/h2-console`**:
@@ -80,9 +151,19 @@ npm ci
 # Start dev server on http://localhost:4200
 npm start
 
+# Start with local Keycloak browser sign-in and automatic API bearer tokens
+# (requires the local Keycloak container and oracle-local,keycloak-local backend profiles)
+npm run start:keycloak
+
 # Production build check
 npm run build
 ```
+
+`npm run start:keycloak` uses Keycloak's authorization-code flow with PKCE. It redirects to the
+local `mew-local` realm, keeps issued tokens in memory, refreshes them before API calls, and adds
+the bearer token only to calls to `http://localhost:8080/api/v1`. Use the **Sign out** control in
+the dashboard policy panel to end the local Keycloak session. The normal `npm start` command keeps
+the existing non-Keycloak development configuration.
 
 ---
 

@@ -5,15 +5,8 @@ spring:
     property-naming-strategy: SNAKE_CASE
     serialization:
       write-dates-as-timestamps: false
-  datasource:
-    url: jdbc:h2:mem:mewdb;DB_CLOSE_DELAY=-1;MODE=Oracle
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
   jpa:
     open-in-view: false
-    hibernate:
-      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -21,22 +14,9 @@ spring:
 server:
   port: 8080
 
----
-spring:
-  config:
-    activate:
-      on-profile: oracle
-  datasource:
-    url: ${ORACLE_JDBC_URL:jdbc:oracle:thin:@//localhost:1521/ORCLPDB1}
-    driver-class-name: oracle.jdbc.OracleDriver
-    username: ${ORACLE_DB_USER:mew_logistics}
-    password: ${ORACLE_DB_PASSWORD:change_me}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.Oracle12cDialect
+mew:
+  security:
+    mode: jwt
 
 ---
 spring:

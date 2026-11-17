@@ -45,7 +45,7 @@ import java.time.LocalDate;
  * Seeds sample Maritime Electromagnetic Warfare (MEW) data for local H2 development.
  */
 @Component
-@Profile({"default", "local"})
+@Profile({"default", "local", "oracle-local"})
 public class DevDataInitializer implements CommandLineRunner {
 
     private final InstallationRepository installationRepository;

@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { runtimeConfig } from '../config/runtime';
 import {
   InstallationDashboard,
   InventoryBalance,
@@ -26,7 +27,7 @@ import {
 })
 export class MewApiService {
   private readonly http = inject(HttpClient);
-  readonly apiBaseUrl = 'http://localhost:8080/api/v1';
+  readonly apiBaseUrl = runtimeConfig.apiBaseUrl;
 
   // Reactive Signals State (SV-4 State Management)
   readonly loading = signal<boolean>(false);
@@ -369,10 +370,15 @@ export class MewApiService {
 
   exportFleetCsv(assetClass?: string): void {
     const cls = assetClass ? `?asset_class=${encodeURIComponent(assetClass)}` : '';
-    window.open(
-      `${this.apiBaseUrl}/dashboard/units/export_csv/${cls}`,
-      '_blank'
-    );
+    this.http
+      .get(`${this.apiBaseUrl}/dashboard/units/export_csv/${cls}`, { responseType: 'blob' })
+      .subscribe((file) => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = 'mew-fleet-readiness.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
   }
 
   // =========================================================================

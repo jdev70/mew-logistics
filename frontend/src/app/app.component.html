@@ -183,6 +183,15 @@
           <i class="pi pi-qrcode text-xs"></i>
           <span>Scan / Receive Shipment</span>
         </button>
+        <button
+          *ngIf="auth.authenticated()"
+          type="button"
+          (click)="auth.signOut()"
+          class="w-full py-1.5 px-2.5 rounded-sm border border-slate-700 hover:border-rose-400/70 text-slate-300 hover:text-rose-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition"
+        >
+          <i class="pi pi-sign-out text-xs"></i>
+          <span>Sign out</span>
+        </button>
       </div>
     </aside>
 

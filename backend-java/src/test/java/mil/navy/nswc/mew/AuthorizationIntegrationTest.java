@@ -15,7 +15,9 @@ import java.time.Instant;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,6 +37,15 @@ class AuthorizationIntegrationTest {
     }
 
     @Test
+    void permitsAngularCorsPreflightBeforeAuthentication() throws Exception {
+        mockMvc.perform(options("/api/v1/assets/")
+                        .header("Origin", "http://localhost:4200")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"));
+    }
+
+    @Test
     void strategicUserCanViewFleetAssets() throws Exception {
         mockMvc.perform(get("/api/v1/assets/").with(jwt().jwt(token -> token.subject("MEW-PER-0000"))))
                 .andExpect(status().isOk())
@@ -47,6 +58,13 @@ class AuthorizationIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].installation_code").value("NS-NORFOLK"));
+    }
+
+    @Test
+    void filteredAssetsDoNotRollbackTheReadTransaction() throws Exception {
+        mockMvc.perform(get("/api/v1/assets/").with(jwt().jwt(token -> token.subject("MEW-PER-0002"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

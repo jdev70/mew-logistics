@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: oracle-local
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: MEW_APP
+    password: ${MEW_ORACLE_LOCAL_PASSWORD}
+  h2:
+    console:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.Oracle12cDialect
+
+mew:
+  security:
+    mode: demo
+    demo-subject: MEW-PER-0000
+    demo-role: FLEET_READINESS_ANALYST

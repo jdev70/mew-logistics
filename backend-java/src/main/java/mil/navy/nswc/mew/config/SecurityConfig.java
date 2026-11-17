@@ -25,14 +25,14 @@ import java.util.List;
 public class SecurityConfig {
     @Bean @ConditionalOnProperty(prefix = "mew.security", name = "mode", havingValue = "jwt", matchIfMissing = true)
     SecurityFilterChain jwt(HttpSecurity http) throws Exception {
-        http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+        http.cors().and().csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests().anyRequest().authenticated().and().oauth2ResourceServer().jwt();
         return http.build();
     }
     @Bean @ConditionalOnProperty(prefix = "mew.security", name = "mode", havingValue = "demo")
     SecurityFilterChain demo(HttpSecurity http, @Value("${mew.security.demo-subject}") String subject,
                              @Value("${mew.security.demo-role}") String role) throws Exception {
-        return http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+        return http.cors().and().csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .addFilterBefore(new DemoIdentityFilter(subject, role), UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests().anyRequest().authenticated().and().build();
     }

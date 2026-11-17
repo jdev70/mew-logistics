@@ -60,6 +60,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "keycloak-local": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/config/runtime.ts",
+                  "with": "src/app/config/runtime.keycloak-local.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -72,6 +83,9 @@
             },
             "development": {
               "buildTarget": "mew-logistics-readiness-frontend:build:development"
+            },
+            "keycloak-local": {
+              "buildTarget": "mew-logistics-readiness-frontend:build:keycloak-local"
             }
           },
           "defaultConfiguration": "development"

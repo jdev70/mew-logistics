@@ -1,3 +1,4 @@
 mil\navy\nswc\mew\AuthorizationIntegrationTest$JwtDecoderConfiguration.class
 mil\navy\nswc\mew\AuthorizationIntegrationTest.class
 mil\navy\nswc\mew\security\MewPermissionsManagerTest.class
+mil\navy\nswc\mew\OracleLocalSmokeIT.class

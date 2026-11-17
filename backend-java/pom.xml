@@ -112,4 +112,36 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>oracle-local-it</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <spring.profiles.active>oracle-local</spring.profiles.active>
+                                <spring.datasource.url>jdbc:oracle:thin:@localhost:1521/XEPDB1</spring.datasource.url>
+                                <spring.datasource.driver-class-name>oracle.jdbc.OracleDriver</spring.datasource.driver-class-name>
+                                <spring.datasource.username>MEW_APP</spring.datasource.username>
+                                <spring.datasource.password>${env.MEW_ORACLE_LOCAL_PASSWORD}</spring.datasource.password>
+                                <spring.jpa.hibernate.ddl-auto>validate</spring.jpa.hibernate.ddl-auto>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

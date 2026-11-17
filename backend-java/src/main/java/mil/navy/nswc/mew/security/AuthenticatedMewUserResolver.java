@@ -27,7 +27,7 @@ public class AuthenticatedMewUserResolver {
         this.personnelRepository = personnelRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = AccessDeniedException.class)
     public MewUser currentUser() {
         Personnel personnel = currentPersonnel();
         return new MewUser(personnel.getIdentitySubject(), enumValue(personnel.getServiceBranch(), MilitaryBranch.class, "service branch"),

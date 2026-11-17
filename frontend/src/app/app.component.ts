@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { MewApiService } from './services/mew-api.service';
 import { ThemeService } from './services/theme.service';
+import { KeycloakAuthService } from './services/keycloak-auth.service';
 import {
   AoSystemBreakdown,
   ComponentAnalyticsItem,
@@ -30,6 +31,7 @@ import {
 export class AppComponent implements OnInit {
   readonly api = inject(MewApiService);
   readonly themeService = inject(ThemeService);
+  readonly auth = inject(KeycloakAuthService);
 
   // Active Navigation Viewpoint (Default to Predictive Analytics & Visualizations)
   readonly activeViewpoint = signal<MewViewpoint>('analytics');

@@ -1,0 +1,17 @@
+{
+  "realm": "mew-local",
+  "enabled": true,
+  "displayName": "MEW Local Development",
+  "clients": [
+    {
+      "clientId": "mew-dashboard",
+      "name": "MEW Dashboard Local Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+spring:
+  config:
+    activate:
+      on-profile: keycloak-local
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/mew-local
+
+mew:
+  security:
+    mode: jwt
