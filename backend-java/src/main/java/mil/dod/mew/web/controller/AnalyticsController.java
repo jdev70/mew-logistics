@@ -4,6 +4,10 @@ import mil.dod.mew.domain.entity.Asset;
 import mil.dod.mew.domain.entity.Installation;
 import mil.dod.mew.repository.AssetRepository;
 import mil.dod.mew.repository.InstallationRepository;
+import mil.dod.mew.repository.WorkOrderRepository;
+import mil.dod.mew.repository.WorkOrderLifecycleEventRepository;
+import mil.dod.mew.domain.enums.MafStatus;
+import mil.dod.mew.domain.enums.WorkOrderLifecycleEventType;
 import mil.dod.mew.security.MewResourceFactory;
 import mil.dod.mew.security.model.Permission;
 import mil.dod.mew.service.RbacPolicyService;
@@ -25,13 +29,18 @@ public class AnalyticsController {
     private final AssetRepository assetRepository;
     private final InstallationRepository installationRepository;
     private final RbacPolicyService rbacPolicyService;
+    private final WorkOrderRepository workOrders;
+    private final WorkOrderLifecycleEventRepository lifecycleEvents;
 
     public AnalyticsController(AssetRepository assetRepository,
                                InstallationRepository installationRepository,
-                               RbacPolicyService rbacPolicyService) {
+                               RbacPolicyService rbacPolicyService, WorkOrderRepository workOrders,
+                               WorkOrderLifecycleEventRepository lifecycleEvents) {
         this.assetRepository = assetRepository;
         this.installationRepository = installationRepository;
         this.rbacPolicyService = rbacPolicyService;
+        this.workOrders = workOrders;
+        this.lifecycleEvents = lifecycleEvents;
     }
 
     @GetMapping({"", "/"})
@@ -81,6 +90,14 @@ public class AnalyticsController {
         payload.put("nec_staffing_matrix", Collections.emptyList());
         payload.put("geospatial_nodes", nodes);
         payload.put("proximity_depot_routes", Collections.emptyList());
+        List<mil.dod.mew.domain.entity.WorkOrderLifecycleEvent> events = lifecycleEvents.findAll();
+        Map<String, Object> lifecycle = new LinkedHashMap<>();
+        lifecycle.put("qa_pending", workOrders.findAll().stream().filter(w -> w.getStatus() == MafStatus.QA_PENDING).count());
+        lifecycle.put("rework_events", events.stream().filter(e -> e.getEventType() == WorkOrderLifecycleEventType.REWORK_REQUESTED).count());
+        lifecycle.put("returned_to_service", workOrders.findAll().stream().filter(w -> w.getStatus() == MafStatus.RETURNED_TO_SERVICE).count());
+        lifecycle.put("closed", workOrders.findAll().stream().filter(w -> w.getStatus() == MafStatus.CLOSED).count());
+        lifecycle.put("transition_events", events.size());
+        payload.put("lifecycle_metrics", lifecycle);
         return payload;
     }
 }

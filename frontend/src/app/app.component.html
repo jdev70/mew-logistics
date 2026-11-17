@@ -378,6 +378,13 @@
           *ngIf="analyticsSubTab() === 'ao' && api.analytics() as an"
           class="flex-1 min-h-0 grid grid-cols-12 gap-3 overflow-hidden"
         >
+          <section *ngIf="an.lifecycle_metrics as lifecycle" class="col-span-12 grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">QA PENDING</div><div class="text-lg font-bold text-violet-300">{{ lifecycle.qa_pending }}</div></div>
+            <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">REWORK EVENTS</div><div class="text-lg font-bold text-amber-300">{{ lifecycle.rework_events }}</div></div>
+            <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">RTS READY</div><div class="text-lg font-bold text-emerald-300">{{ lifecycle.returned_to_service }}</div></div>
+            <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">CLOSED</div><div class="text-lg font-bold text-sky-300">{{ lifecycle.closed }}</div></div>
+            <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">LEDGER EVENTS</div><div class="text-lg font-bold mew-text-primary">{{ lifecycle.transition_events }}</div></div>
+          </section>
           <!-- Left (8 cols): Interactive System Ao & MDT Bar Chart + Funnel -->
           <section class="col-span-12 lg:col-span-8 h-full min-h-0 flex flex-col gap-3 overflow-hidden">
             <!-- Ao & Downtime Decomposition Chart -->
