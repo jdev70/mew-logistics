@@ -132,6 +132,19 @@ With the backend running, verify a real bearer-token request without printing th
 .\scripts\keycloak\test-keycloak-api.ps1
 ```
 
+Verify that the current Keycloak user subject still matches the Oracle authorization assignment
+without changing data:
+
+```powershell
+.\scripts\keycloak\verify-keycloak-oracle-mapping.ps1
+```
+
+Local Keycloak state is stored in Docker's `keycloak-data` named volume. Do not delete that volume
+unless intentionally resetting local identity data; a newly created user can have a different subject
+and must be mapped to Oracle again. See [the mapping guide](docs/LOCAL_KEYCLOAK_ORACLE_MAPPING.md).
+If your running container predates this volume, its first recreation performs a one-time local user
+reset; provision, map, and verify the user once more before using the persistent environment.
+
 `start-dev` is strictly for local development; it is not a production Keycloak configuration.
 
 ### H2 Database Console (Local Dev)

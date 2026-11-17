@@ -22,21 +22,31 @@ try {
         -Body @{ client_id = 'admin-cli'; grant_type = 'password'; username = 'local-admin'; password = $adminPassword }
     $headers = @{ Authorization = "Bearer $($tokenResponse.access_token)" }
     $baseUri = 'http://localhost:8180/admin/realms/mew-local'
-    $users = @(Invoke-RestMethod -Method Get -Uri "$baseUri/users?username=$Username&exact=true" -Headers $headers)
+    $userResponse = Invoke-WebRequest -Method Get -Uri "$baseUri/users?username=$Username&exact=true" -Headers $headers
+    $users = [System.Collections.Generic.List[object]]::new()
+    foreach ($user in ($userResponse.Content | ConvertFrom-Json)) {
+        $users.Add($user)
+    }
 
     if ($users.Count -eq 0) {
         Invoke-RestMethod -Method Post -Uri "$baseUri/users" -Headers $headers -ContentType 'application/json' `
             -Body (@{ username = $Username; enabled = $true; emailVerified = $true; requiredActions = @() } | ConvertTo-Json)
-        $users = @(Invoke-RestMethod -Method Get -Uri "$baseUri/users?username=$Username&exact=true" -Headers $headers)
+        $userResponse = Invoke-WebRequest -Method Get -Uri "$baseUri/users?username=$Username&exact=true" -Headers $headers
+        $users = [System.Collections.Generic.List[object]]::new()
+        foreach ($user in ($userResponse.Content | ConvertFrom-Json)) {
+            $users.Add($user)
+        }
     }
     if ($users.Count -ne 1) {
         throw "Expected one Keycloak user named '$Username', found $($users.Count)."
     }
 
-    $userId = $users[0].id
-    Invoke-RestMethod -Method Put -Uri "$baseUri/users/$userId" -Headers $headers -ContentType 'application/json' `
-        -Body (@{ username = $Username; enabled = $true; emailVerified = $true; requiredActions = @() } | ConvertTo-Json)
-    Invoke-RestMethod -Method Put -Uri "$baseUri/users/$userId/reset-password" -Headers $headers -ContentType 'application/json' `
+    $userId = ([string]$users[0].id).Trim('/')
+    if ([string]::IsNullOrWhiteSpace($userId)) {
+        throw "Keycloak returned a user record without an ID for '$Username'."
+    }
+    $userUri = ('{0}/users/{1}' -f $baseUri.TrimEnd('/'), $userId)
+    Invoke-RestMethod -Method Put -Uri "$userUri/reset-password" -Headers $headers -ContentType 'application/json' `
         -Body (@{ type = 'password'; value = $userPassword; temporary = $false } | ConvertTo-Json)
 
     Write-Host "Provisioned $Username. Its Keycloak subject is: $userId"

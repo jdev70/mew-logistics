@@ -9,4 +9,8 @@ services:
     ports:
       - "127.0.0.1:8180:8080"
     volumes:
+      - keycloak-data:/opt/keycloak/data
       - ./realm:/opt/keycloak/data/import:ro
+
+volumes:
+  keycloak-data:

@@ -9,8 +9,18 @@
       <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
       <span>UNCLASSIFIED // FOR OFFICIAL USE ONLY // MEW LOGISTICS &amp; READINESS C2 (NSWC CRANE)</span>
     </div>
-    <div class="hidden md:flex items-center gap-4 text-emerald-300/90 mono-data">
+    <div class="hidden md:flex items-center gap-3 text-emerald-300/90 mono-data">
       <span>DoDAF: CV-1 | OV-1 | DIV-2 | SvcV-1 | SV-4</span>
+      <span
+        [class]="api.connectionMode() === 'LIVE_API'
+          ? 'text-emerald-300'
+          : 'text-amber-300'"
+      >
+        {{ api.connectionMode() === 'LIVE_API' ? 'DATA: LIVE API' : 'DATA: SIMULATION' }}
+      </span>
+      <span *ngIf="auth.authenticated()" class="text-sky-200">
+        IDENTITY: {{ auth.username() || 'KEYCLOAK USER' }}
+      </span>
       <span>SYNC: {{ api.lastSyncedAt() | date:'HH:mm:ss' }} LOCAL</span>
     </div>
   </header>
@@ -159,6 +169,13 @@
         <div class="bg-slate-950/80 p-2 rounded-sm border border-slate-800 space-y-1 mono-data text-[10px]">
           <div class="text-white font-bold truncate">{{ api.activeRbacContext().actor_name }}</div>
           <div class="text-sky-400 truncate">{{ api.activeRbacContext().functional_role }}</div>
+          <div *ngIf="auth.authenticated()" class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+            <span class="flex items-center gap-1 text-slate-400 truncate" title="Authentication account">
+              <i class="pi pi-key text-[9px] text-sky-400"></i>
+              Keycloak: <span class="text-slate-200">{{ auth.username() || 'authenticated user' }}</span>
+            </span>
+            <span class="shrink-0 text-[9px] font-bold text-emerald-400">ORACLE AUTHZ</span>
+          </div>
           <div class="text-slate-400">
             Scope: <span class="text-emerald-400">{{ api.activeRbacContext().assigned_uic }}</span>
             <span *ngIf="api.activeRbacContext().authorized_cage_codes.length" class="text-amber-400">

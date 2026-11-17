@@ -18,8 +18,12 @@ try {
         -ContentType 'application/x-www-form-urlencoded' `
         -Body @{ client_id = 'admin-cli'; grant_type = 'password'; username = 'local-admin'; password = $adminPassword }
     $headers = @{ Authorization = "Bearer $($tokenResponse.access_token)" }
-    $users = @(Invoke-RestMethod -Method Get `
-        -Uri "http://localhost:8180/admin/realms/mew-local/users?username=$Username&exact=true" -Headers $headers)
+    $userResponse = Invoke-WebRequest -Method Get `
+        -Uri "http://localhost:8180/admin/realms/mew-local/users?username=$Username&exact=true" -Headers $headers
+    $users = [System.Collections.Generic.List[object]]::new()
+    foreach ($user in ($userResponse.Content | ConvertFrom-Json)) {
+        $users.Add($user)
+    }
     if ($users.Count -ne 1) {
         throw "Expected one Keycloak user named '$Username', found $($users.Count)."
     }

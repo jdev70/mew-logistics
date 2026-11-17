@@ -15,6 +15,8 @@ export class KeycloakAuthService {
 
   readonly initialized = signal(false);
   readonly authenticated = signal(false);
+  readonly username = signal<string | null>(null);
+  readonly subject = signal<string | null>(null);
 
   initialize(): Promise<void> {
     if (!this.initialization) {
@@ -33,6 +35,9 @@ export class KeycloakAuthService {
 
   signOut(): void {
     if (this.enabled && this.client.authenticated) {
+      this.authenticated.set(false);
+      this.username.set(null);
+      this.subject.set(null);
       void this.client.logout({ redirectUri: window.location.origin });
     }
   }
@@ -49,6 +54,11 @@ export class KeycloakAuthService {
       checkLoginIframe: false,
     });
     this.authenticated.set(isAuthenticated);
+    if (isAuthenticated) {
+      const claims = this.client.tokenParsed as { preferred_username?: string; sub?: string } | undefined;
+      this.username.set(claims?.preferred_username ?? null);
+      this.subject.set(claims?.sub ?? null);
+    }
     this.initialized.set(true);
   }
 }
