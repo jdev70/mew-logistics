@@ -5,6 +5,75 @@ This project is a decoupled, enterprise-ready logistics and readiness dashboard 
 
 ---
 
+## Development Handoff
+
+### Current project position
+
+The project is in the **demo-hardening and governed-data phase**. The core
+joint-service backend and Angular dashboard are functional, with deterministic
+fictional data for local demonstrations. The Java package root is now
+`mil.dod.mew`; the former Navy-specific package root has been retired.
+
+Implemented foundations include:
+
+- JWT-backed RBAC/ABAC, resource-scoped catalog, asset, inventory, and
+  work-order access controls.
+- Deterministic synthetic personnel, installations, platforms, loadouts,
+  inventory, maintenance, audit, and readiness data.
+- Governed catalog provenance: versioned source manifest, source
+  reconciliation/upsert workflow, `CatalogSource`, and per-target
+  `CatalogAttribution` records.
+- Structured maintenance lifecycle: technician submission, QA approval or
+  rework, return-to-service, closure, and immutable lifecycle events.
+- Lifecycle and supply analytics, including QA turnaround/aging, rework rate,
+  requisition demand, fill rate, priority-one demand, and estimated lead time.
+- Clickable supply analytics drill-downs grouped by installation.
+
+The local/demo data remains fictional. Public catalog-source metadata is kept
+separate from synthetic readiness, personnel, inventory, and maintenance data.
+
+### Current operator notes
+
+- Start the local backend with:
+
+  ```powershell
+  cd backend-java
+  mvn spring-boot:run "-Dspring-boot.run.profiles=local"
+  ```
+
+- Start the frontend with `cd frontend` followed by `npm start`.
+- When starting against an existing local H2 database, restart the backend
+  after lifecycle-seed changes so new demonstration events are available.
+- Use the raw API, Swagger UI, or H2 console for underlying data inspection;
+  see the [raw-data guidance](#raw-data-inspection) below.
+
+### Upcoming implementation components
+
+The next work should follow [the future implementation roadmap](docs/FUTURE_IMPLEMENTATION_ROADMAP.md), with these priorities:
+
+1. Complete lifecycle/logistics reconciliation tests so analytics totals are
+   continuously checked against work orders, requisitions, inventory
+   transactions, and readiness snapshots.
+2. Expand supply drill-downs from installation summaries to component, fleet,
+   and platform-level trends and detail tables.
+3. Enrich synthetic personnel with qualifications, training currency,
+   certifications, and authorized-absence readiness inputs.
+4. Deliberately expand reviewed public catalog coverage through the manifest
+   import workflow; do not add unattributed or operationally sensitive data.
+5. Improve responsive UI ergonomics further, especially drill-down views on
+   laptop-sized displays.
+
+### Raw-data inspection
+
+For local development, inspect JSON through `/api/v1/` endpoints or Swagger at
+`http://localhost:8080/swagger-ui.html`. When the `local` profile enables H2,
+use `http://localhost:8080/h2-console` and the active profile's JDBC settings.
+Useful tables include `mew_work_order`, `mew_work_order_lifecycle_event`,
+`mew_requisition`, `mew_inventory_balance`, `mew_personnel`, and
+`mew_catalog_attribution`.
+
+---
+
 ## DoDAF Architectural Alignment
 
 * **CV-1 (Vision):** Provide logistics officers, depot managers, and product support managers with real-time visibility into MEW system deployment, maintenance, and operational availability (`Ao`).

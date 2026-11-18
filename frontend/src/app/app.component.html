@@ -376,11 +376,11 @@
         <!-- LENS 1: Ao DECOMPOSITION (MTBM / MTTR / LDT) & SUPPLY BOTTLENECK FUNNEL -->
         <div
           *ngIf="analyticsSubTab() === 'ao' && api.analytics() as an"
-          class="flex-1 min-h-0 grid grid-cols-12 gap-3 overflow-hidden"
+          class="flex-1 min-h-0 grid grid-cols-12 gap-4 overflow-y-auto pr-1"
         >
           <!-- Left (8 cols): Interactive System Ao & MDT Bar Chart + Funnel -->
-          <section class="col-span-12 lg:col-span-8 h-full min-h-0 flex flex-col gap-3 overflow-hidden">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 shrink-0" aria-label="Maintenance lifecycle analytics">
+          <section class="col-span-12 lg:col-span-8 min-h-0 flex flex-col gap-4">
+            <div class="grid grid-cols-2 xl:grid-cols-3 gap-3 shrink-0" aria-label="Maintenance lifecycle analytics">
               <ng-container *ngIf="lifecycleAnalyticsMetrics() as lifecycle">
               <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">QA PENDING</div><div class="text-lg font-bold text-violet-300">{{ lifecycle.qa_pending }}</div></div>
               <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">REWORK EVENTS</div><div class="text-lg font-bold text-amber-300">{{ lifecycle.rework_events }}</div></div>
@@ -393,13 +393,13 @@
               <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">REWORK RATE</div><div class="text-lg font-bold text-amber-300">{{ lifecycle.rework_rate_pct | number:'1.0-1' }}%</div></div>
               </ng-container>
             </div>
-            <div *ngIf="an.supply_metrics as supply" class="grid grid-cols-2 md:grid-cols-4 gap-2 shrink-0" aria-label="Maintenance supply analytics">
+            <div *ngIf="an.supply_metrics as supply" class="grid grid-cols-2 xl:grid-cols-4 gap-3 shrink-0" aria-label="Maintenance supply analytics">
               <button type="button" (click)="selectedSupplyDrill.set('open')" class="mew-elevated rounded-sm p-2 text-center hover:ring-1 hover:ring-amber-400"><div class="text-[9px] mono-data mew-text-muted">OPEN DEMAND</div><div class="text-lg font-bold text-amber-300">{{ supply.open_requisitions }}</div></button>
               <button type="button" (click)="selectedSupplyDrill.set('fill')" class="mew-elevated rounded-sm p-2 text-center hover:ring-1 hover:ring-emerald-400"><div class="text-[9px] mono-data mew-text-muted">FILL RATE</div><div class="text-lg font-bold text-emerald-300">{{ supply.fill_rate_pct | number:'1.0-1' }}%</div></button>
               <button type="button" (click)="selectedSupplyDrill.set('priority')" class="mew-elevated rounded-sm p-2 text-center hover:ring-1 hover:ring-rose-400"><div class="text-[9px] mono-data mew-text-muted">PRI-1 OPEN</div><div class="text-lg font-bold text-rose-300">{{ supply.priority_one_open }}</div></button>
               <button type="button" (click)="selectedSupplyDrill.set('lead')" class="mew-elevated rounded-sm p-2 text-center hover:ring-1 hover:ring-sky-400"><div class="text-[9px] mono-data mew-text-muted">EST. LEAD</div><div class="text-lg font-bold text-sky-300">{{ supply.avg_estimated_lead_days | number:'1.0-1' }}d</div></button>
             </div>
-            <div *ngIf="supplyDrill() as drill" class="mew-elevated rounded-sm p-3 shrink-0 border border-sky-500/30">
+            <div *ngIf="supplyDrill() as drill" class="mew-elevated rounded-sm p-4 shrink-0 border border-sky-500/30 text-sm">
               <div class="flex justify-between"><div><div class="text-xs font-bold text-sky-300">{{ drill.title }}</div><div class="text-[10px] mew-text-secondary">{{ drill.note }}</div></div><button type="button" (click)="selectedSupplyDrill.set(null)" class="text-xs text-slate-400">Close</button></div>
               <div class="mt-3 h-3 rounded bg-slate-800 overflow-hidden"><div [class]="drill.color" class="h-full" [style.width.%]="drillBarWidth(drill.value)"></div></div>
               <div class="mt-1 text-xs mono-data mew-text-primary">{{ drill.value | number:'1.0-1' }} {{ drill.unit }}</div>

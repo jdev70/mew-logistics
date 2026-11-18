@@ -1,9 +1,0 @@
-Attribute, Recommended Alias, Definition, Example 
-component, Site Reporting Component, A code used to identify the Military, USMC Air National Guard 
-siteName, Site Name, The official identification or name applied to a site as assigned and promulgated by the DoD, Military Services, or Washington Headquarters Services to recognize the site., Fort Stewart Langley AFB, etc. 
-jointBase, Is Joint Base, The yes or no indicator of whether or not the site is part of a Joint Base, as established by the 2005 Base Closure and Realignment Commission (BRAC)., Yes/No 
-state, State/Territory, The two letter abbreviation for the name of the state in which the feature is located, OH TX PR etc. 
-operStatus, Site Operational Status, A code used to identify the current operational status of the site, Active Closed 
-isFirrma, Included in FIRRMA,The yes or no indicator of whether or not a DoD site is listed in the FIRRMA Act Parts 1 or 2., Yes/No 
-isCui, Is CUI, The yes or no indicator of whether or not the feature contains Controlled Unclassified Information (CUI), No 
-country, Country, The code that represents the location of the country, United States 

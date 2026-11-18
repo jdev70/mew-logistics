@@ -5,7 +5,7 @@
 This catalog supports the `synthetic-data` profile. It includes only installations with a public, attributable military installation, platform, EW/MEW mission, sustainment, test, training, or support relationship. It does not represent a real-time order of battle, deployment schedule, or authoritative inventory.
 
 The current public release of DoD installation geospatial data is a baseline for installation identity and location, but it expressly excludes some sites for security and data-availability reasons. The Base Structure Report is CUI. Therefore this catalog must be described as **public-source governed**, never complete or authoritative for operational use.
-
+mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 ## Inclusion rules
 
 1. The installation is identified in a public DoD or service source.
