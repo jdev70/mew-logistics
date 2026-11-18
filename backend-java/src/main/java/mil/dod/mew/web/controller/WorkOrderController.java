@@ -179,7 +179,7 @@ public class WorkOrderController {
                 .orElseThrow(() -> new ResourceNotFoundException("WorkOrder not found: " + id));
         rbacPolicyService.requireAccess(Permission.LOG_MAINTENANCE_ACTION, MewResourceFactory.forWorkOrder(existing),
                 "/api/v1/work-orders/" + id + "/");
-        workOrderRepository.delete(existing);
+        workOrderRepository.delete(java.util.Objects.requireNonNull(existing));
         return ResponseEntity.noContent().build();
     }
 

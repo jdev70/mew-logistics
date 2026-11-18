@@ -57,7 +57,7 @@ public class AuthenticatedMewUserResolver {
             return Collections.emptySet();
         }
         return java.util.Arrays.stream(raw.replace("[", "").replace("]", "").replace("\"", "").split(","))
-                .map(String::trim).filter(value -> !value.isEmpty()).collect(Collectors.toUnmodifiableSet());
+                .map(value -> value == null ? "" : value.trim()).filter(value -> !value.isEmpty()).collect(Collectors.toUnmodifiableSet());
     }
 
     private Set<Permission> permissions(String raw) {

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.time.Duration;
 import java.time.Instant;
@@ -110,12 +111,12 @@ public class AnalyticsController {
                 WorkOrderLifecycleEventType.QA_APPROVED_FOR_RETURN_TO_SERVICE)).filter(hours -> hours != null).collect(Collectors.toList());
         List<Double> closureTurnaround = eventsByWorkOrder.values().stream().map(history -> durationHours(history,
                 WorkOrderLifecycleEventType.RETURNED_TO_SERVICE, WorkOrderLifecycleEventType.WORK_ORDER_CLOSED)).filter(hours -> hours != null).collect(Collectors.toList());
-        lifecycle.put("avg_qa_turnaround_hours", qaTurnaround.stream().mapToDouble(Double::doubleValue).average().orElse(0));
-        lifecycle.put("avg_closure_turnaround_hours", closureTurnaround.stream().mapToDouble(Double::doubleValue).average().orElse(0));
+        lifecycle.put("avg_qa_turnaround_hours", qaTurnaround.stream().mapToDouble(value -> value).average().orElse(0));
+        lifecycle.put("avg_closure_turnaround_hours", closureTurnaround.stream().mapToDouble(value -> value).average().orElse(0));
         lifecycle.put("avg_qa_aging_hours", workOrders.findAll().stream().filter(w -> w.getStatus() == MafStatus.QA_PENDING)
                 .map(w -> eventsByWorkOrder.getOrDefault(w.getId(), Collections.emptyList())).mapToDouble(history -> {
                     Instant submitted = history.stream().filter(e -> e.getEventType() == WorkOrderLifecycleEventType.TECHNICIAN_SUBMITTED_FOR_QA)
-                            .map(e -> e.getOccurredAt()).max(Instant::compareTo).orElse(null);
+                            .map(e -> e.getOccurredAt()).filter(Objects::nonNull).max((left, right) -> left.compareTo(right)).orElse(null);
                     return submitted == null ? 0 : Duration.between(submitted, Instant.now()).toMinutes() / 60.0;
                 }).average().orElse(0));
         long qaDecisions = events.stream().filter(e -> e.getEventType() == WorkOrderLifecycleEventType.REWORK_REQUESTED
@@ -151,8 +152,10 @@ public class AnalyticsController {
 
     private Double durationHours(List<mil.dod.mew.domain.entity.WorkOrderLifecycleEvent> history,
                                  WorkOrderLifecycleEventType start, WorkOrderLifecycleEventType end) {
-        Instant started = history.stream().filter(event -> event.getEventType() == start).map(event -> event.getOccurredAt()).min(Instant::compareTo).orElse(null);
-        Instant ended = history.stream().filter(event -> event.getEventType() == end).map(event -> event.getOccurredAt()).max(Instant::compareTo).orElse(null);
+        Instant started = history.stream().filter(event -> event.getEventType() == start).map(event -> event.getOccurredAt())
+                .filter(Objects::nonNull).min((left, right) -> left.compareTo(right)).orElse(null);
+        Instant ended = history.stream().filter(event -> event.getEventType() == end).map(event -> event.getOccurredAt())
+                .filter(Objects::nonNull).max((left, right) -> left.compareTo(right)).orElse(null);
         return started == null || ended == null ? null : Duration.between(started, ended).toMinutes() / 60.0;
     }
 }

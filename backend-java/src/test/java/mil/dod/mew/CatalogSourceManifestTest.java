@@ -50,7 +50,7 @@ class CatalogSourceManifestTest {
             try (var reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
                 reader.readLine();
                 return reader.lines().filter(line -> !line.isBlank()).map(this::parse)
-                        .collect(Collectors.toMap(ManifestEntry::sourceId, entry -> entry));
+                        .collect(Collectors.toMap(entry -> entry.sourceId(), entry -> entry));
             }
         }
     }

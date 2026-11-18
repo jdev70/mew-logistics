@@ -198,16 +198,16 @@ public class SyntheticDataSeeder implements CommandLineRunner {
     private List<MilitaryUnit> createUnits(List<Installation> baseList, int scale) {
         List<MilitaryUnit> result = new ArrayList<>();
         MilitaryUnit tycom = unit("Fleet Maritime EW Readiness Command", "N00060", baseList.get(0), null, CommandEchelon.TYCOM_FLEET, "Type Commander");
-        result.add(units.save(tycom));
+        result.add(units.save(Objects.requireNonNull(tycom)));
         for (int i = 0; i < baseList.size(); i++) {
             MilitaryUnit depot = unit(baseList.get(i).getName() + " MEW Support Unit", String.format("M%05d", 100 + i), baseList.get(i), tycom,
                     "R&D_Warfare_Center".equals(baseList.get(i).getMissionCategory()) ? CommandEchelon.WARFARE_CENTER : CommandEchelon.SHORE_DEPOT, "MEW support");
-            result.add(units.save(depot));
+            result.add(units.save(Objects.requireNonNull(depot)));
         }
         for (int i = 0; i < baseList.size(); i++) {
             Installation base = baseList.get(i % baseList.size());
-            result.add(units.save(unit("Maritime EW Unit " + (i + 1), String.format("M%05d", 200 + i), base, tycom,
-                    CommandEchelon.COMBATANT_UNIT, "Guided Missile Destroyer")));
+                result.add(units.save(Objects.requireNonNull(unit("Maritime EW Unit " + (i + 1), String.format("M%05d", 200 + i), base, tycom,
+                    CommandEchelon.COMBATANT_UNIT, "Guided Missile Destroyer"))));
         }
         return result;
     }

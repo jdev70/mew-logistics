@@ -11,6 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -39,7 +40,7 @@ public class SecurityConfig {
     private static final class DemoIdentityFilter extends OncePerRequestFilter {
         private final String subject; private final String role;
         DemoIdentityFilter(String subject, String role) { this.subject = subject; this.role = role; }
-        @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+        @Override protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain) throws ServletException, IOException {
             org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(subject, "N/A", List.of(new SimpleGrantedAuthority("ROLE_" + role))));
             try { chain.doFilter(request, response); } finally { org.springframework.security.core.context.SecurityContextHolder.clearContext(); }

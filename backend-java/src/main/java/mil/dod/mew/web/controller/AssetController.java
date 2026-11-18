@@ -192,7 +192,7 @@ public class AssetController {
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + id));
         rbacPolicyService.requireAccess(Permission.CERTIFY_EQUIPMENT_UPTIME, MewResourceFactory.forAsset(existing),
                 "/api/v1/assets/" + id + "/");
-        assetRepository.delete(existing);
+        assetRepository.delete(java.util.Objects.requireNonNull(existing));
         return ResponseEntity.noContent().build();
     }
 

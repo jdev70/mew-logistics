@@ -28,6 +28,7 @@ import javax.validation.Valid;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -119,7 +120,7 @@ public class RequisitionController {
                 .orElseThrow(() -> new ResourceNotFoundException("Requisition not found: " + id));
         rbacPolicyService.requireAccess(Permission.APPROVE_PARTS_REQUISITION, MewResourceFactory.forRequisition(existing),
                 "/api/v1/requisitions/" + id + "/");
-        requisitionRepository.delete(existing);
+        requisitionRepository.delete(Objects.requireNonNull(existing));
         return ResponseEntity.noContent().build();
     }
 
