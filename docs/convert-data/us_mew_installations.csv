@@ -1,0 +1,13 @@
+installation_id,installation_code,installation_name,service_branch,state_code,aor_command,mission_category,latitude,longitude,scif_accreditation,open_air_spectrum_range,emcon_readiness_level,frequency_deconfliction_cell,last_spectrum_certification
+INST-001,NAVSTA-NORVA,Naval Station Norfolk,USN,VA,USFF / C2F (Atlantic),Fleet Homeport & Surface EW,36.9467,-76.3036,TIER-1_JOINT,False,EMCON-CHARLIE,JEMSOC-VA-20,2026-10-27
+INST-002,NB-SAN-DIEGO,Naval Base San Diego / Point Loma,USN,CA,COMPACFLT / C3F (Indo-Pacific),Fleet Homeport & Subsurface EW,32.6838,-117.1286,TIER-1_JOINT,False,EMCON-CHARLIE,JEMSOC-CA-52,2026-09-29
+INST-003,NAS-WHIDBEY,Naval Air Station Whidbey Island,USN,WA,COMPACFLT / C3F (Indo-Pacific),Airborne Electronic Attack (AEA),48.3518,-122.6559,TIER-1_AEA,True,EMCON-ALPHA,JEMSOC-WA-84,2026-11-09
+INST-004,NSWC-CRANE,Naval Surface Warfare Center Crane Division,USN,IN,NAVSEA (CONUS R&D),"R&D, Engineering & Sustainment",38.8744,-86.8358,TIER-1_RDT&E,True,EMCON-ALPHA,JEMSOC-IN-81,2026-10-21
+INST-005,NSWC-DAHLGREN,Naval Surface Warfare Center Dahlgren Division,USN,VA,NAVSEA (CONUS R&D),"R&D, Modeling & Simulation",38.3489,-77.0361,TIER-1_RDT&E,True,EMCON-BRAVO,JEMSOC-VA-92,2026-09-18
+INST-006,NAWS-CHINA-LAKE,Naval Air Weapons Station China Lake / Point Mugu,USN,CA,NAVAIR (CONUS T&E),Test & Evaluation Spectrum Range,35.6855,-117.6881,TIER-1_T&E,True,EMCON-BRAVO,JEMSOC-CA-78,2026-09-21
+INST-007,MCB-CAMP-PENDLETON,Marine Corps Base Camp Pendleton,USMC,CA,I MEF / MARFORPAC,Expeditionary & Littoral EW,33.3016,-117.3547,TIER-2_MEF,True,EMCON-CHARLIE,JEMSOC-CA-16,2026-11-11
+INST-008,MCB-CAMP-LEJEUNE,Marine Corps Base Camp Lejeune,USMC,NC,II MEF / MARFORCOM,Expeditionary & Littoral EW,34.6775,-77.3458,TIER-2_MEF,True,EMCON-ALPHA,JEMSOC-NC-28,2026-08-28
+INST-009,MCB-HAWAII,Marine Corps Base Hawaii (Kaneohe Bay),USMC,HI,III MEF / INDOPACOM,Maritime Littoral Regiment EW,21.4453,-157.7681,TIER-2_MEF,False,EMCON-BRAVO,JEMSOC-HI-82,2026-09-11
+INST-010,DAVIS-MONTHAN-AFB,Davis-Monthan Air Force Base,USAF,AZ,ACC / 16th Air Force,Joint Airborne Maritime/Theater EW,32.1665,-110.8831,TIER-1_JOINT,True,EMCON-BRAVO,JEMSOC-AZ-25,2026-08-24
+INST-011,JB-LANGLEY-EUSTIS,Joint Base Langley-Eustis,USAF / USA,VA,ACC / TRADOC,Joint Spectrum C2 & Multi-Domain EW,37.0832,-76.3605,TIER-1_JOINT,False,EMCON-BRAVO,JEMSOC-VA-67,2026-08-15
+INST-012,FORT-LIBERTY,Fort Liberty (formerly Fort Bragg),USA,NC,FORSCOM / USASOC,Ground & Multi-Domain Task Force EW,35.139,-79.006,TIER-2_CORPS,True,EMCON-CHARLIE,JEMSOC-NC-73,2026-09-28

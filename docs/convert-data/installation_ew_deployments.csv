@@ -1,0 +1,38 @@
+deployment_id,installation_id,installation_code,tenant_command,system_nomenclature,ew_mission_role,spectrum_domain,operational_status,assigned_units_qty,operational_readiness_pct,security_classification,spectrum_manager_poc
+MEW-DEP-0001,INST-001,NAVSTA-NORVA,NAVIFOR,AN/SLQ-32(V)6 SEWIP Block 2,Surface Electronic Support,Ground / Expeditionary,RDT&E_TESTING,8,98.6,SECRET//NOFORN,CDR ANDERSON
+MEW-DEP-0002,INST-001,NAVSTA-NORVA,CSG-8,AN/SLQ-32(V)7 SEWIP Block 3,Surface Electronic Attack,Multi-Domain Joint,OPERATIONAL_FLEET,8,80.8,SECRET,GS-13 OCHOA
+MEW-DEP-0003,INST-001,NAVSTA-NORVA,NAVIFOR,Nulka Active Decoy System,Anti-Ship Missile Defense,Multi-Domain Joint,OPERATIONAL_FLEET,23,99.0,SECRET//NOFORN,CDR GILMORE
+MEW-DEP-0004,INST-001,NAVSTA-NORVA,C2F,AN/USQ-151 Ship's Signal Exploitation Equipment,Maritime SIGINT,Maritime / Littoral,RDT&E_TESTING,20,95.3,SECRET//NOFORN,LCDR CRUZ
+MEW-DEP-0005,INST-002,NB-SAN-DIEGO,CSG-3,AN/SLQ-32(V)7 SEWIP Block 3,Surface Electronic Attack,Ground / Expeditionary,OPERATIONAL_FLEET,8,98.9,SECRET,Capt HILL
+MEW-DEP-0006,INST-002,NB-SAN-DIEGO,SUBRON-11,AN/BLQ-10 Submarine EW System,Subsurface SIGINT / ES,Ground / Expeditionary,OPERATIONAL_FLEET,7,98.1,SECRET,Capt GONZALEZ
+MEW-DEP-0007,INST-002,NB-SAN-DIEGO,CSG-1,Surface Electronic Warfare Improvement Program,Littoral Spectrum Defense,Airborne / Standoff,OPERATIONAL_FLEET,9,90.9,TS//SCI,CDR MILLER
+MEW-DEP-0008,INST-003,NAS-WHIDBEY,VAQ-135,EA-18G Growler,Airborne Electronic Attack Platform,Airborne / Standoff,PRE_DEPLOYMENT_WORKUP,5,89.5,SECRET,LCDR LEWIS
+MEW-DEP-0009,INST-003,NAS-WHIDBEY,VAQ-129,AN/ALQ-249 Next Generation Jammer Mid-Band (NGJ-MB),Tactical Standoff Jamming,Airborne / Standoff,PRE_DEPLOYMENT_WORKUP,12,83.7,SECRET,Maj HARRIS
+MEW-DEP-0010,INST-003,NAS-WHIDBEY,VAQ-129,AN/ALQ-99 Tactical Jamming System,Legacy Airborne Jamming Pod,Maritime / Littoral,OPERATIONAL_FLEET,16,93.2,SECRET//NOFORN,Maj NASH
+MEW-DEP-0011,INST-003,NAS-WHIDBEY,VAQ-135,AN/ALQ-218 Tactical Jamming Receiver,Precision Geolocation / ES,Ground / Expeditionary,OPERATIONAL_FLEET,3,86.5,SECRET,CDR LEE
+MEW-DEP-0012,INST-004,NSWC-CRANE,NSWC Crane Spectrum Warfare Dept,AN/SLQ-32 SEWIP Engineering Testbed,Hardware-in-the-Loop Testing,Maritime / Littoral,OPERATIONAL_FLEET,12,80.1,TS//SCI,Capt LEE
+MEW-DEP-0013,INST-004,NSWC-CRANE,NSWC Crane Spectrum Warfare Dept,DRAKE Counter-UAS EW Suite,Expeditionary RF Defeat,Airborne / Standoff,OPERATIONAL_FLEET,6,99.1,TS//SCI,LCDR REILLY
+MEW-DEP-0014,INST-004,NSWC-CRANE,NSWC Crane Spectrum Warfare Dept,CREW / JCREW I1B1 Systems,Force Protection Electronic Attack,Maritime / Littoral,RDT&E_TESTING,4,95.5,SECRET//NOFORN,Capt STARK
+MEW-DEP-0015,INST-005,NSWC-DAHLGREN,AEGIS Ashore Test Site,EMBM-J (Electromagnetic Battle Management - Joint),Spectrum C2 Software,Airborne / Standoff,PRE_DEPLOYMENT_WORKUP,19,91.4,SECRET,GS-13 GARCIA
+MEW-DEP-0016,INST-005,NSWC-DAHLGREN,AEGIS Ashore Test Site,AN/SLQ-32(V)7 Digital Array Prototype,High-Power AESA Electronic Attack,Ground / Expeditionary,OPERATIONAL_FLEET,21,98.3,TS//SCI,Capt MORRIS
+MEW-DEP-0017,INST-005,NSWC-DAHLGREN,NSWCDD Electromagnetic & Sensor Systems Dept,Cognitive EW Threat Emulator,AI/ML Radar Signal Classification,Ground / Expeditionary,OPERATIONAL_FLEET,24,97.2,TS//SCI,LCDR HINTON
+MEW-DEP-0018,INST-006,NAWS-CHINA-LAKE,NAWCWD,AN/ALQ-249 NGJ Low-Band & Mid-Band Pods,Open-Air Spectrum Flight Test,Ground / Expeditionary,OPERATIONAL_FLEET,19,97.7,TS//SCI,Capt MYERS
+MEW-DEP-0019,INST-006,NAWS-CHINA-LAKE,NAWCWD,Threat Radar Emitter Simulators,Adversary Anti-Ship Seeker Emulation,Ground / Expeditionary,OPERATIONAL_FLEET,24,78.9,SECRET,GS-13 BURTON
+MEW-DEP-0020,INST-006,NAWS-CHINA-LAKE,VX-9 Vampires,AGM-88G AARGM-ER,Suppression of Enemy Air Defenses (SEAD),Ground / Expeditionary,PRE_DEPLOYMENT_WORKUP,7,79.7,SECRET,Maj HOLT
+MEW-DEP-0021,INST-007,MCB-CAMP-PENDLETON,I-MIG,MEGFoS (MAGTF EW Ground Family of Systems),Modular Littoral EW,Ground / Expeditionary,OPERATIONAL_FLEET,3,90.7,SECRET//NOFORN,LCDR HOLLAND
+MEW-DEP-0022,INST-007,MCB-CAMP-PENDLETON,I-MIG,CESAS II,Tactical Communications Electronic Attack,Multi-Domain Joint,RDT&E_TESTING,16,82.6,SECRET,CDR BROWN
+MEW-DEP-0023,INST-007,MCB-CAMP-PENDLETON,3d LAAD Battalion,LMADIS / MADIS,Counter-UAS Electronic Warfare,Ground / Expeditionary,OPERATIONAL_FLEET,12,83.9,SECRET,CDR SHARP
+MEW-DEP-0024,INST-008,MCB-CAMP-LEJEUNE,2d LAAD Battalion,MEGFoS Dismounted & Vehicle Payloads,Expeditionary Spectrum Attack,Maritime / Littoral,OPERATIONAL_FLEET,20,82.0,SECRET//NOFORN,Capt CERVANTES
+MEW-DEP-0025,INST-008,MCB-CAMP-LEJEUNE,II-MIG,VMAX Man-Packable EW Suite,Amphibious SIGINT / EW,Ground / Expeditionary,OPERATIONAL_FLEET,7,98.3,SECRET//NOFORN,Maj WEST
+MEW-DEP-0026,INST-008,MCB-CAMP-LEJEUNE,2d Radio Battalion,Modi II RF Countermeasure,Dismounted Force Protection,Multi-Domain Joint,OPERATIONAL_FLEET,8,81.0,TS//SCI,Maj REED
+MEW-DEP-0027,INST-009,MCB-HAWAII,3d Radio Battalion,MEGFoS Expeditionary Littoral Node,Distributed Island-Chain EW,Maritime / Littoral,PRE_DEPLOYMENT_WORKUP,15,93.6,SECRET,LCDR SHARP
+MEW-DEP-0028,INST-009,MCB-HAWAII,3d Radio Battalion,MADIS Counter-UAS EW Suite,Littoral Air & Spectrum Defense,Ground / Expeditionary,RDT&E_TESTING,21,97.2,SECRET//NOFORN,LCDR HAYS
+MEW-DEP-0029,INST-009,MCB-HAWAII,3d Marine Littoral Regiment (3d MLR),AN/ALQ-231 Intrepid Tiger II (UH-1Y/AH-1Z),Airborne EW Pod,Airborne / Standoff,OPERATIONAL_FLEET,15,88.6,TS//SCI,GS-13 BENDER
+MEW-DEP-0030,INST-010,DAVIS-MONTHAN-AFB,41st ECS,EC-37B Compass Call,Wide-Area Standoff Electronic Attack,Multi-Domain Joint,OPERATIONAL_FLEET,2,95.1,SECRET//NOFORN,Maj HARRIS
+MEW-DEP-0031,INST-010,DAVIS-MONTHAN-AFB,43rd ECS,EC-130H Compass Call,Legacy Communications & Radar Jamming,Maritime / Littoral,RDT&E_TESTING,4,90.4,TS//SCI,GS-13 MALONE
+MEW-DEP-0032,INST-010,DAVIS-MONTHAN-AFB,55th Electronic Combat Group,SABER Tactical EW C2 Architecture,Joint Spectrum Coordination,Maritime / Littoral,RDT&E_TESTING,13,87.1,SECRET,CDR BURNS
+MEW-DEP-0033,INST-011,JB-LANGLEY-EUSTIS,1st Fighter Wing,AN/ALQ-239 Digital EW System (F-22),Low-Observable Electronic Support,Maritime / Littoral,RDT&E_TESTING,3,84.2,TS//SCI,CDR BENITEZ
+MEW-DEP-0034,INST-011,JB-LANGLEY-EUSTIS,1st Fighter Wing,Joint Electromagnetic Spectrum Operations (JEMSO) Cell,Theater Spectrum Planning,Multi-Domain Joint,RDT&E_TESTING,11,88.0,SECRET,LCDR WALLER
+MEW-DEP-0035,INST-012,FORT-LIBERTY,525th Expeditionary MI Brigade,TLS-BCT (Terrestrial Layer System - Brigade Combat Team),Integrated SIGINT/EW/Cyber,Airborne / Standoff,PRE_DEPLOYMENT_WORKUP,5,79.8,SECRET//NOFORN,Maj WEBB
+MEW-DEP-0036,INST-012,FORT-LIBERTY,XVIII Airborne Corps,TLS-EAB (Echelons Above Brigade),Long-Range Deep Sensing & EA,Multi-Domain Joint,OPERATIONAL_FLEET,10,91.0,SECRET,CDR WINTERS
+MEW-DEP-0037,INST-012,FORT-LIBERTY,525th Expeditionary MI Brigade,Prophet Enhanced,Tactical Ground SIGINT / Direction Finding,Airborne / Standoff,RDT&E_TESTING,20,94.7,SECRET//NOFORN,Capt WILKERSON
