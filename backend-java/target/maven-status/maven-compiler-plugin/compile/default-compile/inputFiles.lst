@@ -81,6 +81,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\MilitaryUnit.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\security\MewAuthorizationService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\RbacPersonaController.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\ReadinessSupplyController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\AnalyticsController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\WorkOrderLifecycleEventRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\MaterialCatalog.java
