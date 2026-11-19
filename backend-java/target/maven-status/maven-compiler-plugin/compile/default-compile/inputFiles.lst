@@ -65,6 +65,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\MaterialCatalogRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\WorkOrderRepository.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\security\model\ClearanceLevel.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\ReadinessApiProperties.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\ReadinessLevel.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\InventoryService.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\WorkOrderService.java
@@ -72,6 +73,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\enums\CatalogFactCategory.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\UnitReadinessSnapshot.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\CatalogSourceRepository.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\ReadinessDashboardController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\config\DevDataInitializer.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\WorkOrderPart.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\AssetController.java
@@ -82,6 +84,7 @@ C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\me
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\domain\entity\CatalogSource.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\dto\MaintenanceCompletionRequest.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\repository\RequisitionRepository.java
+C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\service\ReadinessApiClient.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\security\MewResourceFactory.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\MilitaryUnitDashboardController.java
 C:\Users\dataa\.vscode\repos\mew-logistics\backend-java\src\main\java\mil\dod\mew\web\controller\InventoryController.java

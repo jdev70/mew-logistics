@@ -3,6 +3,13 @@ mew:
     mode: demo
     demo-subject: MEW-PER-0000
     demo-role: FLEET_READINESS_ANALYST
+  readiness-api:
+    # Set these three values in the VS Code Java task environment before enabling.
+    enabled: ${MEW_READINESS_API_ENABLED:false}
+    base-url: ${MEW_READINESS_API_URL:http://127.0.0.1:8000}
+    gateway-secret: ${MEW_READINESS_GATEWAY_SECRET:}
+    # Synthetic Django data maps EDIPI values, while the Java demo user is MEW-PER-0000.
+    local-subject-override: ${MEW_READINESS_LOCAL_SUBJECT:}
 
 spring:
   datasource:

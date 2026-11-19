@@ -18,6 +18,9 @@ import {
   ReceiveShipmentPayload,
   ReceiveShipmentResponse,
   RequisitionSummary,
+  ReadinessDashboardSummary,
+  ReadinessException,
+  ReadinessShortage,
   SecurityAuditLogRecord,
   WorkOrderSummary,
   WorkOrderLifecycleEvent,
@@ -46,6 +49,9 @@ export class MewApiService {
   readonly transactions = signal<InventoryTransactionRecord[]>([]);
   readonly securityAuditLogs = signal<SecurityAuditLogRecord[]>([]);
   readonly analytics = signal<MewAnalyticsPayload | null>(null);
+  readonly readinessSummary = signal<ReadinessDashboardSummary | null>(null);
+  readonly readinessExceptions = signal<ReadinessException[]>([]);
+  readonly readinessShortages = signal<ReadinessShortage[]>([]);
 
   // Hybrid RBAC + ABAC Active Persona & Policy Context
   readonly activeRbacContext = signal<RbacActiveContext>({
@@ -235,6 +241,15 @@ export class MewApiService {
       analytics: this.http
         .get<MewAnalyticsPayload>(`${this.apiBaseUrl}/analytics/overview/`, opts)
         .pipe(catchError(() => of(null))),
+      readinessSummary: this.http
+        .get<ReadinessDashboardSummary>(`${this.apiBaseUrl}/readiness/dashboard/summary/`, opts)
+        .pipe(catchError(() => of(null))),
+      readinessExceptions: this.http
+        .get<ReadinessException[]>(`${this.apiBaseUrl}/readiness/dashboard/exceptions/`, opts)
+        .pipe(catchError(() => of(null))),
+      readinessShortages: this.http
+        .get<ReadinessShortage[]>(`${this.apiBaseUrl}/readiness/dashboard/shortages/`, opts)
+        .pipe(catchError(() => of(null))),
     }).subscribe((payload) => {
       const hasLiveApi = payload.assets !== null && payload.units !== null;
 
@@ -258,6 +273,10 @@ export class MewApiService {
         this.connectionMode.set('SIMULATION_FALLBACK');
         this.loadFallbackSyntheticDataset();
       }
+
+      this.readinessSummary.set(payload.readinessSummary);
+      this.readinessExceptions.set(payload.readinessExceptions || []);
+      this.readinessShortages.set(payload.readinessShortages || []);
 
       this.lastSyncedAt.set(new Date());
       this.loading.set(false);

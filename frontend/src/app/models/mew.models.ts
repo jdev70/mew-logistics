@@ -457,4 +457,37 @@ export interface MewAnalyticsPayload {
   supply_breakdown?: { installation_code: string; installation_name: string; total: number; received: number; open: number; priority_one_open: number; avg_lead_days: number }[];
 }
 
+/** Read-only aggregates supplied by the Django readiness service through Java. */
+export interface ReadinessDashboardSummary {
+  scope: { edipi: string; role: string; unit: string | null; installation_code: string | null; branch: string | null };
+  readiness: { total_assets: number; fmc: number; pmc: number; nmc: number; depot_overhaul: number };
+  maintenance: { open_work_orders: number; open_casreps: number; aging_over_30_days: number };
+  supply: { shortage_lines: number; critical_dmsms_shortages: number; open_requisitions: number };
+  compliance: { overdue_calibrations: number; pmcs_due_or_unknown: number };
+}
+
+export interface ReadinessException {
+  asset_id: string;
+  serial_number: string;
+  nomenclature: string;
+  service_branch: string;
+  readiness_status: string;
+  readiness_severity: string;
+  installation_code: string | null;
+  installation_name: string | null;
+  active_work_orders: { work_order_id: string; work_order_type: string; status: string }[];
+}
+
+export interface ReadinessShortage {
+  inventory_id: string;
+  shortage_qty: number;
+  part_nsn: string;
+  part_number: string;
+  nomenclature: string;
+  is_depot_repairable_dlr: boolean;
+  dmsms_obsolescence_risk: string;
+  on_hand_qty: number;
+  due_in_qty: number;
+}
+
 

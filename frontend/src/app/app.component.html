@@ -380,6 +380,32 @@
         >
           <!-- Left (8 cols): Interactive System Ao & MDT Bar Chart + Funnel -->
           <section class="col-span-12 lg:col-span-8 min-h-0 flex flex-col gap-4">
+            <section *ngIf="api.readinessSummary() as readiness" class="mew-surface rounded-sm p-3 shrink-0 border border-sky-500/30" aria-label="Live Django readiness summary">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">Live Django Readiness Feed</div>
+                <div class="text-[10px] mono-data mew-text-muted">{{ readiness.scope.role }} · {{ readiness.scope.unit || 'ENTERPRISE' }}</div>
+              </div>
+              <div class="grid grid-cols-2 xl:grid-cols-4 gap-2 text-center mono-data">
+                <div class="mew-elevated p-2 rounded-sm"><div class="text-[9px] mew-text-muted">FMC / TOTAL</div><div class="text-lg font-bold text-emerald-400">{{ readiness.readiness.fmc }} <span class="text-xs mew-text-muted">/ {{ readiness.readiness.total_assets }}</span></div></div>
+                <div class="mew-elevated p-2 rounded-sm"><div class="text-[9px] mew-text-muted">NMC EXCEPTIONS</div><div class="text-lg font-bold text-rose-400">{{ readiness.readiness.nmc }}</div></div>
+                <div class="mew-elevated p-2 rounded-sm"><div class="text-[9px] mew-text-muted">OPEN CASREPS</div><div class="text-lg font-bold text-rose-400">{{ readiness.maintenance.open_casreps }}</div></div>
+                <div class="mew-elevated p-2 rounded-sm"><div class="text-[9px] mew-text-muted">CRITICAL DMSMS</div><div class="text-lg font-bold text-amber-300">{{ readiness.supply.critical_dmsms_shortages }}</div></div>
+              </div>
+            </section>
+            <section *ngIf="api.readinessExceptions().length || api.readinessShortages().length" class="grid grid-cols-1 xl:grid-cols-2 gap-3 shrink-0" aria-label="Live exceptions and shortages">
+              <div class="mew-surface rounded-sm p-3 min-h-[140px]">
+                <div class="flex justify-between mb-2"><span class="text-[10px] mono-data uppercase text-rose-400 font-bold">Live Readiness Exceptions</span><span class="text-[10px] mono-data mew-text-muted">{{ api.readinessExceptions().length }}</span></div>
+                <div class="space-y-1 max-h-24 overflow-y-auto">
+                  <div *ngFor="let item of api.readinessExceptions().slice(0, 3)" class="mew-elevated rounded-sm p-1.5 text-[10px] mono-data flex justify-between gap-2"><span class="truncate text-slate-200">{{ item.nomenclature }} · {{ item.serial_number }}</span><span class="shrink-0 text-rose-400">{{ item.readiness_status }}</span></div>
+                </div>
+              </div>
+              <div class="mew-surface rounded-sm p-3 min-h-[140px]">
+                <div class="flex justify-between mb-2"><span class="text-[10px] mono-data uppercase text-amber-300 font-bold">Live DMSMS Shortages</span><span class="text-[10px] mono-data mew-text-muted">{{ api.readinessShortages().length }}</span></div>
+                <div class="space-y-1 max-h-24 overflow-y-auto">
+                  <div *ngFor="let item of api.readinessShortages().slice(0, 3)" class="mew-elevated rounded-sm p-1.5 text-[10px] mono-data flex justify-between gap-2"><span class="truncate text-slate-200">{{ item.nomenclature }}</span><span class="shrink-0 text-amber-300">−{{ item.shortage_qty }}</span></div>
+                </div>
+              </div>
+            </section>
             <div class="grid grid-cols-2 xl:grid-cols-3 gap-3 shrink-0" aria-label="Maintenance lifecycle analytics">
               <ng-container *ngIf="lifecycleAnalyticsMetrics() as lifecycle">
               <div class="mew-elevated rounded-sm p-2 text-center"><div class="text-[9px] mono-data mew-text-muted">QA PENDING</div><div class="text-lg font-bold text-violet-300">{{ lifecycle.qa_pending }}</div></div>
