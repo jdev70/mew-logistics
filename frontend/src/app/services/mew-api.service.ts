@@ -190,6 +190,9 @@ export class MewApiService {
       assets: this.http
         .get<PaginatedResponse<MewAsset> | MewAsset[]>(`${this.apiBaseUrl}/assets/`, opts)
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessAssets: this.http
+        .get<PaginatedResponse<ReadinessException> | ReadinessException[]>(`${this.apiBaseUrl}/readiness/assets/`, opts)
+        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       installations: this.http
         .get<PaginatedResponse<InstallationDashboard> | InstallationDashboard[]>(
           `${this.apiBaseUrl}/installations/`,
@@ -259,7 +262,9 @@ export class MewApiService {
           this.activeRbacContext.set(payload.rbac.active_context);
         }
         this.units.set(payload.units || []);
-        this.assets.set(payload.assets || []);
+        this.assets.set(payload.readinessAssets
+          ? payload.readinessAssets.map((asset) => this.toDashboardAsset(asset))
+          : (payload.assets || []));
         this.installations.set(payload.installations || []);
         this.personnel.set(payload.personnel || []);
         this.components.set(payload.components || []);
@@ -281,6 +286,47 @@ export class MewApiService {
       this.lastSyncedAt.set(new Date());
       this.loading.set(false);
     });
+  }
+
+  /** Adapts Django's asset contract to the existing Angular read-only loadout views. */
+  private toDashboardAsset(asset: ReadinessException): MewAsset {
+    const readiness = asset.readiness_status.startsWith('PMC') ? 'PMC'
+      : asset.readiness_status === 'DEPOT_OVERHAUL' ? 'DLM' : asset.readiness_status;
+    return {
+      id: asset.asset_id,
+        assignment_id: asset.nsn || null,
+      serial_number: asset.serial_number,
+        system_id: asset.nsn || null,
+      nomenclature: asset.nomenclature,
+        common_name: asset.category || '',
+        ew_category: asset.category || '',
+        asset_class: asset.category || '',
+      manufacturer: '',
+        hull_number: asset.platform_hull_or_tail || null,
+        vessel_name: asset.unit || null,
+      ship_class: null,
+        domain: asset.service_branch === 'USAF' ? 'Airborne' : 'Surface',
+        mission_role_code: asset.command || 'EW-CORE',
+        mission_role_name: asset.category || '',
+      quantity_installed: 1,
+        operational_status: asset.readiness_status,
+        installation_date: asset.last_pmcs_date || null,
+        assigned_unit_name: asset.unit || '',
+        current_location: asset.installation_code ? {
+          id: asset.installation_code, installation_id: asset.installation_code,
+          installation_code: asset.installation_code, name: asset.installation_name || asset.installation_code,
+          dodaac: '', location_display: asset.storage_location || '', region: '', mission_category: '',
+        } : null,
+      readiness_status: readiness,
+      readiness_status_display: asset.readiness_status,
+      engine_hours: '0',
+      last_status_change: '',
+      mtbf_hours: 0,
+      mttr_hours: 0,
+      operational_availability_pct: 0,
+      active_work_orders: [],
+      pending_requisitions: [],
+    };
   }
 
   receiveShipment(

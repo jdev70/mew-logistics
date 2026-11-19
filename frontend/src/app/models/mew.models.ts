@@ -475,6 +475,13 @@ export interface ReadinessException {
   readiness_severity: string;
   installation_code: string | null;
   installation_name: string | null;
+  unit?: string;
+  command?: string;
+  category?: string;
+  nsn?: string;
+  platform_hull_or_tail?: string;
+  storage_location?: string;
+  last_pmcs_date?: string | null;
   active_work_orders: { work_order_id: string; work_order_type: string; status: string }[];
 }
 
