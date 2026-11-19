@@ -196,10 +196,11 @@ export class MewApiService {
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       installations: this.http
         .get<PaginatedResponse<InstallationDashboard> | InstallationDashboard[]>(
-          `${this.apiBaseUrl}/installations/`,
+          `${this.apiBaseUrl}/readiness/reference/installations/`,
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessInstallations: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/reference/installations/`, opts).pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       personnel: this.http
         .get<PaginatedResponse<PersonnelRecord> | PersonnelRecord[]>(
           `${this.apiBaseUrl}/personnel/`,
@@ -208,10 +209,11 @@ export class MewApiService {
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       components: this.http
         .get<PaginatedResponse<MewComponent> | MewComponent[]>(
-          `${this.apiBaseUrl}/components/`,
+          `${this.apiBaseUrl}/readiness/reference/catalog-items/`,
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessComponents: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/reference/catalog-items/`, opts).pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       balances: this.http
         .get<PaginatedResponse<InventoryBalance> | InventoryBalance[]>(
           `${this.apiBaseUrl}/inventory-balances/`,
@@ -245,10 +247,11 @@ export class MewApiService {
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       auditLogs: this.http
         .get<PaginatedResponse<SecurityAuditLogRecord> | SecurityAuditLogRecord[]>(
-          `${this.apiBaseUrl}/security-audit-logs/`,
+          `${this.apiBaseUrl}/readiness/reference/audit-logs/`,
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessAuditLogs: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/reference/audit-logs/`, opts).pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       analytics: this.http
         .get<MewAnalyticsPayload>(`${this.apiBaseUrl}/analytics/overview/`, opts)
         .pipe(catchError(() => of(null))),
