@@ -45,6 +45,18 @@ public class ReadinessApiClient {
         return restTemplate.exchange(uri.toUriString(), HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class);
     }
 
+    public ResponseEntity<JsonNode> post(String path, Object payload) {
+        requireConfigured();
+        MewUser user = userResolver.currentUser();
+        String subject = StringUtils.hasText(properties.getLocalSubjectOverride()) ? properties.getLocalSubjectOverride().trim() : user.subject();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Gateway-Secret", properties.getGatewaySecret());
+        headers.set("X-User-Id", subject);
+        headers.set("X-User-Installation", user.assignedInstallationCode());
+        return restTemplate.exchange(trimTrailingSlash(properties.getBaseUrl()) + path, HttpMethod.POST,
+                new HttpEntity<>(payload, headers), JsonNode.class);
+    }
+
     private void requireConfigured() {
         if (!properties.isEnabled()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,

@@ -451,7 +451,7 @@ export class MewApiService {
 
     this.http
       .post<ReceiveShipmentResponse>(
-        `${this.apiBaseUrl}/requisitions/receive-shipment/`,
+        `${this.apiBaseUrl}/readiness/supply/receive-shipment/`,
         payload,
         this.getHeaders()
       )
