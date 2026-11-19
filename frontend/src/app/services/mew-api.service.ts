@@ -218,11 +218,15 @@ export class MewApiService {
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessBalances: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/supply/inventory/`, opts)
+        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       requisitions: this.http
         .get<PaginatedResponse<RequisitionSummary> | RequisitionSummary[]>(
           `${this.apiBaseUrl}/requisitions/`,
           opts
         )
+        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessRequisitions: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/supply/requisitions/`, opts)
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       workOrders: this.http
         .get<PaginatedResponse<WorkOrderSummary> | WorkOrderSummary[]>(
@@ -272,8 +276,18 @@ export class MewApiService {
         this.installations.set(payload.installations || []);
         this.personnel.set(payload.personnel || []);
         this.components.set(payload.components || []);
-        this.inventoryBalances.set(payload.balances || []);
-        this.requisitions.set(payload.requisitions || []);
+        this.inventoryBalances.set(payload.readinessBalances ? payload.readinessBalances.map((item: any) => ({
+          id: item.inventory_id, installation: item.installation, installation_code: '', installation_name: '',
+          material: item.part_nsn, component_id: item.part_number, nsn: item.part_nsn, nomenclature: item.nomenclature,
+          component_category: '', unit_price: 0, critical_item: item.dmsms_obsolescence_risk === 'CRITICAL',
+          quantity_on_hand: item.on_hand_qty, reorder_point: item.allowance_qty, safety_stock: 0,
+          needs_replenishment: item.on_hand_qty < item.allowance_qty,
+        })) : (payload.balances || []));
+        this.requisitions.set(payload.readinessRequisitions ? payload.readinessRequisitions.map((item: any) => ({
+          id: item.requisition_doc_number, document_number: item.requisition_doc_number, material_name: item.part_nsn,
+          nsn: item.part_nsn, quantity: item.quantity_ordered, priority_display: item.priority_designator,
+          work_order_jcn: item.work_order_id, status: item.status, estimated_delivery_date: item.estimated_delivery_date,
+        })) : (payload.requisitions || []));
         this.workOrders.set(payload.readinessWorkOrders
           ? payload.readinessWorkOrders.map((workOrder) => this.toDashboardWorkOrder(workOrder))
           : (payload.workOrders || []));
