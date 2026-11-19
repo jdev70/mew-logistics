@@ -497,4 +497,17 @@ export interface ReadinessShortage {
   due_in_qty: number;
 }
 
+export interface ReadinessWorkOrder {
+  work_order_id: string;
+  asset: string;
+  unit: string;
+  work_order_type: string;
+  casrep_category: string | null;
+  failure_description: string;
+  assigned_tech_name: string;
+  status: string;
+  opened_at: string;
+  closed_at: string | null;
+}
+
 

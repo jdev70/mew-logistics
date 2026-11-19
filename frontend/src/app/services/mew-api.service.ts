@@ -21,6 +21,7 @@ import {
   ReadinessDashboardSummary,
   ReadinessException,
   ReadinessShortage,
+  ReadinessWorkOrder,
   SecurityAuditLogRecord,
   WorkOrderSummary,
   WorkOrderLifecycleEvent,
@@ -229,6 +230,9 @@ export class MewApiService {
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+      readinessWorkOrders: this.http
+        .get<PaginatedResponse<ReadinessWorkOrder> | ReadinessWorkOrder[]>(`${this.apiBaseUrl}/readiness/work-orders/`, opts)
+        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       transactions: this.http
         .get<PaginatedResponse<InventoryTransactionRecord> | InventoryTransactionRecord[]>(
           `${this.apiBaseUrl}/inventory-transactions/`,
@@ -270,7 +274,9 @@ export class MewApiService {
         this.components.set(payload.components || []);
         this.inventoryBalances.set(payload.balances || []);
         this.requisitions.set(payload.requisitions || []);
-        this.workOrders.set(payload.workOrders || []);
+        this.workOrders.set(payload.readinessWorkOrders
+          ? payload.readinessWorkOrders.map((workOrder) => this.toDashboardWorkOrder(workOrder))
+          : (payload.workOrders || []));
         this.transactions.set(payload.transactions || []);
         this.securityAuditLogs.set(payload.auditLogs || []);
         this.analytics.set(payload.analytics || null);
@@ -326,6 +332,22 @@ export class MewApiService {
       operational_availability_pct: 0,
       active_work_orders: [],
       pending_requisitions: [],
+    };
+  }
+
+  private toDashboardWorkOrder(workOrder: ReadinessWorkOrder): WorkOrderSummary {
+    return {
+      id: workOrder.work_order_id,
+      jcn: workOrder.work_order_id,
+      status: workOrder.status,
+      status_display: workOrder.status,
+      priority_display: workOrder.work_order_type,
+      is_grounding_fault: workOrder.work_order_type === 'CASREP',
+      asset_serial: workOrder.asset,
+      description_of_fault: workOrder.failure_description,
+      technician_name: workOrder.assigned_tech_name || 'Unassigned',
+      date_opened: workOrder.opened_at,
+      date_closed: workOrder.closed_at,
     };
   }
 
