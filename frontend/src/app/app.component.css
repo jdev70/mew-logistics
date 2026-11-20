@@ -2,6 +2,21 @@
   display: block;
 }
 
+.workspace-main {
+  min-width: 0;
+}
+
+:host button:focus-visible,
+:host a:focus-visible,
+:host input:focus-visible,
+:host select:focus-visible,
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--dod-accent-primary);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1;
+}
+
 .phase-a-command-bar {
   min-height: 3.7rem;
   padding: 0.55rem 1rem;
@@ -70,5 +85,51 @@
   .phase-a-command-bar {
     min-height: 3.35rem;
     padding-inline: 0.7rem;
+  }
+}
+
+/* Field-tablet fitment: preserve a readable rail while allowing each
+   master-detail workspace to become a vertically scrollable single column. */
+@media (max-width: 1023px) {
+  .command-rail {
+    width: 12.5rem;
+  }
+
+  .workspace-main {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    align-content: start;
+  }
+
+  .workspace-main.grid {
+    grid-auto-rows: minmax(19rem, auto);
+  }
+
+  .workspace-main.grid > section {
+    height: auto !important;
+    min-height: 19rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    height: 100dvh !important;
+    min-height: 100dvh;
+  }
+
+  .workspace-shell {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .command-rail {
+    width: 100%;
+    max-height: 14.5rem;
+    flex: 0 0 auto;
+  }
+
+  .workspace-main {
+    flex: 0 0 auto;
+    min-height: calc(100dvh - 18rem);
   }
 }

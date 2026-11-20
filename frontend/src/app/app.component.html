@@ -1,7 +1,7 @@
 <!-- ========================================================================
      ZERO-SCROLL 100VH C2 WATCH FLOOR SHELL (Aligned with UI_DESIGN_CONSIDERATIONS.md)
      ======================================================================== -->
-<div class="h-screen w-screen overflow-hidden flex flex-col select-none">
+<div class="app-shell h-screen w-screen overflow-hidden flex flex-col select-none">
 
   <!-- Top DoD Classification Banner -->
   <header class="class-banner unclass shrink-0">
@@ -43,14 +43,29 @@
       </button>
     </div>
   </section>
+  <div class="sr-only" aria-live="polite" aria-atomic="true">
+    {{ api.loading() ? 'Synchronizing dashboard telemetry.' : 'Dashboard telemetry synchronized.' }}
+  </div>
+
+  <!-- Shared Phase D drilldown identity: installation, unit, and asset panels use this same context ribbon. -->
+  <ng-template #drilldownHeader let-kind="kind" let-title="title" let-scope="scope" let-relationship="relationship">
+    <div class="mb-2.5 pb-2 border-b mew-border flex items-start justify-between gap-2">
+      <div class="min-w-0">
+        <div class="text-[10px] mono-data uppercase tracking-wider text-sky-400 font-bold">{{ kind }} Drilldown</div>
+        <div class="text-xs font-bold mew-text-primary truncate">{{ title }}</div>
+        <div class="text-[10px] mono-data mew-text-secondary truncate">{{ scope }}</div>
+      </div>
+      <span *ngIf="relationship" class="text-[9px] mono-data text-right mew-text-muted max-w-32">{{ relationship }}</span>
+    </div>
+  </ng-template>
 
   <!-- Main Workspace Container (Locked to Viewport Height) -->
-  <div class="flex-1 min-h-0 flex flex-row overflow-hidden">
+  <div class="workspace-shell flex-1 min-h-0 flex flex-row overflow-hidden">
 
     <!-- ====================================================================
          LEFT TACTICAL COMMAND RAIL (Persistent Sidebar)
          ==================================================================== -->
-    <aside class="w-60 xl:w-64 shrink-0 bg-[#080c14] text-slate-200 border-r border-slate-800/90 flex flex-col justify-between overflow-y-auto">
+    <aside class="command-rail w-60 xl:w-64 shrink-0 bg-[#080c14] text-slate-200 border-r border-slate-800/90 flex flex-col justify-between overflow-y-auto" aria-label="Operational viewpoint navigation">
       <div>
         <!-- Command Emblem & Title -->
         <div class="px-4 py-3.5 border-b border-slate-800/80 flex items-center gap-3">
@@ -65,7 +80,7 @@
         </div>
 
         <!-- Viewpoint Navigation Rail -->
-        <div class="p-2.5 space-y-1">
+        <nav class="p-2.5 space-y-1" aria-label="Operational viewpoints">
           <div class="px-2.5 py-1 text-[10px] mono-data uppercase tracking-widest text-slate-400">
             Operational Viewpoints
           </div>
@@ -73,6 +88,7 @@
           <button
             type="button"
             (click)="setViewpoint('analytics')"
+            [attr.aria-current]="activeViewpoint() === 'analytics' ? 'page' : null"
             [class]="activeViewpoint() === 'analytics'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -89,6 +105,7 @@
           <button
             type="button"
             (click)="setViewpoint('readiness')"
+            [attr.aria-current]="activeViewpoint() === 'readiness' ? 'page' : null"
             [class]="activeViewpoint() === 'readiness'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -105,6 +122,7 @@
           <button
             type="button"
             (click)="setViewpoint('loadouts')"
+            [attr.aria-current]="activeViewpoint() === 'loadouts' ? 'page' : null"
             [class]="activeViewpoint() === 'loadouts'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -121,6 +139,7 @@
           <button
             type="button"
             (click)="setViewpoint('maintenance')"
+            [attr.aria-current]="activeViewpoint() === 'maintenance' ? 'page' : null"
             [class]="activeViewpoint() === 'maintenance'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -140,6 +159,7 @@
           <button
             type="button"
             (click)="setViewpoint('supply')"
+            [attr.aria-current]="activeViewpoint() === 'supply' ? 'page' : null"
             [class]="activeViewpoint() === 'supply'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -159,6 +179,7 @@
           <button
             type="button"
             (click)="setViewpoint('installations')"
+            [attr.aria-current]="activeViewpoint() === 'installations' ? 'page' : null"
             [class]="activeViewpoint() === 'installations'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -175,6 +196,7 @@
           <button
             type="button"
             (click)="setViewpoint('ledger')"
+            [attr.aria-current]="activeViewpoint() === 'ledger' ? 'page' : null"
             [class]="activeViewpoint() === 'ledger'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
               : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
@@ -187,7 +209,7 @@
               {{ api.transactions().length }}
             </span>
           </button>
-        </div>
+        </nav>
       </div>
 
       <!-- Compact RBAC/ABAC Policy & Telemetry Box -->
@@ -372,7 +394,7 @@
       <!-- ==================================================================
            VIEWPOINT 0: INTERACTIVE MEW ANALYTICS & VISUALIZATIONS (MEW_ANALYTICS.md)
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'analytics'" class="flex-1 min-h-0 p-3 flex flex-col gap-3 overflow-y-auto overflow-x-hidden">
+      <main *ngIf="activeViewpoint() === 'analytics'" class="workspace-main flex-1 min-h-0 p-3 flex flex-col gap-3 overflow-y-auto overflow-x-hidden" aria-label="Command overview workspace">
 
         <!-- Sub-View Lens Selector & Formula Ribbon -->
         <div class="mew-surface rounded-sm px-3.5 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2">
@@ -995,7 +1017,7 @@
            VIEWPOINT 1: FLEET READINESS & UNIT COMMAND SPLIT WORKSPACE
            (Left: Naval Units Grid | Right: Selected Unit Dossier, 30-Day Trend & CASREPs)
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'readiness'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+      <main *ngIf="activeViewpoint() === 'readiness'" class="workspace-main flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden" aria-label="Fleet readiness workspace">
 
         <!-- LEFT PANE (7 cols): Naval Combatant Units & Detachments Master Grid -->
         <section class="col-span-12 lg:col-span-7 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
@@ -1035,6 +1057,11 @@
               <ng-template pTemplate="body" let-u>
                 <tr
                   (click)="selectUnit(u)"
+                  (keydown.enter)="selectUnit(u)"
+                  (keydown.space)="selectUnit(u)"
+                  tabindex="0"
+                  role="button"
+                  [attr.aria-label]="'Open unit dossier for ' + u.name"
                   class="cursor-pointer"
                   [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedUnit()?.id === u.id}"
                 >
@@ -1075,6 +1102,7 @@
 
           <!-- Selected Unit Command Header Card -->
           <div *ngIf="selectedUnit() as unit" class="mew-surface rounded-sm p-3.5 shrink-0 border-l-4 border-l-sky-400">
+            <ng-container *ngTemplateOutlet="drilldownHeader; context: { kind: 'UNIT', title: unit.name, scope: unit.uic + ' // ' + unit.command_type, relationship: unitCommandContext()?.relationship }"></ng-container>
             <div class="flex items-start justify-between gap-2">
               <div>
                 <div class="flex items-center gap-2">
@@ -1083,6 +1111,7 @@
                 </div>
                 <h3 class="text-base font-bold mew-text-primary mt-1">{{ unit.name }}</h3>
                 <div class="text-xs mono-data mew-text-secondary">Stationed: {{ unit.installation_name }}</div>
+                <div *ngIf="unitCommandContext() as context" class="text-[10px] mono-data text-sky-300 mt-0.5 truncate">{{ context.installationLabel }}</div>
               </div>
               <div class="text-right mono-data">
                 <div class="text-[10px] uppercase mew-text-muted">Unit Ao</div>
@@ -1221,7 +1250,7 @@
            VIEWPOINT 2: NAVAL HULL & MEW SYSTEM LOADOUT SPLIT WORKSPACE
            (Left: Filterable Loadout Grid | Right: Technical & Diagnostic Dossier)
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'loadouts'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+      <main *ngIf="activeViewpoint() === 'loadouts'" class="workspace-main flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden" aria-label="Equipment readiness workspace">
 
         <!-- LEFT PANE (8 cols): Naval Hull & MEW System Loadout Grid -->
         <section class="col-span-12 lg:col-span-7 xl:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
@@ -1344,6 +1373,7 @@
           <ng-container *ngIf="selectedAsset() as asset; else noAssetSelected">
             <!-- Dossier Header -->
             <div class="border-b mew-border pb-3">
+              <ng-container *ngTemplateOutlet="drilldownHeader; context: { kind: 'ASSET', title: asset.nomenclature, scope: (asset.assignment_id || asset.system_id || 'UNASSIGNED') + ' // ' + asset.serial_number, relationship: asset.assigned_unit_name || asset.current_location?.name }"></ng-container>
               <div class="flex items-center justify-between gap-2">
                 <span class="dod-tag" [ngClass]="readinessBadgeClass(asset.readiness_status)">
                   {{ asset.readiness_status }} &mdash; {{ asset.readiness_status_display }}
@@ -1542,7 +1572,7 @@
            PHASE C: DEDICATED MAINTENANCE/CASREP OR SUPPLY/RECEIPTS WORKSPACE
            (Shared asset and work-order context; distinct stateful workflows)
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'maintenance' || activeViewpoint() === 'supply'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+      <main *ngIf="activeViewpoint() === 'maintenance' || activeViewpoint() === 'supply'" class="workspace-main flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden" aria-label="Maintenance and supply workspace">
 
         <!-- LEFT PANE (8 cols): Tabbed Supply & Maintenance Data Grid -->
         <section class="col-span-12 lg:col-span-7 xl:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
@@ -1623,6 +1653,11 @@
               <ng-template pTemplate="body" let-bal>
                 <tr
                   (click)="selectBalanceRecord(bal)"
+                  (keydown.enter)="selectBalanceRecord(bal)"
+                  (keydown.space)="selectBalanceRecord(bal)"
+                  tabindex="0"
+                  role="button"
+                  [attr.aria-label]="'Open inventory detail for ' + bal.nomenclature"
                   class="cursor-pointer"
                   [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedBalance()?.id === bal.id}"
                 >
@@ -1743,6 +1778,11 @@
               <ng-template pTemplate="body" let-wo>
                 <tr
                   (click)="selectWorkOrderRecord(wo)"
+                  (keydown.enter)="selectWorkOrderRecord(wo)"
+                  (keydown.space)="selectWorkOrderRecord(wo)"
+                  tabindex="0"
+                  role="button"
+                  [attr.aria-label]="'Open work order ' + (wo.jcn || wo.id)"
                   class="cursor-pointer"
                   [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedWorkOrder()?.id === wo.id}"
                 >
@@ -2171,7 +2211,7 @@
            VIEWPOINT 4: SHORE INSTALLATIONS, PERSONNEL & DOSSIER (3-COLUMN SPLIT)
            (Col 1: Shore Bases List | Col 2: Base Command Header + Filtered Roster | Col 3: Personnel Dossier)
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'installations'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+      <main *ngIf="activeViewpoint() === 'installations'" class="workspace-main flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden" aria-label="Personnel, installation, and unit workspace">
 
         <!-- COLUMN 1 (3 cols): Compact Scrollable Shore Installations Master List -->
         <section class="col-span-12 lg:col-span-3 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
@@ -2245,6 +2285,25 @@
                 <span class="text-sky-300">{{ inst.personnel_count || 0 }} Billets</span>
               </div>
             </div>
+
+            <div *ngIf="commandOrganizationsList().length" class="pt-2 mt-2 border-t mew-border">
+              <div class="px-1 pb-1 text-[9px] mono-data uppercase tracking-wider text-amber-300 font-bold">
+                Command Organizations ({{ commandOrganizationsList().length }})
+              </div>
+              <div
+                *ngFor="let inst of commandOrganizationsList()"
+                (click)="selectInstallation(inst.installation_code || inst.dodaac)"
+                class="p-2.5 mb-1.5 rounded-sm cursor-pointer transition border"
+                [ngClass]="selectedInstallationCode() === (inst.installation_code || inst.dodaac) ? 'bg-amber-500/10 border-amber-400' : 'mew-elevated hover:border-amber-500/40'"
+              >
+                <div class="flex items-center gap-1.5">
+                  <i class="pi pi-sitemap text-[10px] text-amber-300"></i>
+                  <span class="mono-data text-xs font-bold text-amber-300">{{ inst.installation_code || inst.dodaac }}</span>
+                </div>
+                <div class="text-xs font-semibold mew-text-primary mt-0.5 truncate">{{ inst.name }}</div>
+                <div class="text-[9px] mono-data text-amber-200/80 mt-1">COMMAND // NOT A PHYSICAL INSTALLATION</div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -2253,29 +2312,26 @@
 
           <!-- Selected Installation Command Dossier Banner (Always at Top of Center Column) -->
           <div class="mew-surface rounded-sm p-3 shrink-0 border-l-4 border-l-sky-400">
-            <div *ngIf="api.personnelReadiness() as readiness" class="mb-3 grid grid-cols-2 xl:grid-cols-5 gap-2 text-xs mono-data">
+            <div class="mb-3 grid grid-cols-2 xl:grid-cols-4 gap-2 text-xs mono-data">
               <div class="mew-elevated rounded-sm p-2">
                 <div class="text-[10px] mew-text-muted">PERS READY</div>
-                <div class="text-indigo-300 font-bold">{{ readiness.summary.fully_ready }} / {{ readiness.summary.assigned }} ({{ readiness.summary.readiness_pct }}%)</div>
+                <div class="text-indigo-300 font-bold">{{ installationCommandSummary().fullyReady }} / {{ installationCommandSummary().assigned }} ({{ installationCommandSummary().readinessPct }}%)</div>
               </div>
               <div class="mew-elevated rounded-sm p-2">
-                <div class="text-[10px] mew-text-muted">TRAINING OVERDUE</div>
-                <div class="text-amber-300 font-bold">{{ readiness.summary.overdue_training_records }}</div>
+                <div class="text-[10px] mew-text-muted">SYSTEMS / FMC</div>
+                <div class="text-emerald-300 font-bold">{{ installationCommandSummary().fmcAssets }} / {{ installationCommandSummary().totalAssets }}</div>
               </div>
               <div class="mew-elevated rounded-sm p-2">
-                <div class="text-[10px] mew-text-muted">QUALIFICATION GAPS</div>
-                <div class="text-rose-300 font-bold">{{ readiness.summary.critical_qualification_gaps }}</div>
+                <div class="text-[10px] mew-text-muted">OPEN MAINT / CASREP</div>
+                <div class="text-amber-300 font-bold">{{ installationCommandSummary().openWorkOrders }} / {{ installationCommandSummary().casreps }}</div>
               </div>
               <div class="mew-elevated rounded-sm p-2">
-                <div class="text-[10px] mew-text-muted">MEDICAL LIMITATIONS</div>
-                <div class="text-amber-300 font-bold">{{ readiness.summary.medically_non_deployable }}</div>
-              </div>
-              <div class="mew-elevated rounded-sm p-2">
-                <div class="text-[10px] mew-text-muted">ROTATIONS ≤ 90D</div>
-                <div class="text-sky-300 font-bold">{{ readiness.summary.rotations_next_90_days }}</div>
+                <div class="text-[10px] mew-text-muted">SUPPLY SHORT / OPEN</div>
+                <div class="text-rose-300 font-bold">{{ installationCommandSummary().shortages }} / {{ installationCommandSummary().openRequisitions }}</div>
               </div>
             </div>
             <ng-container *ngIf="activeInstallationDetail() as inst; else allBasesBanner">
+              <ng-container *ngTemplateOutlet="drilldownHeader; context: { kind: isCommandOrganization(inst) ? 'COMMAND' : 'INSTALLATION', title: inst.name, scope: (inst.installation_code || inst.dodaac) + ' // ' + (inst.location_display || inst.region), relationship: isCommandOrganization(inst) ? 'Operational parent; not a physical facility' : 'Physical installation / personnel and equipment scope' }"></ng-container>
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 text-xs mono-data">
@@ -2292,7 +2348,7 @@
                   <span class="dod-tag bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     {{ inst.readiness_rating || 'C1_FMC' }}
                   </span>
-                  <span class="text-[10px] mew-text-muted">
+                  <span *ngIf="!isCommandOrganization(inst)" class="text-[10px] mew-text-muted">
                     {{ inst.latitude }}, {{ inst.longitude }}
                   </span>
                 </div>
@@ -2313,7 +2369,8 @@
                 </div>
                 <span class="mew-text-secondary">
                   Filtered: <strong class="text-sky-400">{{ filteredPersonnel().length }}</strong> Personnel &bull;
-                  <strong class="text-emerald-400">{{ installationHousedAssets().length }}</strong> Systems
+                  <strong class="text-emerald-400">{{ installationHousedAssets().length }}</strong> Systems &bull;
+                  <strong class="text-indigo-400">{{ selectedInstallationUnits().length }}</strong> Mapped Units
                 </span>
               </div>
             </ng-container>
@@ -2416,6 +2473,11 @@
                 <ng-template pTemplate="body" let-p>
                   <tr
                     (click)="selectPersonnelRecord(p)"
+                    (keydown.enter)="selectPersonnelRecord(p)"
+                    (keydown.space)="selectPersonnelRecord(p)"
+                    tabindex="0"
+                    role="button"
+                    [attr.aria-label]="'Open personnel dossier for ' + p.rank + ' ' + p.first_name + ' ' + p.last_name"
                     class="cursor-pointer"
                     [ngClass]="{'ring-1 ring-inset ring-sky-400 bg-sky-500/10': selectedPersonnel()?.id === p.id}"
                   >
@@ -2459,7 +2521,7 @@
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-a>
-                  <tr (click)="selectAsset(a)" class="cursor-pointer">
+                  <tr (click)="selectAsset(a)" (keydown.enter)="selectAsset(a)" (keydown.space)="selectAsset(a)" tabindex="0" role="button" [attr.aria-label]="'Open asset dossier for ' + a.nomenclature" class="cursor-pointer">
                     <td class="mono-data text-xs font-bold text-sky-400">{{ a.hull_number || 'SHORE' }}</td>
                     <td>
                       <div class="font-semibold mew-text-primary text-xs">{{ a.nomenclature }} ({{ a.common_name }})</div>
@@ -2586,7 +2648,7 @@
       <!-- ==================================================================
            VIEWPOINT 5: IMMUTABLE INVENTORY & RBAC/OPSEC SECURITY AUDIT LEDGER
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'ledger'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+      <main *ngIf="activeViewpoint() === 'ledger'" class="workspace-main flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden" aria-label="Integration and audit workspace">
 
         <!-- LEFT PANE (8 cols): Tabbed Inventory Ledger & Security Audit Log -->
         <section class="col-span-12 lg:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">

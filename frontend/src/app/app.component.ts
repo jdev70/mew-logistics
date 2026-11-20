@@ -471,10 +471,24 @@ export class AppComponent implements OnInit {
   readonly filteredInstallationsList = computed(() => {
     const q = this.installationSearchQuery().trim().toLowerCase();
     return this.api.installations().filter((inst) => {
+      if (this.isCommandOrganization(inst)) return false;
       if (!q) return true;
       const hay = `${inst.installation_code || ''} ${inst.name} ${inst.city || ''} ${
         inst.state_or_country || ''
       } ${inst.mission_category || ''} ${inst.primary_ew_focus || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  });
+
+  // Fleet and command records provide operational context, but are not presented
+  // as shore facilities. Keeping them separate prevents a user from inferring
+  // physical billets, warehouses, or coordinates that do not exist.
+  readonly commandOrganizationsList = computed(() => {
+    const q = this.installationSearchQuery().trim().toLowerCase();
+    return this.api.installations().filter((inst) => {
+      if (!this.isCommandOrganization(inst)) return false;
+      if (!q) return true;
+      const hay = `${inst.installation_code || ''} ${inst.name} ${inst.mission_category || ''}`.toLowerCase();
       return hay.includes(q);
     });
   });
@@ -517,6 +531,68 @@ export class AppComponent implements OnInit {
           a.current_location?.installation_code === code ||
           a.current_location?.dodaac === code
       );
+  });
+
+  readonly installationCommandSummary = computed(() => {
+    const code = this.selectedInstallationCode();
+    const personnel = code === 'ALL'
+      ? this.api.personnel()
+      : this.api.personnel().filter((person) => person.installation_code === code);
+    const assets = this.installationHousedAssets();
+    const assetSerials = new Set(assets.map((asset) => asset.serial_number));
+    const workOrders = this.api.workOrders().filter((workOrder) =>
+      code === 'ALL' ||
+      workOrder.installation_code === code ||
+      (!!workOrder.asset_serial && assetSerials.has(workOrder.asset_serial))
+    );
+    const openWorkOrders = workOrders.filter((workOrder) =>
+      !['COMPLETED', 'CLOSED', 'RETURNED_TO_SERVICE'].includes(workOrder.status)
+    );
+    const workOrderJcns = new Set(workOrders.map((workOrder) => workOrder.jcn).filter(Boolean));
+    const openRequisitions = this.api.requisitions().filter((requisition) =>
+      requisition.status !== 'Received' &&
+      (code === 'ALL' || (!!requisition.work_order_jcn && workOrderJcns.has(requisition.work_order_jcn)))
+    );
+    const shortages = this.api.inventoryBalances().filter((balance) =>
+      (code === 'ALL' || balance.installation_code === code) &&
+      (balance.needs_replenishment || balance.quantity_on_hand <= balance.reorder_point)
+    );
+    const fullyReady = personnel.filter((person) =>
+      person.is_fully_deployable && person.is_medically_deployable && person.is_training_current
+    ).length;
+
+    return {
+      assigned: personnel.length,
+      fullyReady,
+      readinessPct: personnel.length ? Math.round((fullyReady / personnel.length) * 100) : 0,
+      totalAssets: assets.length,
+      fmcAssets: assets.filter((asset) => asset.readiness_status === 'FMC').length,
+      nmcAssets: assets.filter((asset) => !['FMC', 'PMC'].includes(asset.readiness_status)).length,
+      openWorkOrders: openWorkOrders.length,
+      casreps: openWorkOrders.filter((workOrder) => workOrder.is_grounding_fault).length,
+      shortages: shortages.length,
+      openRequisitions: openRequisitions.length,
+    };
+  });
+
+  readonly selectedInstallationUnits = computed(() => {
+    const installation = this.activeInstallationDetail();
+    if (!installation) return [];
+    return this.api.units().filter((unit) => unit.installation_name === installation.name);
+  });
+
+  readonly unitCommandContext = computed(() => {
+    const unit = this.selectedUnit();
+    if (!unit) return null;
+    const installation = this.api.installations().find((item) => item.name === unit.installation_name);
+    return {
+      installationLabel: installation
+        ? `${installation.installation_code || installation.dodaac} // ${installation.name}`
+        : unit.installation_name || 'No physical installation mapped',
+      relationship: installation && this.isCommandOrganization(installation)
+        ? 'Command organization / operational parent'
+        : 'Physical installation / homeport relationship',
+    };
   });
 
   readonly selectedPersonnelWorkOrders = computed(() => {
@@ -590,6 +666,11 @@ export class AppComponent implements OnInit {
 
   selectInstallation(code: string): void {
     this.selectedInstallationCode.set(code);
+  }
+
+  isCommandOrganization(installation: InstallationDashboard): boolean {
+    const identity = `${installation.installation_code || ''} ${installation.name || ''} ${installation.mission_category || ''}`.toLowerCase();
+    return identity.includes('fleet') || identity.includes('command') || identity.includes('task force');
   }
 
   selectPersonnelRecord(person: PersonnelRecord): void {
