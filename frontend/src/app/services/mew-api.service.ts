@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, timeout } from 'rxjs/operators';
 import { runtimeConfig } from '../config/runtime';
 import {
   InstallationDashboard,
@@ -183,91 +183,94 @@ export class MewApiService {
     forkJoin({
       rbac: this.http
         .get<AuthorizationContextPayload>(`${this.apiBaseUrl}/authorization/context/`, opts)
-        .pipe(catchError(() => of(null))),
+        .pipe(timeout(15000), catchError(() => of(null))),
       units: this.http
         .get<PaginatedResponse<MilitaryUnitDashboard> | MilitaryUnitDashboard[]>(
           `${this.apiBaseUrl}/dashboard/units/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       assets: this.http
         .get<PaginatedResponse<MewAsset> | MewAsset[]>(`${this.apiBaseUrl}/assets/`, opts)
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       readinessAssets: this.http
         .get<PaginatedResponse<ReadinessException> | ReadinessException[]>(`${this.apiBaseUrl}/readiness/assets/`, opts)
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       installations: this.http
         .get<PaginatedResponse<InstallationDashboard> | InstallationDashboard[]>(
           `${this.apiBaseUrl}/readiness/reference/installations/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       personnel: this.http
         .get<PaginatedResponse<PersonnelRecord> | PersonnelRecord[]>(
           `${this.apiBaseUrl}/readiness/reference/personnel/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       components: this.http
         .get<PaginatedResponse<MewComponent> | MewComponent[]>(
           `${this.apiBaseUrl}/readiness/reference/catalog-items/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       balances: this.http
         .get<PaginatedResponse<InventoryBalance> | InventoryBalance[]>(
           `${this.apiBaseUrl}/inventory-balances/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       readinessBalances: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/supply/inventory/`, opts)
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       requisitions: this.http
         .get<PaginatedResponse<RequisitionSummary> | RequisitionSummary[]>(
           `${this.apiBaseUrl}/requisitions/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       readinessRequisitions: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/supply/requisitions/`, opts)
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       workOrders: this.http
         .get<PaginatedResponse<WorkOrderSummary> | WorkOrderSummary[]>(
           `${this.apiBaseUrl}/work-orders/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       readinessWorkOrders: this.http
         .get<PaginatedResponse<ReadinessWorkOrder> | ReadinessWorkOrder[]>(`${this.apiBaseUrl}/readiness/work-orders/`, opts)
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       transactions: this.http
         .get<PaginatedResponse<InventoryTransactionRecord> | InventoryTransactionRecord[]>(
           `${this.apiBaseUrl}/inventory-transactions/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       auditLogs: this.http
         .get<PaginatedResponse<SecurityAuditLogRecord> | SecurityAuditLogRecord[]>(
           `${this.apiBaseUrl}/readiness/reference/audit-logs/`,
           opts
         )
-        .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
+        .pipe(map((r) => this.unwrap(r)), timeout(15000), catchError(() => of(null))),
       analytics: this.http
         .get<MewAnalyticsPayload>(`${this.apiBaseUrl}/analytics/overview/`, opts)
-        .pipe(catchError(() => of(null))),
+        .pipe(timeout(15000), catchError(() => of(null))),
       readinessSummary: this.http
         .get<ReadinessDashboardSummary>(`${this.apiBaseUrl}/readiness/dashboard/summary/`, opts)
-        .pipe(catchError(() => of(null))),
+        .pipe(timeout(15000), catchError(() => of(null))),
       readinessExceptions: this.http
         .get<ReadinessException[]>(`${this.apiBaseUrl}/readiness/dashboard/exceptions/`, opts)
-        .pipe(catchError(() => of(null))),
+        .pipe(timeout(15000), catchError(() => of(null))),
       readinessShortages: this.http
         .get<ReadinessShortage[]>(`${this.apiBaseUrl}/readiness/dashboard/shortages/`, opts)
-        .pipe(catchError(() => of(null))),
+        .pipe(timeout(15000), catchError(() => of(null))),
       personnelReadiness: this.http
         .get<PersonnelReadinessPayload>(`${this.apiBaseUrl}/readiness/dashboard/personnel-readiness/`, opts)
-        .pipe(catchError(() => of(null))),
+        .pipe(timeout(15000), catchError(() => of(null))),
     }).subscribe((payload) => {
-      const hasLiveApi = payload.assets !== null && payload.units !== null;
+      // The readiness endpoints are the authoritative integration contract.  The
+      // older dashboard endpoints may be unavailable while the gateway migrates,
+      // and should not cause a synthetic-data fallback when readiness data arrived.
+      const hasLiveApi = payload.readinessAssets !== null || payload.assets !== null;
 
       if (hasLiveApi) {
         this.connectionMode.set('LIVE_API');
