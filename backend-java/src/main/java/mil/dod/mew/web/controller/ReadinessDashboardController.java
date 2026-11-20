@@ -38,4 +38,13 @@ public class ReadinessDashboardController {
     public ResponseEntity<JsonNode> shortages() {
         return readinessApi.get("/api/v1/dashboard/shortages/", Map.of());
     }
+
+    @GetMapping({"/personnel-readiness", "/personnel-readiness/"})
+    public ResponseEntity<JsonNode> personnelReadiness(
+            @RequestParam(value = "branch", required = false) String branch,
+            @RequestParam(value = "installation_code", required = false) String installationCode) {
+        return readinessApi.get("/api/v1/dashboard/personnel-readiness/", Map.of(
+                "branch", branch == null ? "" : branch,
+                "installation_code", installationCode == null ? "" : installationCode));
+    }
 }

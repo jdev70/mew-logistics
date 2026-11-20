@@ -13,6 +13,7 @@ import {
   MilitaryUnitDashboard,
   PaginatedResponse,
   PersonnelRecord,
+  PersonnelReadinessPayload,
   RbacActiveContext,
   AuthorizationContextPayload,
   ReceiveShipmentPayload,
@@ -53,6 +54,7 @@ export class MewApiService {
   readonly readinessSummary = signal<ReadinessDashboardSummary | null>(null);
   readonly readinessExceptions = signal<ReadinessException[]>([]);
   readonly readinessShortages = signal<ReadinessShortage[]>([]);
+  readonly personnelReadiness = signal<PersonnelReadinessPayload | null>(null);
 
   // Hybrid RBAC + ABAC Active Persona & Policy Context
   readonly activeRbacContext = signal<RbacActiveContext>({
@@ -261,6 +263,9 @@ export class MewApiService {
       readinessShortages: this.http
         .get<ReadinessShortage[]>(`${this.apiBaseUrl}/readiness/dashboard/shortages/`, opts)
         .pipe(catchError(() => of(null))),
+      personnelReadiness: this.http
+        .get<PersonnelReadinessPayload>(`${this.apiBaseUrl}/readiness/dashboard/personnel-readiness/`, opts)
+        .pipe(catchError(() => of(null))),
     }).subscribe((payload) => {
       const hasLiveApi = payload.assets !== null && payload.units !== null;
 
@@ -302,6 +307,7 @@ export class MewApiService {
       this.readinessSummary.set(payload.readinessSummary);
       this.readinessExceptions.set(payload.readinessExceptions || []);
       this.readinessShortages.set(payload.readinessShortages || []);
+      this.personnelReadiness.set(payload.personnelReadiness);
 
       this.lastSyncedAt.set(new Date());
       this.loading.set(false);

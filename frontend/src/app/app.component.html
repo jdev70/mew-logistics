@@ -2194,6 +2194,28 @@
 
           <!-- Selected Installation Command Dossier Banner (Always at Top of Center Column) -->
           <div class="mew-surface rounded-sm p-3 shrink-0 border-l-4 border-l-sky-400">
+            <div *ngIf="api.personnelReadiness() as readiness" class="mb-3 grid grid-cols-2 xl:grid-cols-5 gap-2 text-xs mono-data">
+              <div class="mew-elevated rounded-sm p-2">
+                <div class="text-[10px] mew-text-muted">PERS READY</div>
+                <div class="text-indigo-300 font-bold">{{ readiness.summary.fully_ready }} / {{ readiness.summary.assigned }} ({{ readiness.summary.readiness_pct }}%)</div>
+              </div>
+              <div class="mew-elevated rounded-sm p-2">
+                <div class="text-[10px] mew-text-muted">TRAINING OVERDUE</div>
+                <div class="text-amber-300 font-bold">{{ readiness.summary.overdue_training_records }}</div>
+              </div>
+              <div class="mew-elevated rounded-sm p-2">
+                <div class="text-[10px] mew-text-muted">QUALIFICATION GAPS</div>
+                <div class="text-rose-300 font-bold">{{ readiness.summary.critical_qualification_gaps }}</div>
+              </div>
+              <div class="mew-elevated rounded-sm p-2">
+                <div class="text-[10px] mew-text-muted">MEDICAL LIMITATIONS</div>
+                <div class="text-amber-300 font-bold">{{ readiness.summary.medically_non_deployable }}</div>
+              </div>
+              <div class="mew-elevated rounded-sm p-2">
+                <div class="text-[10px] mew-text-muted">ROTATIONS ≤ 90D</div>
+                <div class="text-sky-300 font-bold">{{ readiness.summary.rotations_next_90_days }}</div>
+              </div>
+            </div>
             <ng-container *ngIf="activeInstallationDetail() as inst; else allBasesBanner">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">

@@ -82,6 +82,32 @@ export interface PersonnelRecord {
   official_email: string;
 }
 
+export interface PersonnelReadinessSummary {
+  assigned: number;
+  fully_ready: number;
+  readiness_pct: number;
+  medically_non_deployable: number;
+  limited_or_non_available: number;
+  overdue_training_records: number;
+  expired_qualification_records: number;
+  critical_qualification_gaps: number;
+  rotations_next_90_days: number;
+}
+
+export interface PersonnelReadinessPayload {
+  summary: PersonnelReadinessSummary;
+  breakdown: Array<{
+    personnel__service_branch: string;
+    personnel__unit__installation__installation_code: string;
+    personnel__unit__installation__installation_name: string;
+    personnel__unit_id: string;
+    personnel__unit__command: string;
+    assigned: number;
+    medically_deployable: number;
+    available: number;
+  }>;
+}
+
 export interface WorkOrderPartDetail {
   id: string;
   nsn: string;
