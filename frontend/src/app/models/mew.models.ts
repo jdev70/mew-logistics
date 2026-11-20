@@ -9,6 +9,7 @@ export type MewViewpoint =
   | 'analytics'
   | 'readiness'
   | 'loadouts'
+  | 'maintenance'
   | 'supply'
   | 'installations'
   | 'ledger';

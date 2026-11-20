@@ -42,7 +42,8 @@ export class AppComponent implements OnInit {
     analytics: 'Command Overview',
     readiness: 'Fleet Readiness',
     loadouts: 'Equipment Readiness',
-    supply: 'Maintenance & Supply',
+    maintenance: 'Maintenance & CASREP',
+    supply: 'Supply & Receipts',
     installations: 'Personnel, Installations & Units',
     ledger: 'Integration & Audit',
   } as Record<MewViewpoint, string>)[this.activeViewpoint()]);
@@ -176,6 +177,48 @@ export class AppComponent implements OnInit {
       avg_qa_aging_hours: 0,
       rework_rate_pct: 0,
     };
+  });
+  readonly workOrderNextAction = computed(() => {
+    const workOrder = this.selectedWorkOrder();
+    if (!workOrder) return null;
+    const reviewer = this.isFleetReviewer();
+    switch (workOrder.status) {
+      case 'IN_WORK':
+        return {
+          state: 'IN WORK',
+          action: 'Submit maintenance completion for QA',
+          evidence: 'Diagnostics, tag-out, isolation, repair, restoration test, final equipment status, and labor hours.',
+          authorized: true,
+        };
+      case 'AWAITING_PARTS':
+        return {
+          state: 'AWAITING PARTS',
+          action: 'Receive the tied requisition, then resume maintenance.',
+          evidence: 'Receipt transaction and resulting inventory balance.',
+          authorized: true,
+        };
+      case 'QA_PENDING':
+        return {
+          state: 'QA PENDING',
+          action: reviewer ? 'Record QA approval or return the MAF for rework.' : 'Await fleet-readiness QA disposition.',
+          evidence: 'QA rationale and reviewer identity.',
+          authorized: reviewer,
+        };
+      case 'RETURNED_TO_SERVICE':
+        return {
+          state: 'RETURNED TO SERVICE',
+          action: reviewer ? 'Close the returned-to-service MAF.' : 'Await authorized administrative closure.',
+          evidence: 'Approved QA disposition and lifecycle ledger entry.',
+          authorized: reviewer,
+        };
+      default:
+        return {
+          state: workOrder.status.replaceAll('_', ' '),
+          action: 'No additional workflow action is required.',
+          evidence: 'Lifecycle ledger remains available for review.',
+          authorized: false,
+        };
+    }
   });
 
   // =========================================================================
@@ -525,6 +568,11 @@ export class AppComponent implements OnInit {
 
   setViewpoint(vp: MewViewpoint): void {
     this.activeViewpoint.set(vp);
+    if (vp === 'maintenance') {
+      this.supplySubTab.set('workorders');
+    } else if (vp === 'supply' && this.supplySubTab() === 'workorders') {
+      this.supplySubTab.set('inventory');
+    }
   }
 
   setDomainFilter(domain: OperationalDomainFilter): void {

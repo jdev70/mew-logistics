@@ -120,6 +120,25 @@
 
           <button
             type="button"
+            (click)="setViewpoint('maintenance')"
+            [class]="activeViewpoint() === 'maintenance'
+              ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
+              : 'w-full flex items-center justify-between px-3 py-2 rounded-sm text-slate-300 hover:bg-slate-800/60 hover:text-white text-xs transition-all'"
+          >
+            <span class="flex items-center gap-2.5">
+              <i class="pi pi-wrench text-xs"></i>
+            <span>Maintenance &amp; CASREP</span>
+            </span>
+            <span
+              class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm"
+              [ngClass]="workOrderLifecycleStats().qaPending > 0 ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40' : 'bg-slate-800 text-slate-300'"
+            >
+              {{ workOrderLifecycleStats().qaPending }} QA
+            </span>
+          </button>
+
+          <button
+            type="button"
             (click)="setViewpoint('supply')"
             [class]="activeViewpoint() === 'supply'
               ? 'w-full flex items-center justify-between px-3 py-2 rounded-sm bg-sky-500/15 text-sky-300 border-l-2 border-sky-400 font-semibold text-xs transition-all'
@@ -127,7 +146,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-box text-xs"></i>
-            <span>Maintenance &amp; Supply</span>
+              <span>Supply &amp; Receipts</span>
             </span>
             <span
               class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm"
@@ -1520,10 +1539,10 @@
       </main>
 
       <!-- ==================================================================
-           VIEWPOINT 3: SUPPLY, WAREHOUSE LRUs & DOCKED SHIPMENT RECEIVER
-           (Left: Inventory / Requisitions / WorkOrders Grid | Right: LRU Dossier & Scanner)
+           PHASE C: DEDICATED MAINTENANCE/CASREP OR SUPPLY/RECEIPTS WORKSPACE
+           (Shared asset and work-order context; distinct stateful workflows)
            ================================================================== -->
-      <main *ngIf="activeViewpoint() === 'supply'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
+      <main *ngIf="activeViewpoint() === 'maintenance' || activeViewpoint() === 'supply'" class="flex-1 min-h-0 p-3 grid grid-cols-12 gap-3 overflow-hidden">
 
         <!-- LEFT PANE (8 cols): Tabbed Supply & Maintenance Data Grid -->
         <section class="col-span-12 lg:col-span-7 xl:col-span-8 h-full min-h-0 mew-surface rounded-sm flex flex-col overflow-hidden">
@@ -1531,6 +1550,7 @@
           <div class="px-3.5 py-2.5 border-b mew-border flex flex-wrap items-center justify-between gap-2 shrink-0">
             <div class="flex items-center gap-1.5">
               <button
+                *ngIf="activeViewpoint() === 'supply'"
                 type="button"
                 (click)="supplySubTab.set('inventory')"
                 [class]="supplySubTab() === 'inventory'
@@ -1540,6 +1560,7 @@
                 LRU Stock ({{ filteredInventoryBalances().length }})
               </button>
               <button
+                *ngIf="activeViewpoint() === 'supply'"
                 type="button"
                 (click)="supplySubTab.set('requisitions')"
                 [class]="supplySubTab() === 'requisitions'
@@ -1549,6 +1570,7 @@
                 Requisitions ({{ api.requisitions().length }})
               </button>
               <button
+                *ngIf="activeViewpoint() === 'maintenance'"
                 type="button"
                 (click)="supplySubTab.set('workorders')"
                 [class]="supplySubTab() === 'workorders'
@@ -1559,7 +1581,7 @@
               </button>
             </div>
 
-            <div *ngIf="supplySubTab() === 'inventory'" class="flex items-center gap-2.5">
+            <div *ngIf="activeViewpoint() === 'supply' && supplySubTab() === 'inventory'" class="flex items-center gap-2.5">
               <label class="flex items-center gap-1.5 text-xs mono-data mew-text-secondary cursor-pointer">
                 <input
                   type="checkbox"
@@ -1801,6 +1823,18 @@
                 </div>
               </div>
 
+              <section *ngIf="workOrderNextAction() as next" class="rounded-sm border border-violet-500/35 bg-violet-500/10 p-2.5 space-y-1.5" aria-label="Controlled maintenance workflow">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[10px] mono-data uppercase font-bold text-violet-300">Controlled Workflow</span>
+                  <span class="dod-tag bg-slate-950/60 text-violet-200 border border-violet-400/30">{{ next.state }}</span>
+                </div>
+                <div class="text-xs font-semibold mew-text-primary">Next: {{ next.action }}</div>
+                <div class="text-[10px] mono-data mew-text-secondary">Required evidence: {{ next.evidence }}</div>
+                <div class="text-[10px] mono-data" [ngClass]="next.authorized ? 'text-emerald-300' : 'text-amber-300'">
+                  {{ next.authorized ? 'Your assigned role may perform this action.' : 'This transition is role-gated; review remains available.' }}
+                </div>
+              </section>
+
               <!-- Domain 2: Configuration & Component Catalog Keys -->
               <div class="grid grid-cols-3 gap-1.5 text-center mono-data text-xs">
                 <div class="mew-elevated p-2 rounded-sm">
@@ -2018,7 +2052,7 @@
           </div>
 
           <!-- MODE B: Selected LRU Component & Warehouse Stock Detail Card (when Inventory/Requisitions active) -->
-          <div *ngIf="supplySubTab() !== 'workorders' && selectedBalance() as bal" class="mew-surface rounded-sm p-3.5 shrink-0">
+          <div *ngIf="activeViewpoint() === 'supply' && supplySubTab() !== 'workorders' && selectedBalance() as bal" class="mew-surface rounded-sm p-3.5 shrink-0">
             <div class="flex items-center justify-between border-b mew-border pb-2">
               <span class="dod-tag bg-sky-500/15 text-sky-400 border border-sky-500/40">{{ bal.component_id }}</span>
               <span class="mono-data text-xs mew-text-secondary">NSN: {{ bal.nsn }}</span>
@@ -2059,7 +2093,7 @@
           </div>
 
           <!-- Docked MILSTRIP Barcode Shipment Receiver Panel -->
-          <div *ngIf="supplySubTab() !== 'workorders'" class="mew-surface rounded-sm p-3.5 flex-1 flex flex-col justify-between border-t-2 border-t-emerald-500">
+          <div *ngIf="activeViewpoint() === 'supply' && supplySubTab() !== 'workorders'" class="mew-surface rounded-sm p-3.5 flex-1 flex flex-col justify-between border-t-2 border-t-emerald-500">
             <div class="space-y-3">
               <div class="border-b mew-border pb-2">
                 <div class="text-[10px] mono-data uppercase tracking-wider text-emerald-400 font-bold">
@@ -2067,6 +2101,12 @@
                 </div>
                 <h3 class="text-sm font-bold mew-text-primary">Receive MILSTRIP Shipment &amp; Auto-Split Backorders</h3>
               </div>
+
+              <section class="rounded-sm border border-emerald-500/35 bg-emerald-500/10 p-2.5 space-y-1" aria-label="Controlled receipt workflow">
+                <div class="text-[10px] mono-data uppercase font-bold text-emerald-300">Controlled Receipt Workflow</div>
+                <div class="text-xs font-semibold mew-text-primary">Open requisition → verified receipt → inventory increase → immutable audit record</div>
+                <div class="text-[10px] mono-data mew-text-secondary">Required evidence: selected document number and received quantity. A short receipt creates a backorder; no browser-only inventory edits are permitted.</div>
+              </section>
 
               <div>
                 <label class="block text-[10px] mono-data uppercase mew-text-secondary mb-1">
