@@ -38,6 +38,14 @@ export class AppComponent implements OnInit {
 
   // Active Navigation Viewpoint (Default to Predictive Analytics & Visualizations)
   readonly activeViewpoint = signal<MewViewpoint>('analytics');
+  readonly activeViewTitle = computed(() => ({
+    analytics: 'Command Overview',
+    readiness: 'Fleet Readiness',
+    loadouts: 'Equipment Readiness',
+    supply: 'Maintenance & Supply',
+    installations: 'Personnel, Installations & Units',
+    ledger: 'Integration & Audit',
+  } as Record<MewViewpoint, string>)[this.activeViewpoint()]);
 
   // =========================================================================
   // 0. INTERACTIVE ANALYTICS & VISUALIZATIONS STATE (MEW_ANALYTICS.md)

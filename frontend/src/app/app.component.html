@@ -25,6 +25,25 @@
     </div>
   </header>
 
+  <!-- Phase A command bar: persistent workspace identity, scope, and synchronization control -->
+  <section class="phase-a-command-bar shrink-0">
+    <div class="min-w-0">
+      <div class="phase-a-command-title">{{ activeViewTitle() }}</div>
+      <div class="phase-a-command-scope mono-data">
+        Scope: {{ api.activeRbacContext().assigned_uic || 'AUTHORIZED ENTERPRISE VIEW' }}
+        <span *ngIf="selectedBranchFilter() !== 'ALL'"> / {{ selectedBranchFilter() }}</span>
+      </div>
+    </div>
+    <div class="phase-a-command-actions mono-data">
+      <span class="hidden lg:inline">{{ api.connectionMode() === 'LIVE_API' ? 'LIVE DATA' : 'SIMULATION' }}</span>
+      <span class="hidden md:inline">SYNC {{ api.lastSyncedAt() | date:'HH:mm:ss' }}</span>
+      <button type="button" class="phase-a-refresh" (click)="api.loadAllTelemetry()" [disabled]="api.loading()">
+        <i class="pi" [ngClass]="api.loading() ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+        {{ api.loading() ? 'Syncing' : 'Refresh' }}
+      </button>
+    </div>
+  </section>
+
   <!-- Main Workspace Container (Locked to Viewport Height) -->
   <div class="flex-1 min-h-0 flex flex-row overflow-hidden">
 
@@ -60,7 +79,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-chart-bar text-xs"></i>
-              <span>Predictive Analytics &amp; Viz</span>
+            <span>Command Overview</span>
             </span>
             <span class="text-[10px] mono-data px-1.5 py-0.5 rounded-sm bg-indigo-500/25 text-indigo-300 border border-indigo-500/40">
               ORSA
@@ -76,7 +95,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-chart-line text-xs"></i>
-              <span>Fleet Readiness &amp; Ao</span>
+            <span>Fleet Readiness</span>
             </span>
             <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-sky-300">
               {{ api.fleetMetrics().avgAo }}%
@@ -92,7 +111,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-shield text-xs"></i>
-              <span>Hull &amp; System Loadouts</span>
+            <span>Equipment Readiness</span>
             </span>
             <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300">
               {{ api.assets().length }}
@@ -108,7 +127,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-box text-xs"></i>
-              <span>Supply, LRUs &amp; Maint</span>
+            <span>Maintenance &amp; Supply</span>
             </span>
             <span
               class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm"
@@ -127,7 +146,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-users text-xs"></i>
-              <span>Bases &amp; EW Personnel</span>
+            <span>Personnel &amp; Installations</span>
             </span>
             <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300">
               {{ api.personnel().length }}
@@ -143,7 +162,7 @@
           >
             <span class="flex items-center gap-2.5">
               <i class="pi pi-history text-xs"></i>
-              <span>Immutable Audit Ledger</span>
+            <span>Integration &amp; Audit</span>
             </span>
             <span class="text-[11px] mono-data px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300">
               {{ api.transactions().length }}

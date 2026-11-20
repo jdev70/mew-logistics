@@ -1,3 +1,74 @@
 :host {
   display: block;
 }
+
+.phase-a-command-bar {
+  min-height: 3.7rem;
+  padding: 0.55rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--dod-bg-surface);
+  border-bottom: 1px solid var(--dod-border-color);
+  box-shadow: 0 6px 16px -14px rgba(2, 6, 23, 0.9);
+}
+
+.phase-a-command-title {
+  color: var(--dod-text-primary);
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.phase-a-command-scope {
+  margin-top: 0.2rem;
+  color: var(--dod-text-secondary);
+  font-size: 0.67rem;
+}
+
+.phase-a-command-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  color: var(--dod-text-secondary);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.phase-a-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 2px;
+  padding: 0.35rem 0.55rem;
+  color: var(--dod-accent-primary);
+  background: rgba(56, 189, 248, 0.08);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.phase-a-refresh:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.16);
+}
+
+.phase-a-refresh:focus-visible {
+  outline: 2px solid var(--dod-accent-primary);
+  outline-offset: 2px;
+}
+
+.phase-a-refresh:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 640px) {
+  .phase-a-command-bar {
+    min-height: 3.35rem;
+    padding-inline: 0.7rem;
+  }
+}
