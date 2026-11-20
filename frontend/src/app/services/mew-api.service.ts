@@ -200,10 +200,9 @@ export class MewApiService {
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
-      readinessInstallations: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/reference/installations/`, opts).pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       personnel: this.http
         .get<PaginatedResponse<PersonnelRecord> | PersonnelRecord[]>(
-          `${this.apiBaseUrl}/personnel/`,
+          `${this.apiBaseUrl}/readiness/reference/personnel/`,
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
@@ -213,7 +212,6 @@ export class MewApiService {
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
-      readinessComponents: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/reference/catalog-items/`, opts).pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       balances: this.http
         .get<PaginatedResponse<InventoryBalance> | InventoryBalance[]>(
           `${this.apiBaseUrl}/inventory-balances/`,
@@ -251,7 +249,6 @@ export class MewApiService {
           opts
         )
         .pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
-      readinessAuditLogs: this.http.get<PaginatedResponse<any> | any[]>(`${this.apiBaseUrl}/readiness/reference/audit-logs/`, opts).pipe(map((r) => this.unwrap(r)), catchError(() => of(null))),
       analytics: this.http
         .get<MewAnalyticsPayload>(`${this.apiBaseUrl}/analytics/overview/`, opts)
         .pipe(catchError(() => of(null))),
@@ -276,9 +273,9 @@ export class MewApiService {
         this.assets.set(payload.readinessAssets
           ? payload.readinessAssets.map((asset) => this.toDashboardAsset(asset))
           : (payload.assets || []));
-        this.installations.set(payload.installations || []);
-        this.personnel.set(payload.personnel || []);
-        this.components.set(payload.components || []);
+        this.installations.set((payload.installations || []).map((installation: any) => this.toDashboardInstallation(installation)));
+        this.personnel.set((payload.personnel || []).map((person: any) => this.toDashboardPersonnel(person)));
+        this.components.set((payload.components || []).map((component: any) => this.toDashboardComponent(component)));
         this.inventoryBalances.set(payload.readinessBalances ? payload.readinessBalances.map((item: any) => ({
           id: item.inventory_id, installation: item.installation, installation_code: '', installation_name: '',
           material: item.part_nsn, component_id: item.part_number, nsn: item.part_nsn, nomenclature: item.nomenclature,
@@ -295,7 +292,7 @@ export class MewApiService {
           ? payload.readinessWorkOrders.map((workOrder) => this.toDashboardWorkOrder(workOrder))
           : (payload.workOrders || []));
         this.transactions.set(payload.transactions || []);
-        this.securityAuditLogs.set(payload.auditLogs || []);
+        this.securityAuditLogs.set((payload.auditLogs || []).map((auditLog: any) => this.toDashboardAuditLog(auditLog)));
         this.analytics.set(payload.analytics || null);
       } else {
         this.connectionMode.set('SIMULATION_FALLBACK');
@@ -309,6 +306,113 @@ export class MewApiService {
       this.lastSyncedAt.set(new Date());
       this.loading.set(false);
     });
+  }
+
+  /** Adapts Django's installation contract to the existing Angular installation views. */
+  private toDashboardInstallation(installation: any): InstallationDashboard {
+    const state = installation.state_code || '';
+    return {
+      id: installation.installation_id,
+      installation_id: installation.installation_id,
+      installation_code: installation.installation_code,
+      name: installation.installation_name,
+      dodaac: installation.alias_codes || '',
+      location_display: state || installation.aor_command || '',
+      region: installation.aor_command || '',
+      mission_category: installation.mission_category || '',
+      city: '',
+      state_or_country: state,
+      latitude: installation.latitude,
+      longitude: installation.longitude,
+      primary_ew_focus: installation.mission_category || '',
+      dsn_prefix: '',
+      max_ew_billets: 0,
+      scif_accredited: Boolean(installation.scif_accreditation),
+      rf_anechoic_chamber: Boolean(installation.open_air_spectrum_range),
+      readiness_rating: installation.emcon_readiness_level || 'UNASSESSED',
+      last_inspection_date: installation.last_spectrum_certification || null,
+      personnel_count: Number(installation.personnel_count || 0),
+      housed_assets_count: 0,
+    };
+  }
+
+  /** Adapts Django's personnel + command hierarchy contract to the dashboard roster views. */
+  private toDashboardPersonnel(person: any): PersonnelRecord {
+    const active = person.account_status === 'ACTIVE';
+    const scifAuthorized = Boolean(person.scif_badge_active);
+    return {
+      id: person.edipi,
+      personnel_id: person.edipi,
+      dod_id: person.edipi,
+      first_name: person.first_name,
+      middle_initial: '',
+      last_name: person.last_name,
+      personnel_category: person.service_branch,
+      paygrade: person.rank,
+      rank: person.rank,
+      rank_full: person.rank,
+      specialty_code: person.mos_rating_afsc || '',
+      title: person.mos_title || '',
+      role: person.rbac_role,
+      functional_role: person.rbac_role,
+      functional_role_display: String(person.rbac_role || '').replaceAll('_', ' '),
+      assigned_uic: person.unit,
+      installation: person.installation_code || null,
+      installation_code: person.installation_code || '',
+      installation_deployed_at: person.installation_name || '',
+      installation_location: person.installation_state || '',
+      installation_mission_category: person.unit_command || person.unit_parent_command || '',
+      security_clearance: String(person.clearance_level || '').replaceAll('_', '//'),
+      operational_status: person.account_status,
+      is_medically_deployable: active,
+      is_training_current: active,
+      is_fully_deployable: active && scifAuthorized,
+      date_assigned: '',
+      projected_rotation_date: '',
+      dsn_phone: '',
+      official_email: person.mil_email || '',
+    };
+  }
+
+  /** Adapts Django's EW catalog contract to the dashboard's component catalogue. */
+  private toDashboardComponent(component: any): MewComponent {
+    return {
+      id: String(component.catalog_id),
+      component_id: component.tamcn || component.nsn,
+      nsn: component.nsn,
+      nomenclature: component.nomenclature,
+      part_number: component.tamcn || '',
+      cage_code: component.cage_code || '',
+      manufacturer: '',
+      component_category: component.category || '',
+      repairability_code: '',
+      unit_of_issue: 'EA',
+      unit_price: component.unit_cost_usd || 0,
+      critical_item: false,
+      lead_time_days: 0,
+      expected_mtbf_hours: component.mtbf_hours || 0,
+      compatible_system_ids: [],
+    };
+  }
+
+  /** Adapts immutable Django audit records to the existing security ledger table. */
+  private toDashboardAuditLog(auditLog: any): SecurityAuditLogRecord {
+    const eventType = auditLog.event_type || auditLog.action_type || 'AUDIT_EVENT';
+    return {
+      id: String(auditLog.audit_id),
+      created_at: auditLog.event_timestamp,
+      actor_name: auditLog.actor_name || auditLog.actor_edipi || 'SYSTEM',
+      actor_role: auditLog.actor_edipi === 'SYSTEM' ? 'SYSTEM' : 'AUDITED SUBJECT',
+      actor_uic: '',
+      actor_clearance: auditLog.classification_accessed || 'UNCLASSIFIED',
+      actor_cage_scope: '',
+      event_type: eventType,
+      event_type_display: String(eventType).replaceAll('_', ' '),
+      decision: 'RECORDED',
+      decision_display: 'Recorded',
+      resource_target: auditLog.resource_target || `${auditLog.entity_type}:${auditLog.entity_id}`,
+      reason: `Immutable audit record for ${auditLog.resource_target || `${auditLog.entity_type}:${auditLog.entity_id}`}.`,
+    };
   }
 
   /** Adapts Django's asset contract to the existing Angular read-only loadout views. */

@@ -15,6 +15,7 @@ public class ReadinessReferenceController {
     private final ReadinessApiClient api;
     public ReadinessReferenceController(ReadinessApiClient api) { this.api = api; }
     @GetMapping({"/installations", "/installations/"}) public ResponseEntity<JsonNode> installations() { return api.get("/api/v1/installations/", Map.of("page_size", "2000")); }
+    @GetMapping({"/personnel", "/personnel/"}) public ResponseEntity<JsonNode> personnel() { return api.get("/api/v1/personnel/", Map.of("page_size", "2000")); }
     @GetMapping({"/catalog-items", "/catalog-items/"}) public ResponseEntity<JsonNode> catalogItems() { return api.get("/api/v1/catalog-items/", Map.of("page_size", "2000")); }
     @GetMapping({"/audit-logs", "/audit-logs/"}) public ResponseEntity<JsonNode> auditLogs() { return api.get("/api/v1/security-audit-logs/", Map.of("page_size", "2000")); }
 }
